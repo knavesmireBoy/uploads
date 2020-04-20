@@ -25,12 +25,13 @@ if(isset($clientlist)):?>
 <p><?php echo $prompt; ?></p>
 <p><label>Yes<input type="radio" name="<?php echo $call; ?>" value="<?php echo $pos;?>"/></label></p>
 <p><label>No<input type="radio" name="<?php echo $call; ?>" value="<?php echo $neg;?>"/></label></p>
-<input type="submit" value = "Submit"/></p>
+<input type="submit" value = "Submit"/>
 </form>
 <?php endif;  ?>
 
 
 <?php if(isset($del)):?>
+
 <form action="." method="post" name="deletions" class="block">
 <input type="hidden" name="id" value="<?php echo $id; ?>"/>
 <p><label for="ext_nwf">Delete this file only<input type="radio" id="ext_nwf" name="extent" value="f"/></label></p>	

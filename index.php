@@ -4,6 +4,15 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'].'/uploads/includes/helpers.inc.php';
 
 $base = 'Log In';
+$error = '';
+$tmpl_error = '/uploads/includes/error.html.php';
+
+
+$mefiles = function($arg){
+    return $_FILES['upload'][$arg];
+};
+
+
 
 if(isset($_GET['action']) && $_GET['action'] == 'download') {;}
 else{
@@ -28,27 +37,23 @@ $domain="RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";//!!?!
 }
 
 
-if (isset($_POST['action']) and $_POST['action'] == 'upload'){ //Bail out if the file isn't really an upload
-if (!is_uploaded_file($_FILES['upload']['tmp_name']))
-{
+if (isset($_POST['action']) and $_POST['action'] == 'upload'){ 
+    //Bail out if the file isn't really an upload
+if (!is_uploaded_file($_FILES['upload']['tmp_name'])){
 $error = 'There was no file uploaded!';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 exit();
 }
 
-$uploaddesc = isset($_POST['desc']) ? $_POST['desc'] : '';
-$uploadtype = $_FILES['upload']['type'];
-$uploadfile = $_FILES['upload']['tmp_name'];
-$realname = $_FILES['upload']['name'];
-$size = $_FILES['upload']['size'];
+$uploadfile = $mefiles('tmp_name');
+$realname = $mefiles('name');
 $ext = preg_replace('/(.*)(\.[^0-9.]+$)/i', '$2', $realname);
 $uploadname = time() . $_SERVER['REMOTE_ADDR'] . $ext ;
 $time = time();
-$path = '../../filestore3/';  
+$path = '../../filestore/';  
 $filedname =  $path . $uploadname;
-
-if (!copy($uploadfile, $filedname))// Copy the file (if it is deemed safe)
-{ 
+// Copy the file (if it is deemed safe)
+if (!copy($uploadfile, $filedname)){ 
 $error = "Could not  save file as $filedname!";
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 exit();
@@ -58,23 +63,16 @@ if($priv=='Admin' and !empty($_POST['user'])){//ie Admin selects user
 $key=$_POST['user'];
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 $sql="SELECT domain FROM client WHERE domain='$key'";//will either return empty set(no error) or produce count. Test to see if a client has been selected.
-$result = mysqli_query($link, $sql);
-$row = mysqli_fetch_array($result);
+ $row = doSafeFetch($link, $sql);
 if(count($row[0])>0){
-$sql="SELECT user.name, user.id FROM user INNER JOIN client ON user.client_id=client.id WHERE client.domain='$key' LIMIT 1";
-//RETURNS one user (LIMIT 1), as relationship between file and user is one to one. NOT WORKING SO OVERWRITE WITH NEXT QUERY
-
 $sql="SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain =client.domain) AS employer WHERE employer.domain='$key' LIMIT 1";//RETURNS one user, as relationship between file and user is one to one.
-
 //exit($sql);
-$result = mysqli_query($link, $sql);
-$row = mysqli_fetch_array($result);
+$row = doSafeFetch($link, $sql);
 $key=$row['user_id'];
 if(!$key) {
 $key=$_POST['user'];//$key will be empty if above query returned empty set, reset
 $sql="SELECT user.id from user INNER JOIN client ON user.client_id=client.id WHERE user.email='$key'";
-$result = mysqli_query($link, $sql);
-$row = mysqli_fetch_array($result);
+$row = doSafeFetch($link, $sql);
 $key=$row['id'];
 }// @ clients use domain or full email as key if neither tests produce a result key refers to a user only
 }//END OF COUNT
@@ -83,13 +81,16 @@ $key=$row['id'];
 
 // Prepare user-submitted values for safe database insert
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-$realname = mysqli_real_escape_string($link,  $realname);
-$size= mysqli_real_escape_string($link,  $size);
-$uploadname = mysqli_real_escape_string($link,  $uploadname);
-$uploadtype = mysqli_real_escape_string($link,  $uploadtype);
-$uploaddesc = mysqli_real_escape_string($link,  $uploaddesc);
-$path = mysqli_real_escape_string($link,  $path);
-$time = mysqli_real_escape_string($link,  $time);
+    echo $realname;
+$realname = doSanitize($link,  $realname);
+$size = doSanitize($link, $mefiles('size'));
+$uploadname = doSanitize($link, $uploadname);
+$uploadtype = doSanitize($link, $mefiles('type'));
+$uploaddesc = doSanitize($link,  isset($_POST['desc']) ? $_POST['desc'] : '');
+$path = doSanitize($link,  $path);
+$time = doSanitize($link,  $time);
+    
+$realname = doSanitize($link, $realname);
 $sql = "INSERT INTO upload SET
 filename = '$realname',
 mimetype = '$uploadtype',
@@ -99,27 +100,16 @@ file = '$uploadname',
 size ='$size'/1024,
 userid='$key',
 time=NOW()";
-
-if (!mysqli_query($link, $sql)){
-$error = 'Database error storing file information!' . $sql;
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-exit();
-}
+doFetch($link, $sql, 'Database error storing file information!' . $sql);
 /*$sql2 = "select user.whatever from user INNER JOIN upload ON user.id=upload.userid INNER JOIN (SELECT MAX(id) AS big FROM upload) AS last ON last.big = upload.id";
 NOT REQUIRED - USING mysqli_INSERT_ID INSTEAD - BUT KEPT AS AN EXAMPLE OF A SUBQUERY
 */
+$menum = mysqli_insert_id($link);
+$sql = "select user.email, user.name, upload.id, upload.filename from user INNER JOIN upload ON user.id=upload.userid WHERE upload.id=$menum";
+    
+doFetch($link, $sql, 'Error selecting email address.');
 
-$menum=mysqli_insert_id($link);
-$sql2 = "select user.email, user.name, upload.id, upload.filename from user INNER JOIN upload ON user.id=upload.userid WHERE upload.id=$menum";
-
-$result = mysqli_query($link, $sql2);
-if (!$result)
-{
-$error = 'Error selecting email address.';
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-exit();
-}
-$row = mysqli_fetch_array($result);
+$row = doSafeFetch($link, $sql);
 $email = $row['email'];
 $file = $row['filename'];
 $name = $row['name'];
@@ -152,12 +142,12 @@ exit();
 
 
 if (isset($_GET['action']) and isset($_GET['id'])){
+    echo 'wild';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 $id = mysqli_real_escape_string($link,  $_GET['id']);
 $sql = "SELECT filename, mimetype, filepath, file, size FROM upload WHERE id = '$id'";
 $result = mysqli_query($link, $sql);
-if (!$result)
-{
+if (!$result){
 $error = 'Database error fetching requested file.';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 exit();

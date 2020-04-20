@@ -1,4 +1,23 @@
 <?php
+function databaseContainsUser($email, $password){
+include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
+$email = mysqli_real_escape_string($link, $email);
+$password = mysqli_real_escape_string($link, $password);
+$sql = "SELECT COUNT(*) FROM user INNER JOIN userrole ON user.id=userrole.userid WHERE email='$email' AND password='$password' ";
+$result = mysqli_query($link, $sql);
+if (!$result)  { 
+$error = 'Error searching for user.';
+include 'error.html.php';
+exit();
+}
+$row = mysqli_fetch_array($result);
+if ($row[0] > 0)  {
+return TRUE;
+}  else  {
+ return FALSE;
+ }
+ }
+
 function userIsLoggedIn(){
 if (isset($_POST['action']) and $_POST['action'] == 'login')  {
 if (!isset($_POST['email']) or $_POST['email'] == '' or !isset($_POST['password']) or $_POST['password'] == ''){
@@ -38,24 +57,7 @@ if (isset($_SESSION['loggedIn']))  {
 return databaseContainsUser($_SESSION['email'], $_SESSION['password']);  }
 }// end of user check
 
-function databaseContainsUser($email, $password){
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-$email = mysqli_real_escape_string($link, $email);
-$password = mysqli_real_escape_string($link, $password);
-$sql = "SELECT COUNT(*) FROM user INNER JOIN userrole ON user.id=userrole.userid WHERE email='$email' AND password='$password' ";
-$result = mysqli_query($link, $sql);
-if (!$result)  { 
-$error = 'Error searching for user.';
-include 'error.html.php';
-exit();
-}
-$row = mysqli_fetch_array($result);
-if ($row[0] > 0)  {
-return TRUE;
-}  else  {
- return FALSE;
- }
- }
+
  
 function userHasWhatRole(){
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
