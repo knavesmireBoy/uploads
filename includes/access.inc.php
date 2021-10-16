@@ -5,7 +5,7 @@ $email = mysqli_real_escape_string($link, $email);
 $password = mysqli_real_escape_string($link, $password);
 $sql = "SELECT COUNT(*) FROM user INNER JOIN userrole ON user.id=userrole.userid WHERE email='$email' AND password='$password' ";
 $result = mysqli_query($link, $sql);
-if (!$result)  { 
+if (!$result)  {
 $error = 'Error searching for user.';
 include 'error.html.php';
 exit();
@@ -33,7 +33,7 @@ if (databaseContainsUser($_POST['email'], $password))    {
  $_SESSION['password'] = $password;
   return TRUE;
  }
- else{ 
+ else{
   session_start();
   unset($_SESSION['loggedIn']);
   unset($_SESSION['email']);
@@ -42,7 +42,7 @@ if (databaseContainsUser($_POST['email'], $password))    {
   return FALSE;
   }
   }//end of log in attempt
-  
+
   if (isset($_POST['action']) and $_POST['action'] == 'logout')  {
   session_start();
   unset($_SESSION['loggedIn']);
@@ -51,20 +51,21 @@ if (databaseContainsUser($_POST['email'], $password))    {
   header("Location: ". $_POST['goto']);
       exit();
       }//end of logout
-      
+
 session_start();
 if (isset($_SESSION['loggedIn']))  {
 return databaseContainsUser($_SESSION['email'], $_SESSION['password']);  }
 }// end of user check
 
 
- 
+
 function userHasWhatRole(){
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 $email = mysqli_real_escape_string($link, $_SESSION['email']);
-$sql = "SELECT userrole.roleid, user.id, count(*) as total FROM userrole INNER JOIN user ON user.id=userrole.userid where user.email='$email'"; 
+$sql = "SELECT userrole.roleid, user.id, count(user.id) as total FROM userrole INNER JOIN user ON user.id=userrole.userid where user.email='$email' GROUP BY userrole.roleid, user.id";
  $result = mysqli_query($link, $sql);
- if (!$result)  { 
+
+ if (!$result)  {
  $error = 'Error searching for user roles.';
  include 'error.html.php';
  exit();
@@ -72,11 +73,11 @@ $sql = "SELECT userrole.roleid, user.id, count(*) as total FROM userrole INNER J
  }
  $row = mysqli_fetch_array($result);
  if ($row['total'] > 0)
- { 
+ {
 $roleplay[$row['id']]=$row['roleid'];
 return $roleplay;
  }
-else  { 
+else  {
 return FALSE;
 }
 }

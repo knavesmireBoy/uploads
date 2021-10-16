@@ -41,7 +41,7 @@ $domain="RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";//!!?!
 }
 
 
-if (isset($_POST['action']) and $_POST['action'] == 'upload'){ 
+if (isset($_POST['action']) and $_POST['action'] == 'upload'){
     //Bail out if the file isn't really an upload
 if (!is_uploaded_file($_FILES['upload']['tmp_name'])){
 $error = 'There was no file uploaded!';
@@ -56,10 +56,10 @@ $ext = preg_replace('/(.*)(\.[^0-9.]+$)/i', '$2', $realname);
 $time = time();
 $uploadname = $time . getRemoteAddr() .$ext;
 
-$path = '../../filestore/';  
+$path = '../../filestore/';
 $filedname =  $path . $uploadname;
 // Copy the file (if it is deemed safe)
-if (!copy($uploadfile, $filedname)){ 
+if (!copy($uploadfile, $filedname)){
 $error = "Could not  save file as $filedname!";
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 exit();
@@ -70,7 +70,7 @@ $key=$_POST['user'];
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 $sql="SELECT domain FROM client WHERE domain='$key'";//will either return empty set(no error) or produce count. Test to see if a client has been selected.
 $row = doSafeFetch($link, $sql);
-    
+
 if(count($row[0])>0){
 $sql="SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain =client.domain) AS employer WHERE employer.domain='$key' LIMIT 1";//RETURNS one user, as relationship between file and user is one to one.
 //exit($sql);
@@ -94,7 +94,7 @@ $uploadtype = doSanitize($link, $mefiles('type'));
 $uploaddesc = doSanitize($link,  isset($_POST['desc']) ? $_POST['desc'] : '');
 $path = doSanitize($link,  $path);
 $time = doSanitize($link,  $time);
-    
+
 $sql = "INSERT INTO upload SET
 filename = '$realname',
 mimetype = '$uploadtype',
@@ -110,7 +110,7 @@ NOT REQUIRED - USING mysqli_INSERT_ID INSTEAD - BUT KEPT AS AN EXAMPLE OF A SUBQ
 */
 $menum = mysqli_insert_id($link);
 $sql = "select user.email, user.name, upload.id, upload.filename from user INNER JOIN upload ON user.id=upload.userid WHERE upload.id=$menum";
-    
+
 doFetch($link, $sql, 'Error selecting email address.');
 
 $row = doSafeFetch($link, $sql);
@@ -119,7 +119,7 @@ $file = $row['filename'];
 $name = $row['name'];
 
 if($priv=='Admin'){
-$body =  'We have just uploaded the file' . $file . 'for checking.'; 
+$body =  'We have just uploaded the file' . $file . 'for checking.';
 $body = wordwrap($body, 70);
 //mail($email, $file, $body, "From: $name <{$_SESSION['email']}>");
 }
@@ -127,15 +127,15 @@ $body = wordwrap($body, 70);
 /*
 else {
 $body =  '<html><body><p>We have just uploaded the file <a href='.
-'"http://northwolds.serveftp.net/uploads/" /><strong>' . $file . '</strong></a> for printing.</p></body></html>'; 
-if (!@mail('north.wolds@btinternet.com', 'Files to North Wolds | ' . $file,  
-   $body,  
-    "From: $name <{$_SESSION['email']}>\n" . 
+'"http://northwolds.serveftp.net/uploads/" /><strong>' . $file . '</strong></a> for printing.</p></body></html>';
+if (!@mail('north.wolds@btinternet.com', 'Files to North Wolds | ' . $file,
+   $body,
+    "From: $name <{$_SESSION['email']}>\n" .
      "cc:  $name <files@northwolds.co.uk>\n" .
-    "MIME-Version: 1.0\n" .  
+    "MIME-Version: 1.0\n" .
     "Content-type: text/html; charset=iso-8859-1"))
 {
- exit('<p>The file uploaded but an email could not be sent.</p>');  
+ exit('<p>The file uploaded but an email could not be sent.</p>');
 }
 }
 */
@@ -192,7 +192,7 @@ $prompt = "Are you sure you want to delete this file? ";
 $call ="confirm";
 $pos="Yes";
 $neg="No";
-$action =''; 
+$action ='';
 }
 
 if (isset($_POST['confirm']) and $_POST['confirm'] == 'Yes' ){
@@ -205,7 +205,7 @@ if (isset($_POST['proceed']) and $_POST['proceed'] == 'remove' ){
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 $id = doSanitize($link, $_POST['id']);
 
-$path = '../../filestore/';  
+$path = '../../filestore/';
 
 if($_POST['extent']=="c"){
 $sql = "SELECT c.file FROM user INNER JOIN client ON user.client_id = client.id INNER JOIN upload AS c ON user.id = c.userid  INNER JOIN upload AS d ON d.userid=user.id WHERE d.id=$id";
@@ -365,7 +365,7 @@ $error = 'Database error fetching requesting THE list of files.';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 exit();
 }
-$row = mysqli_fetch_array($r, MYSQL_NUM);
+$row = mysqli_fetch_array($r, MYSQLI_NUM);
 $records = $row[0];
 if ($records > $display) {
 $pages = ceil($records/$display);
@@ -386,7 +386,7 @@ foreach ($meswitch as $ix => $u){
 if ($ix == $sort) break;
 }
 switch ($sort) {
-case $ix : 
+case $ix :
 $order_by = $meswitch[$ix];
 break;
 default:
@@ -496,37 +496,37 @@ else {
 $email=$_SESSION['email'];
 $where .=" WHERE user.email='$email' ";
 }
-if ($user_id != '') { // A user is selected 
+if ($user_id != '') { // A user is selected
 if(!isset($check)) $where .= " AND user.id=$user_id";
 }
 $text = doSanitize($link, $_GET['text']);
-if ($text != '') { // Some search text was specified 
+if ($text != '') { // Some search text was specified
 $where .= " AND upload.filename LIKE '%$text%'";
 }
 $suffix= doSanitize($link, $_GET['suffix']);
-if (isset($suffix)){ 
+if (isset($suffix)){
 if($suffix =='owt'){
-$where .= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')"; 
+$where .= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')";
 }
 elseif($suffix =='pdf' or $suffix =='zip') {
-	$where .= " AND upload.filename LIKE '%$suffix'"; 
+	$where .= " AND upload.filename LIKE '%$suffix'";
 	//$where .= sprintf(" AND upload.filename LIKE %s", GetSQLValueString('%'.$suffix, "text"));//Tricky percent symbol
 }
 }
 
 $sql =  $select . $from . $where . $order;
 
-$result = mysqli_query($link, $sql); 
- if (!$result)  {   
-$error = 'Error fetching file details1.' . $sql ; 
+$result = mysqli_query($link, $sql);
+ if (!$result)  {
+$error = 'Error fetching file details1.' . $sql ;
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
  exit();
 }
 $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . $order;
 //exit($sqlcount);
-$r = mysqli_query($link, $sqlcount); 
- if (!$r)  {   
-$error = 'Error getting file count.'; 
+$r = mysqli_query($link, $sqlcount);
+ if (!$r)  {
+$error = 'Error getting file count.';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 exit();
 }
@@ -564,7 +564,7 @@ $from .=" INNER JOIN userrole ON user.id=userrole.userid";
 $where  = ' WHERE TRUE';
 if(isset($_GET['ext']) && $ext=doSanitize($link, $_GET['ext'])) {
 if($ext =='owt') {
-$where .= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')"; 
+$where .= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')";
 }
 else $where .=" AND upload.filename LIKE '%$ext'";
 }
