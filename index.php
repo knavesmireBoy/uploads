@@ -317,17 +317,18 @@ if (isset($_POST['swap']))
 if (isset($_POST['original']))
 { // 'original' is common to both options of file amend block
     include $db;
+    
     $fid = doSanitize($link, $_POST['fileid']);
-    $fname = doSanitize($link, $_POST['filename']);
     $orig = doSanitize($link, $_POST['original']);
-    $user = doSanitize($link, $_POST['user']);
+    $user = isset($_POST['user']) ? doSanitize($link, $_POST['user']) : null;
     $user = isset($_POST['colleagues']) ? doSanitize($link, $_POST['colleagues']) : $user;
     $diz = doSanitize($link, $_POST['description']);
-    $user = $user || $orig;
+    $fname = doSanitize($link, $_POST['filename']);
+    $user = !(isset($user)) ? $orig : $user;
     $options = array("UPDATE upload SET userid='$user' WHERE userid='$orig'", "UPDATE upload SET userid='$user', description='$diz', filename='$fname' WHERE id ='$fid'");
     
     $getBest = getBestThunk($isPositive($_POST['answer']));
-    $sql = $getBest($options[0], $options[1]);
+    $sql = $getBest($options[0], $options[1]);    
     
     $doError = partialDefer('errorHandler', 'error updating details', $terror);
     doWhen($always(!mysqli_query($link, $sql)), $doError)(null);
@@ -408,6 +409,9 @@ switch ($sort)
 }
 //D I S P L A Y_______________________________________________________________
 include $db; ///Present list of users for administrators
+$user_id = null;
+$text = null;
+$suffix = null;
 $sqlu = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id=client.id WHERE client.domain IS NULL ORDER BY name";
 $result = mysqli_query($link, $sqlu);
 if (!$result)

@@ -19,7 +19,7 @@
 		<div>
 		<label for="colleagues">Colleagues:&nbsp;</label> <select id="colleagues" name="colleagues"><option value="">Select one</option><?php foreach ($colleagues as $k => $v): ?>
 			<option value="<?php htmlout($k); ?>"
-                    <?php if(htmlout($k) == '110'): ?>
+                    <?php if($k == $userid): ?>
                 selected='selected'<?php endif; ?>>
                 <?php htmlout($v); ?></option>
             <?php endforeach; ?>
