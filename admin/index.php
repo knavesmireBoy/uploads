@@ -360,13 +360,15 @@ include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 $sqlc="SELECT $domain FROM user WHERE user.email='$email'";
 $result = mysqli_query($link, $sqlc);
 $row = mysqli_fetch_array($result);
-$dom=$row[0];
-$sqlc="SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain=client.domain WHERE $domain='$dom' AND client.domain='$dom'";
+$dom = $row[0];
+$sqlc = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain=client.domain WHERE $domain='$dom' AND client.domain='$dom'";
 $result = mysqli_query($link, $sqlc);
 $row = mysqli_fetch_array($result);
-$count=$row['dom'];
-if($count==0) $domain="user.email";//full domain
-if(count($count) > 0) {
+$count = $row['dom'];
+if($count == 0) {
+    $domain="user.email";//full domain
+}
+if($count > 0) {
 $sql="SELECT employer.id, employer.name FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain=client.domain) AS employer ON $domain=employer.domain WHERE user.email='$email'";
 $result = mysqli_query($link, $sql);
 

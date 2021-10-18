@@ -78,14 +78,17 @@ function bbcodeout($text)
 {
     echo bbcode2html($text);
 }
+/*
 function html($text)
 {
     return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
 }
+
 function htmlout($text)
 {
     echo html($text);
 }
+*/
 function add_querystring_var($url, $key, $value)
 {
     $url = preg_replace('/(.*)(\?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');

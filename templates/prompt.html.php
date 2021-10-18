@@ -18,19 +18,19 @@ if(isset($clientlist)):?>
 </form> 
 
 
-<?php elseif(!isset($clientlist) and !isset($del)):?>
+<?php elseif(!isset($clientlist) and !isset($confirmed)):?>
 
-<form action="<?php echo $action; ?>" method="post" name="choice">
+<form action="." method="post" name="choice">
 <input type="hidden" name="id" value="<?php echo $id; ?>"/>
 <p><?php echo $prompt; ?></p>
-<p><label>Yes<input type="radio" name="<?php echo $call; ?>" value="<?php echo $pos;?>"/></label></p>
-<p><label>No<input type="radio" name="<?php echo $call; ?>" value="<?php echo $neg;?>"/></label></p>
+<p><label>Yes<input type="radio" name="<?php echo $call; ?>" value="Yes"/></label></p>
+<p><label>No<input type="radio" name="<?php echo $call; ?>" value="No"/></label></p>
 <input type="submit" value = "Submit"/>
 </form>
 <?php endif;  ?>
 
 
-<?php if(isset($del)):?>
+<?php if(isset($confirmed)):?>
 
 <form action="." method="post" name="deletions" class="block">
 <input type="hidden" name="id" value="<?php echo $id; ?>"/>
@@ -39,7 +39,7 @@ if(isset($clientlist)):?>
 <?php if($priv == 'Admin'):?>
 <p><label for="ext_nwc">Delete all files for this client<input type="radio" id="ext_nwc" name="extent" value="c"/></label></p>
 <?php endif; ?>
-<input type="hidden" name="<?php echo $del; ?>" value="remove"/>
+<input type="hidden" name="<?php echo $confirmed; ?>" value="remove"/>
 <input type="submit" value="Remove Files"/>
 </form>
 <?php endif; ?>

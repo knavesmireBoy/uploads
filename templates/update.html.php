@@ -1,4 +1,4 @@
-<form action="<?php htmlout($action); ?>" method="post" name="updateFileInfo">
+<form action="." method="post" name="updateFileInfo">
 <?php if($_POST['swap'] == 'No'): ?>
 	<div>
 		<label for="filename">Name: <input id="filename" type="text" name="filename" value="<?php htmlout($filename); ?>"/></label></div>
@@ -6,12 +6,12 @@
 		<label for="description">Description: <input id="description" type="text" name="description" value="<?php htmlout($diz); ?>"/></label></div>
 	<div>
 	<?php endif; ?>
-	<?php if(count($colleagues)==0) : ?>
+	<?php if(count($colleagues) == 0 && $priv == 'Admin') : ?>
 	<label for="user">User:&nbsp;</label><select id="user" name="user">
 <option value="">Select one</option><?php foreach ($all_users as $i => $a): ?>
 <option value="<?php htmlout($i); ?>"><?php htmlout($a) ?></option><?php endforeach; ?>
 </select></div>
-<?php else : ?>
+<?php elseif($priv == 'Admin') : ?>
 		<div>
 		<label for="colleagues">Colleagues:&nbsp;</label> <select id="colleagues" name="colleagues"><option value="">Select one</option><?php foreach ($colleagues as $i => $c): ?>
 			<option value="<?php htmlout($i); ?>"><?php htmlout($c); ?></option><?php endforeach; ?>
