@@ -22,9 +22,14 @@ if(isset($clientlist)):?>
 
 <form action="." method="post" name="choice">
 <input type="hidden" name="id" value="<?php echo $id; ?>"/>
-<p><?php echo $prompt; ?></p>
+    <?php if($prompt === 'continue'): ?>
+    <p><label>Edit<input type="radio" name="<?php echo $call; ?>" value="No"/></label></p>
+    <?php else: ?>
+    <p><?php echo $prompt; ?></p>
 <p><label>Yes<input type="radio" name="<?php echo $call; ?>" value="Yes"/></label></p>
 <p><label>No<input type="radio" name="<?php echo $call; ?>" value="No"/></label></p>
+<?php endif; ?>
+
 <input type="submit" value = "Submit"/>
 </form>
 <?php endif;  ?>

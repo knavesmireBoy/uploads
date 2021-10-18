@@ -11,7 +11,7 @@
 <option value="">Select one</option><?php foreach ($all_users as $i => $a): ?>
 <option value="<?php htmlout($i); ?>"><?php htmlout($a) ?></option><?php endforeach; ?>
 </select></div>
-<?php elseif($priv == 'Admin') : ?>
+<?php elseif(($priv == 'Admin') && count($colleagues) > 1) : ?>
 		<div>
 		<label for="colleagues">Colleagues:&nbsp;</label> <select id="colleagues" name="colleagues"><option value="">Select one</option><?php foreach ($colleagues as $i => $c): ?>
 			<option value="<?php htmlout($i); ?>"><?php htmlout($c); ?></option><?php endforeach; ?>

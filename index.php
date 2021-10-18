@@ -197,7 +197,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'delete')
 {
     $id = $_POST['id'];
     $title = "Prompt";
-    $prompt = "Are you sure you want to delete this file? ";
+    $prompt = "Choose yes for deletion options. Choose no for editing options";
     $call = "confirm";
 }
 
@@ -248,10 +248,10 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
             $colleagues[$row['id']] = $row['name'];
         }
     if(count($colleagues) > 1){
-      $prompt = "Change ownership on ALL files?";  
+      $prompt = "Choose yes to select assign a new owner to all client files. Choose no to edit a single file"; 
     }
     elseif(count($colleagues)){
-       $prompt = "Continue editing";  
+       $prompt = "continue";  
     }
     
     $id = $_POST['id'];
