@@ -8,13 +8,21 @@
 	<?php endif; ?>
 	<?php if(count($colleagues) == 0 && $priv == 'Admin') : ?>
 	<label for="user">User:&nbsp;</label><select id="user" name="user">
-<option value="">Select one</option><?php foreach ($all_users as $i => $a): ?>
-<option value="<?php htmlout($i); ?>"><?php htmlout($a) ?></option><?php endforeach; ?>
+<option value="">Select one like</option><?php foreach ($all_users as $k => $v): ?>
+<option value="<?php htmlout($k); ?>"
+    <?php if($k == $userid) : ?>
+        selected='selected'<?php endif; ?>>
+    <?php htmlout($v); ?></option>
+        <?php endforeach; ?>
 </select></div>
 <?php elseif(($priv == 'Admin') && count($colleagues) > 1) : ?>
 		<div>
-		<label for="colleagues">Colleagues:&nbsp;</label> <select id="colleagues" name="colleagues"><option value="">Select one</option><?php foreach ($colleagues as $i => $c): ?>
-			<option value="<?php htmlout($i); ?>"><?php htmlout($c); ?></option><?php endforeach; ?>
+		<label for="colleagues">Colleagues:&nbsp;</label> <select id="colleagues" name="colleagues"><option value="">Select one</option><?php foreach ($colleagues as $k => $v): ?>
+			<option value="<?php htmlout($k); ?>"
+                    <?php if(htmlout($k) == '110'): ?>
+                selected='selected'<?php endif; ?>>
+                <?php htmlout($v); ?></option>
+            <?php endforeach; ?>
 		</select></div>
 		<?php endif; ?>
 	<div>

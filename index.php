@@ -55,6 +55,7 @@ else
 
     }
     $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!!?!! V. USEFUL VARIABLE IN GLOBAL SPACE
+    $isPositive = curry22('equals')('Yes');
 }
 
 if (isset($_POST['action']) and $_POST['action'] == 'upload')
@@ -197,7 +198,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'delete')
 {
     $id = $_POST['id'];
     $title = "Prompt";
-    $prompt = "Choose yes for deletion options. Choose no for editing options";
+    $prompt = "Choose <b>yes</b> for deletion options and <b>no</b> for editing options";
     $call = "confirm";
 }
 
@@ -242,16 +243,19 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
     $id = doSanitize($link, $_POST['id']);
     $result = mysqli_query($link, getColleagues($id, $domain));
     $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
+    $prompt1 = "Choose <b>yes</b> to select assign a new owner to all "; 
+    $prompt2 =  " files. Choose <b>no</b> to edit a single file"; 
+    $prompt = "$prompt1 client $prompt2"; 
     doWhen($always(!$result), $doError)(null);
      while ($row = mysqli_fetch_array($result))
         {
             $colleagues[$row['id']] = $row['name'];
         }
-    if(count($colleagues) > 1){
-      $prompt = "Choose yes to select assign a new owner to all client files. Choose no to edit a single file"; 
+    if(isset($colleagues) && count($colleagues) === 1){
+        $prompt = "continue";
     }
-    elseif(count($colleagues)){
-       $prompt = "continue";  
+    else if(!isset($colleagues)) {
+        $prompt = "$prompt1 user $prompt2";
     }
     
     $id = $_POST['id'];
@@ -311,39 +315,26 @@ if (isset($_POST['swap']))
 
 
 if (isset($_POST['original']))
-{ //CAN ONLY BE SET BY ADMIN, 'original' is common to both options of file amend block
+{ // 'original' is common to both options of file amend block
     include $db;
     $fid = doSanitize($link, $_POST['fileid']);
     $fname = doSanitize($link, $_POST['filename']);
     $orig = doSanitize($link, $_POST['original']);
     $user = doSanitize($link, $_POST['user']);
-    if ($_POST['colleagues'])
-    {
-        $user = doSanitize($link, $_POST['colleagues']);
-    }
+    $user = isset($_POST['colleagues']) ? doSanitize($link, $_POST['colleagues']) : $user;
     $diz = doSanitize($link, $_POST['description']);
-    if (!$user)
-    {
-        $user = $orig;
-    }
-    if ($_POST['answer'] == 'Yes')
-    {
-        $sql = "UPDATE upload SET userid='$user' WHERE userid='$orig'";
-    }
-    else
-    {
-        $sql = "UPDATE upload SET userid='$user', description='$diz', filename='$fname' WHERE id ='$fid'";
-    }
-    if (!mysqli_query($link, $sql))
-    {
-        $error = 'error updating details';
-        include $terror;
-        exit();
-    }
+    $user = $user || $orig;
+    $options = array("UPDATE upload SET userid='$user' WHERE userid='$orig'", "UPDATE upload SET userid='$user', description='$diz', filename='$fname' WHERE id ='$fid'");
+    
+    $getBest = getBestThunk($isPositive($_POST['answer']));
+    $sql = $getBest($options[0], $options[1]);
+    
+    $doError = partialDefer('errorHandler', 'error updating details', $terror);
+    doWhen($always(!mysqli_query($link, $sql)), $doError)(null);
     header('Location: . ');
     exit();
 }
-///end of F I L E AMEND BLOCK___________________________________________________________________
+///end of UPDATE FILE BLOCK___________________________________________________________________
 //a default block___________________________________________________________________
 $display = 10;
 if (isset($_GET['p']) and is_numeric($_GET['p']))
@@ -362,7 +353,7 @@ else
     $r = mysqli_query($link, $sql);
     if (!$r)
     {
-        $error = 'Database error fetching requesting THE list of files.';
+        $error = 'Database error fetching requesting the list of files.';
         include $terror;
         exit();
     }
