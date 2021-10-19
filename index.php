@@ -22,8 +22,17 @@ function getRemoteAddr()
     return $ipAddress;
 }
 
-function getColleagues($id, $dom) {
-        return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id=$id ORDER BY name";
+function getColleaguesFromUploadId($id, $dom) {
+        return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id= $id ORDER BY name";
+}
+
+function getColleaguesFromUploadIdVerbose($id, $dom) {
+        return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email)) = client.domain) AS employer ON RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email)) = employer.domain WHERE upload.id = 1926 ORDER BY name";
+}
+
+function assignColleague($upload_id, $user_id) {
+    return "UPDATE upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT  user.client_id FROM upload INNER JOIN user 
+ON upload.userid = user.id WHERE upload.id = $upload_id) AS tgt ON user.client_id = tgt.client_id SET upload.userid = $user_id WHERE user.client_id = tgt.client_id";
 }
 
 $uploadedfile = function ($arg)
@@ -241,7 +250,7 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
 { //swap
     include $db;
     $id = doSanitize($link, $_POST['id']);
-    $result = mysqli_query($link, getColleagues($id, $domain));
+    $result = mysqli_query($link, getColleaguesFromUploadId($id, $domain));
     $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
     $prompt1 = "Choose <b>yes</b> to select assign a new owner to all "; 
     $prompt2 =  " files. Choose <b>no</b> to edit a single file"; 
@@ -284,7 +293,7 @@ if (isset($_POST['swap']))
         $aname = $row['name'];
         $button = "Update";
         $answer = $_POST['swap'];
-        $result = mysqli_query($link, getColleagues($row['id'], $domain));
+        $result = mysqli_query($link, getColleaguesFromUploadId($row['id'], $domain));
         $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
         doWhen($always(!$result), $doError)(null);
         
@@ -325,7 +334,11 @@ if (isset($_POST['original']))
     $diz = doSanitize($link, $_POST['description']);
     $fname = doSanitize($link, $_POST['filename']);
     $user = !(isset($user)) ? $orig : $user;
-    $options = array("UPDATE upload SET userid='$user' WHERE userid='$orig'", "UPDATE upload SET userid='$user', description='$diz', filename='$fname' WHERE id ='$fid'");
+    $swapuser = "UPDATE upload SET userid='$user' WHERE userid='$orig'";
+    $single = "UPDATE upload SET userid='$user', description='$diz', filename='$fname' WHERE id ='$fid'";
+    $all = assignColleague($fid, $user);
+    
+    $options = array($all, $single);
     
     $getBest = getBestThunk($isPositive($_POST['answer']));
     $sql = $getBest($options[0], $options[1]);    
