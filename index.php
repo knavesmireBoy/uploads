@@ -22,23 +22,21 @@ function getRemoteAddr()
     return $ipAddress;
 }
 
-function getColleaguesFromUploadId($id, $dom) {
+function getColleagues($id, $dom) {
         return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id= $id ORDER BY name";
 }
-
-function getColleaguesFromUploadIdVerbose($id, $dom) {
-        return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email)) = client.domain) AS employer ON RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email)) = employer.domain WHERE upload.id = 1926 ORDER BY name";
+function getColleagues2($id){
+    return "SELECT user.id, user.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.client_id FROM upload INNER JOIN user ON upload.userid = user.id WHERE upload.id = $id) AS tgt ON user.client_id = tgt.client_id ORDER BY name";
 }
 
 function assignColleague($upload_id, $user_id) {
-    return "UPDATE upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT  user.client_id FROM upload INNER JOIN user 
+    return "UPDATE upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.client_id FROM upload INNER JOIN user 
 ON upload.userid = user.id WHERE upload.id = $upload_id) AS tgt ON user.client_id = tgt.client_id SET upload.userid = $user_id WHERE user.client_id = tgt.client_id";
 }
 
-$uploadedfile = function ($arg)
-{
+function uploadedfile($arg) {
     return $_FILES['upload'][$arg];
-};
+}
 
 
 if (!userIsLoggedIn())
@@ -64,7 +62,7 @@ else
 
     }
     $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!!?!! V. USEFUL VARIABLE IN GLOBAL SPACE
-    $isPositive = curry22('equals')('Yes');
+    $isPositive = curry2('equals')('Yes');
 }
 
 if (isset($_POST['action']) and $_POST['action'] == 'upload')
@@ -79,8 +77,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'upload')
         exit();
     }
 
-    $uploadfile = $uploadedfile('tmp_name');
-    $realname = $uploadedfile('name');
+    $uploadfile = uploadedfile('tmp_name');
+    $realname = uploadedfile('name');
     $ext = preg_replace('/(.*)(\.[^0-9.]+$)/i', '$2', $realname);
     $time = time();
     $uploadname = $time . getRemoteAddr() . $ext;
@@ -119,13 +117,12 @@ if (isset($_POST['action']) and $_POST['action'] == 'upload')
         } //END OF COUNT
 
     }
-
     // Prepare user-submitted values for safe database insert
     include $db;
     $realname = doSanitize($link, $realname);
-    $size = doSanitize($link, $uploadedfile('size'));
+    $size = doSanitize($link, uploadedfile('size'));
     $uploadname = doSanitize($link, $uploadname);
-    $uploadtype = doSanitize($link, $uploadedfile('type'));
+    $uploadtype = doSanitize($link, uploadedfile('type'));
     $uploaddesc = doSanitize($link, isset($_POST['desc']) ? $_POST['desc'] : '');
     $path = doSanitize($link, $path);
     //$time = doSanitize($link, $time);
@@ -224,6 +221,8 @@ if (isset($_POST['extent']))
     $findIndex = curry2('array_search')(array("c", "u", "f"));
     $id = doSanitize($link, $_POST['id']);
     $routes = array("SELECT c.file FROM user INNER JOIN client ON user.client_id = client.id INNER JOIN upload AS c ON user.id = c.userid  INNER JOIN upload AS d ON d.userid=user.id WHERE d.id=$id", "SELECT upload.file FROM upload INNER JOIN user ON upload.userid=user.id INNER JOIN upload AS d ON upload.userid=d.userid WHERE d.id=$id", "SELECT file FROM upload WHERE id=$id");
+    
+    
     $getRoute = partial('getProperty', $routes);
     $sql = $compose($findIndex, $getRoute)($_POST['extent']);
     if (!$sql)
@@ -250,7 +249,7 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
 { //swap
     include $db;
     $id = doSanitize($link, $_POST['id']);
-    $result = mysqli_query($link, getColleaguesFromUploadId($id, $domain));
+    $result = mysqli_query($link, getColleagues($id, $domain));
     $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
     $prompt1 = "Choose <b>yes</b> to select assign a new owner to all "; 
     $prompt2 =  " files. Choose <b>no</b> to edit a single file"; 
@@ -285,6 +284,7 @@ if (isset($_POST['swap']))
         $result = mysqli_query($link, $sql);
         $doError = partialDefer('errorHandler', 'Database error fetching stored files', $terror);
         doWhen($always(!$result), $doError)(null);//doWhen expects an argument to pass to predicate and action functions
+        
         $row = mysqli_fetch_array($result);
         $id = $row['id'];
         $filename = $row['filename'];
@@ -293,7 +293,7 @@ if (isset($_POST['swap']))
         $aname = $row['name'];
         $button = "Update";
         $answer = $_POST['swap'];
-        $result = mysqli_query($link, getColleaguesFromUploadId($row['id'], $domain));
+        $result = mysqli_query($link, getColleagues($row['id'], $domain));
         $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
         doWhen($always(!$result), $doError)(null);
         
@@ -323,25 +323,19 @@ if (isset($_POST['swap']))
 } ///
 
 
-if (isset($_POST['original']))
+if (isset($_POST['update']))
 { // 'original' is common to both options of file amend block
     include $db;
-    
     $fid = doSanitize($link, $_POST['fileid']);
     $orig = doSanitize($link, $_POST['original']);
     $user = isset($_POST['user']) ? doSanitize($link, $_POST['user']) : null;
     $user = isset($_POST['colleagues']) ? doSanitize($link, $_POST['colleagues']) : $user;
-    $diz = doSanitize($link, $_POST['description']);
-    $fname = doSanitize($link, $_POST['filename']);
+    $diz = isset($_POST['description']) ? doSanitize($link, $_POST['description']) : null;
+    $fname = isset($_POST['filename']) ? doSanitize($link, $_POST['filename']) : null;
     $user = !(isset($user)) ? $orig : $user;
     $single = "UPDATE upload SET userid='$user', description='$diz', filename='$fname' WHERE id ='$fid'";
-    $extent = $_POST['blanket'] ? assignColleague($fid, $user) : "UPDATE upload SET userid='$user' WHERE userid='$orig'";
-    
-    $options = array($extent, $single);
-    
-    $getBest = getBestThunk($isPositive($_POST['answer']));
-    $sql = $getBest($options[0], $options[1]);    
-    
+    $extent = isset($_POST['blanket']) ? assignColleague($fid, $user) : "UPDATE upload SET userid='$user' WHERE userid='$orig'";
+    $sql = $isPositive($_POST['answer']) ? $extent : $single;
     $doError = partialDefer('errorHandler', 'error updating details', $terror);
     doWhen($always(!mysqli_query($link, $sql)), $doError)(null);
     header('Location: . ');

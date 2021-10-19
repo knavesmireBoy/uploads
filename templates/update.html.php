@@ -16,8 +16,11 @@
         <?php endforeach; ?>
 </select></div>
 <?php elseif(($priv == 'Admin') && count($colleagues) > 1) : ?>
+    
+    <?php if(isset($answer) && $answer == 'Yes') : ?>
     <p>Select checkbox to re-assign all client files to selected user. Leave unchecked to simply swap all instances of original owner to selected user</p>
     <p><label for="blanket">swap/re-assign</label><input type = "checkbox" name="blanket" id="blanket"></p>
+    <?php endif; ?>
 		<div>
 		<label for="colleagues">Colleagues:&nbsp;</label><select id="colleagues" name="colleagues"><option value="">Select one</option><?php foreach ($colleagues as $k => $v): ?>
 			<option value="<?php htmlout($k); ?>"
@@ -30,6 +33,6 @@
 	<div>
 		<input type="hidden" name="fileid" value="<?php htmlout($id); ?>"/>
 		<input type="hidden" name="answer" value="<?php htmlout($answer); ?>"/>
-		<input type="hidden" name="original" value="<?php htmlout($userid); ?>"/>
+		<input type="hidden" name="update" value="<?php htmlout($userid); ?>"/>
 		<input type="submit" value="<?php htmlout($button); ?>"/></div>
 </form>
