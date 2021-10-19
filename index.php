@@ -291,6 +291,7 @@ if (isset($_POST['swap']))
         $doError = partialDefer('errorHandler', 'Database error fetching stored files', $terror);
         doWhen($always(!$result), $doError)(null);//doWhen expects an argument to pass to predicate and action functions
         
+        $extent = 0;
         $row = mysqli_fetch_array($result);
         $id = $row['id'];
         $filename = $row['filename'];
@@ -306,17 +307,18 @@ if (isset($_POST['swap']))
         while ($row = mysqli_fetch_array($result))
         {
             $colleagues[$row['id']] = $row['name'];
+            $extent++;
         }
        
-        if ($priv == 'Admin' && count($colleagues) == 0)
+        if ($priv == 'Admin' && !$extent)
         {
-            $sql = "SELECT user.name, user.id FROM user LEFT JOIN client ON user.client_id=client.id  WHERE client.domain IS NULL UNION SELECT user.name, user.id FROM user INNER JOIN client ON user.client_id=client.id ORDER BY name";
+            $sql = "SELECT user.name, user.id FROM user LEFT JOIN client ON user.client_id=client.id  WHERE client.domain IS NULL UNION SELECT user.name, user.id FROM user INNER JOIN client ON user.client_id = client.id ORDER BY name";
             $result = mysqli_query($link, $sql);
             $doError = partialDefer('errorHandler', 'Database error fetching users.', $terror);
             doWhen($always(!$result), $doError)(null);
             while ($row = mysqli_fetch_array($result))
             {
-                $all_users[$row['id']] = $row['name'];
+                $colleagues[$row['id']] = $row['name'];
             }
         }
     //exit($filename);
@@ -343,7 +345,6 @@ if (isset($_POST['update']))
     $extent = isset($_POST['blanket']) ? assignColleague($fid, $user) : "UPDATE upload SET userid='$user' WHERE userid='$orig'";
     $sql = $_POST['answer'] === "Yes" ? $extent : $single;
     $doError = partialDefer('errorHandler', 'error updating details', $terror);
-    //exit($sql);
     doWhen($always(!mysqli_query($link, $sql)), $doError)(null);
     header('Location: . ');
     exit();

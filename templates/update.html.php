@@ -6,16 +6,16 @@
 		<label for="description">Description: <input id="description" type="text" name="description" value="<?php htmlout($diz); ?>"/></label></div>
 	<div>
 	<?php endif; ?>
-	<?php if(count($colleagues) == 0 && $priv == 'Admin') : ?>
+	<?php if(!$extent && $priv == 'Admin') : ?>
 	<label for="user">User:&nbsp;</label><select id="user" name="user">
-<option value="">Select one like</option><?php foreach ($all_users as $k => $v): ?>
+<option value="">Select one like</option><?php foreach ($colleagues as $k => $v): ?>
 <option value="<?php htmlout($k); ?>"
     <?php if($k == $userid) : ?>
         selected='selected'<?php endif; ?>>
     <?php htmlout($v); ?></option>
         <?php endforeach; ?>
 </select></div>
-<?php elseif(($priv == 'Admin') && count($colleagues) > 1) : ?>
+<?php elseif(($priv == 'Admin') && $extent > 1) : ?>
     
     <?php if(isset($answer) && $answer == 'Yes') : ?>
     <p>Select checkbox to re-assign all client files to selected user. Leave unchecked to simply swap all instances of original owner to selected user</p>
