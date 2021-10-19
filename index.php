@@ -334,11 +334,10 @@ if (isset($_POST['original']))
     $diz = doSanitize($link, $_POST['description']);
     $fname = doSanitize($link, $_POST['filename']);
     $user = !(isset($user)) ? $orig : $user;
-    $swapuser = "UPDATE upload SET userid='$user' WHERE userid='$orig'";
     $single = "UPDATE upload SET userid='$user', description='$diz', filename='$fname' WHERE id ='$fid'";
-    $all = assignColleague($fid, $user);
+    $extent = $_POST['blanket'] ? assignColleague($fid, $user) : "UPDATE upload SET userid='$user' WHERE userid='$orig'";
     
-    $options = array($all, $single);
+    $options = array($extent, $single);
     
     $getBest = getBestThunk($isPositive($_POST['answer']));
     $sql = $getBest($options[0], $options[1]);    
