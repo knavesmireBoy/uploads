@@ -38,9 +38,11 @@ if(isset($clientlist)):?>
 <p><?php echo $prompt; ?></p>
 <form action="." method="post" name="deletions" class="block">
 <input type="hidden" name="id" value="<?php echo $id; ?>"/>
-<p><label for="ext_nwf">Delete this file only<input type="radio" id="ext_nwf" name="extent" value="f"/></label></p>	
+<p><label for="ext_nwf">Delete this file only<input type="radio" id="ext_nwf" name="extent" value="f"/></label></p>
+    <?php if(!$extent): ?>
 <p><label for="ext_nwu">Delete all files for this user<input type="radio" id="ext_nwu" name="extent" value="u"/></label></p>
-<?php if($priv == 'Admin'):?>
+    <?php endif; ?>
+<?php if($priv == 'Admin' && $extent):?>
 <p><label for="ext_nwc">Delete all files for this client<input type="radio" id="ext_nwc" name="extent" value="c"/></label></p>
 <?php endif; ?>
 <input type="hidden" name="<?php echo $confirmed; ?>" value="remove"/>

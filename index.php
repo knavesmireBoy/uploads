@@ -213,6 +213,15 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'Yes')
     $prompt = "Select the extent of deletions";
     $id = $_POST['id'];
     $confirmed = "confirmed";
+    $colleagues = array();
+    $extent = 0;
+    include $db;
+    $result = mysqli_query($link, getColleagues($id, $domain));
+    while ($row = mysqli_fetch_array($result))
+        {
+          $colleagues[$row['id']] = $row['name'];
+          $extent += 1;
+        }
 }
 
 if (isset($_POST['extent']))
@@ -248,6 +257,7 @@ if (isset($_POST['extent']))
 if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
 { //swap
     include $db;
+    $extent = 0;
     $id = doSanitize($link, $_POST['id']);
     $result = mysqli_query($link, getColleagues($id, $domain));
     $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
@@ -255,17 +265,13 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
     $prompt2 =  " files. Choose <b>no</b> to edit a single file"; 
     $prompt = "$prompt1 client $prompt2"; 
     doWhen($always(!$result), $doError)(null);
-     while ($row = mysqli_fetch_array($result))
+    while ($row = mysqli_fetch_array($result))
         {
-            $colleagues[$row['id']] = $row['name'];
+          $colleagues[$row['id']] = $row['name'];
+          $extent += 1;
         }
-    if(isset($colleagues) && count($colleagues) === 1){
-        $prompt = "continue";
-    }
-    else if(!isset($colleagues)) {
-        $prompt = "$prompt1 user $prompt2";
-    }
     
+    $prompt = !$extent ? "$prompt1 user $prompt2" : $extent === 1 ? "continue" : $prompt;
     $id = $_POST['id'];
     $call = "swap";
 }
@@ -324,10 +330,10 @@ if (isset($_POST['swap']))
 
 
 if (isset($_POST['update']))
-{ // 'original' is common to both options of file amend block
+{ // 'update' is common to both options of file amend block
     include $db;
     $fid = doSanitize($link, $_POST['fileid']);
-    $orig = doSanitize($link, $_POST['original']);
+    $orig = doSanitize($link, $_POST['update']);
     $user = isset($_POST['user']) ? doSanitize($link, $_POST['user']) : null;
     $user = isset($_POST['colleagues']) ? doSanitize($link, $_POST['colleagues']) : $user;
     $diz = isset($_POST['description']) ? doSanitize($link, $_POST['description']) : null;
@@ -335,8 +341,9 @@ if (isset($_POST['update']))
     $user = !(isset($user)) ? $orig : $user;
     $single = "UPDATE upload SET userid='$user', description='$diz', filename='$fname' WHERE id ='$fid'";
     $extent = isset($_POST['blanket']) ? assignColleague($fid, $user) : "UPDATE upload SET userid='$user' WHERE userid='$orig'";
-    $sql = $isPositive($_POST['answer']) ? $extent : $single;
+    $sql = $_POST['answer'] === "Yes" ? $extent : $single;
     $doError = partialDefer('errorHandler', 'error updating details', $terror);
+    //exit($sql);
     doWhen($always(!mysqli_query($link, $sql)), $doError)(null);
     header('Location: . ');
     exit();
