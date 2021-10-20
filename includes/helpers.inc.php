@@ -113,10 +113,10 @@ function doSanitize($lnk, $arg)
 {
     return mysqli_real_escape_string($lnk, $arg);
 }
-function doSafeFetch($lnk, $sql)
+function doSafeFetch($lnk, $sql, $mode = MYSQLI_BOTH)
 {
     //assumes query works!!
-    return mysqli_fetch_array(mysqli_query($lnk, $sql));
+    return mysqli_fetch_array(mysqli_query($lnk, $sql), $mode);
 }
 function doFetch($lnk, $sql, $msg)
 {
