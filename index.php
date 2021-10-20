@@ -53,9 +53,13 @@ function getBaseOrder($o, $s, $d){
 }
 
 function concatString($str){
-    return function($opt) use($str) {
+    return function($opt = '') use($str) {
         return $str .= $opt;
     };
+}
+
+function concatString2($str, $opt = ''){
+        return $str .= $opt;
 }
 
 function doEmail($link, $id){
@@ -431,15 +435,12 @@ if (isset($_GET['action']) and $_GET['action'] == 'search') {
     $haveUser = partial(negate('isEmpty'), $user_id);
     $notClient = partial('isEmpty', $check);
     $res = array_reduce([$haveUser, $notClient], 'every', true);
-    $text = doSanitize($link, $_GET['text']);
-    
-   
-    $maybeText = doWhen($always($res), partial($doConcat, " AND user.id = $user_id"));
-    $where = $maybeText(null) ? $maybeText(null) : $where;
+    $text = doSanitize($link, $_GET['text']);   
+    $pass1 = getBestThunk($always($res))(partial($doConcat, " AND user.id = $user_id"), $always($where));
+    $where = $pass1();
     $doConcat = concatString($where);
-    $maybeText = doWhen(partial(negate('isEmpty')), partial($doConcat, " AND upload.filename LIKE '%$text%'"));
-    $where = $maybeText($text) ? $maybeText($text) : $where;
-    
+    $pass2 = getBestThunk(partial(negate('isEmpty'), $text))(partial($doConcat, " AND upload.filename LIKE '%$text%'"), $always($where));
+    $where = $pass2();
     exit($where);
     $suffix = doSanitize($link, $_GET['suffix']);
     if (isset($suffix)) {
