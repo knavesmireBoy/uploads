@@ -5,7 +5,6 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
 $tmplt = $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/';
 $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-$db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 $base = 'Log In';
 $error = '';
 $tmpl_error = '/uploads/includes/error.html.php';
@@ -38,19 +37,39 @@ function doInsert($link){
     return function() use($link){
         $doSanitize = partial('doSanitize', $link);
         $args = array_map($doSanitize, func_get_args());
-        
-       return "INSERT INTO upload SET filename = '$args[0]', mimetype = '$args[1]', description = '$args[2]', filepath = '$args[3]', file = '$args[4]', size ='$args[5]'/1024, userid='$args[6]', time=NOW()";
-        
-        /*
-        return vsprintf("INSERT INTO upload SET filename = '%r', mimetype = %t, description = %d, filepath = %p, file = %f, size = %s/1024, userid = %i, time=NOW()", func_get_args())*/;
+        return "INSERT INTO upload SET filename = '$args[0]', mimetype = '$args[1]', description = '$args[2]', filepath = '$args[3]', file = '$args[4]', size ='$args[5]'/1024, userid='$args[6]', time=NOW()";
     };
 }
 
-function getInitialKey($conn, $privilege, $user, $domn){
-    
-    function assignInitialUser($id, $dom){
-     return "SELECT employer.name, employer.id FROM (SELECT user.name, user.id, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer WHERE employer.domain='$id' LIMIT 1"; 
+function getBaseSelect(){
+    return "SELECT upload.id, filename, mimetype, description, filepath, file, size, time,  MID(file, 11, 14) AS origin, user.email";
 }
+
+function getBaseFrom(){
+    return " FROM upload INNER JOIN user ON upload.userid=user.id";
+}
+function getBaseOrder(){
+    return " ORDER BY $order_by LIMIT $start, $display";
+}
+
+function doEmail($link, $id){
+    $sql = "select user.email, user.name, upload.id, upload.filename from user INNER JOIN upload ON user.id=upload.userid WHERE upload.id=$id";
+    doFetch($link, $sql, 'Error selecting email address.');
+    $row = doSafeFetch($link, $sql);
+    $email = $row['email'];
+    $file = $row['filename'];
+    $name = $row['name'];
+    if ($priv == 'Admin') {
+        $body = 'We have just uploaded the file' . $file . 'for checking.';
+        $body = wordwrap($body, 70);
+        //mail($email, $file, $body, "From: $name <{$_SESSION['email']}>");
+    }
+}
+
+function getInitialKey($conn, $privilege, $user, $domn){
+    function assignInitialUser($id, $dom){
+        return "SELECT employer.name, employer.id FROM (SELECT user.name, user.id, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer WHERE employer.domain='$id' LIMIT 1"; 
+    }
     
     if ($privilege == 'Admin' and !empty($user)) { //ie Admin selects user
         $key = $user;
@@ -81,25 +100,20 @@ if (!userIsLoggedIn()) {
     include $tmplt . 'login.html.php';
     exit();
 }
+$roleplay = userHasWhatRole();
 //public page
-if (!$roleplay = userHasWhatRole()) {
-    //$doError = partialDefer('errorHandler', 'Only valid clients may access this page.', $tmplt . 'accessdenied.html.php');
-    //doWhen($always(!$roleplay = userHasWhatRole()), $doError)(null);
-    $error = 'Only valid clients may access this page.';
-    include $tmplt . 'accessdenied.html.php';
-    exit(); // endof OBTAIN access level
-    
-} else {
-    foreach ($roleplay as $key => $priv) { // $roleplay is an array, use foreach to obtain value and index
-    }
-    $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!!?!! V. USEFUL VARIABLE IN GLOBAL SPACE
-}
+$doError = partialDefer('errorHandler', 'Only valid clients may access this page.', $tmplt . 'accessdenied.html.php');
+doWhen($always(!$roleplay), $doError)(null);
+$key = $roleplay['id'];
+$priv = $roleplay['roleid'];
+$domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!!?!! V. USEFUL VARIABLE IN GLOBAL SPACE
+$db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
+
 if (isset($_POST['action']) and $_POST['action'] == 'upload') {
     //Bail out if the file isn't really an upload
     $doError = partialDefer('errorHandler', 'There was no file uploaded!', $terror);
     doWhen($always(!is_uploaded_file($_FILES['upload']['tmp_name'])), $doError)(null);
     
-    $uploadfile = uploadedfile('tmp_name');
     $realname = uploadedfile('name');
     $ext = preg_replace('/(.*)(\.[^0-9.]+$)/i', '$2', $realname);
     $uploadname = time() . getRemoteAddr() . $ext;
@@ -107,60 +121,38 @@ if (isset($_POST['action']) and $_POST['action'] == 'upload') {
     $filedname = $path . $uploadname;
     // Copy the file (if it is deemed safe)
     $doError = partialDefer('errorHandler', "Could not  save file as $filedname!", $terror);
-    doWhen($always(!copy($uploadfile, $filedname)), $doError)(null);
+    doWhen($always(!copy(uploadedfile('tmp_name'), $filedname)), $doError)(null);
+    
     $theKey = getInitialKey($db, $priv, $_POST['user'], $domain);
     $mykey = $theKey ? $theKey : $key;
     // Prepare user-submitted values for safe database insert
     include $db;
-    //$doSanitize = partial(doSanitize, $link);
-    //$realname = doSanitize($link, $realname);
-    //$uploadtype = doSanitize($link, uploadedfile('type'));
-    //$uploaddesc = doSanitize($link, isset($_POST['desc']) ? $_POST['desc'] : '');
     $uploaddesc = isset($_POST['desc']) ? $_POST['desc'] : '';
-    //$path = doSanitize($link, $path);
-    //$uploadname = doSanitize($link, $uploadname);
-    //$size = doSanitize($link, uploadedfile('size'));
-    $doInsert = doInsert($link);
-    /*
-    $sql = "INSERT INTO upload SET filename = '$realname', mimetype = '$uploadtype', description = '$uploaddesc', filepath = '$path', file = '$uploadname', size ='$size'/1024, userid='$mykey', time=NOW()";
-    */
+    $doInsert = doInsert($link);//older versions of php may need to capture closure in a variable as opposed to func()();
     $sql = $doInsert($realname, uploadedfile('type'), $uploaddesc, $path, $uploadname, uploadedfile('size'), $mykey);          
     doFetch($link, $sql, 'Database error storing file information!' . $sql);
-    $id = mysqli_insert_id($link);
-    $sql = "select user.email, user.name, upload.id, upload.filename from user INNER JOIN upload ON user.id=upload.userid WHERE upload.id=$id";
-    doFetch($link, $sql, 'Error selecting email address.');
-    $row = doSafeFetch($link, $sql);
-    $email = $row['email'];
-    $file = $row['filename'];
-    $name = $row['name'];
-    if ($priv == 'Admin') {
-        $body = 'We have just uploaded the file' . $file . 'for checking.';
-        $body = wordwrap($body, 70);
-        //mail($email, $file, $body, "From: $name <{$_SESSION['email']}>");
-    }
+    
+    doEmail($link, mysqli_insert_id($link));
     header('Location: .');
     exit();
 } // end of upload_____________________________________________________________________
+
 if (isset($_GET['action']) and isset($_GET['id'])) {
     include $db;
     $id = doSanitize($link, $_GET['id']);
-    $sql = "SELECT filename, mimetype, filepath, file, size FROM upload WHERE id = '$id'";
-    $result = mysqli_query($link, $sql);
+    $result = mysqli_query($link, "SELECT filename, mimetype, filepath, file, size FROM upload WHERE id = '$id'");
     $doError = partialDefer('errorHandler', 'Database error fetching requested file.', $terror);
     doWhen($always(!$result), $doError) (null);
+    
     $file = mysqli_fetch_array($result);
     $doError = partialDefer('errorHandler', 'File with specified ID not found in the database!', $terror);
-    doWhen($always(!$file), $doError) (null);
+    doWhen($always(!$file), $doError)(null);
+    
     $filename = $file['filename'];
     $mimetype = $file['mimetype'];
-    $filepath = $file['filepath'];
-    $uploadfile = $file['file'];
-    $size = $file['size'];
-    $filepath .= $uploadfile;
-    $fullpath = $_SERVER['DOCUMENT_ROOT'] . $filepath;
-    $filedata = file_get_contents($fullpath);
+
+    $filedata = file_get_contents($_SERVER['DOCUMENT_ROOT'] . $file['filepath'] . $file['file']);
     $disposition = ($_GET['action'] == 'download') ? 'attachment' : 'inline';
-    $ext = preg_replace('/(.*)(\.[^0-9.]+$)/i', '$2', $filename);
     //$mimetype = 'application/x-unknown'; application/octet-stream
     //Content-type must come before Content-disposition
     header("Content-type: $mimetype");
@@ -207,6 +199,7 @@ if (isset($_POST['extent'])) {
         $sql = "DELETE FROM upload WHERE file = '$file'";
         $doError = partialDefer('errorHandler', 'Error deleting file.', $terror);
         doWhen($always(!mysqli_query($link, $sql)), $doError) (null);
+        
         unlink('../../filestore/' . $file);
     }
     header('Location: .');
@@ -218,13 +211,14 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'No') { //swap
     $id = doSanitize($link, $_POST['id']);
     $result = mysqli_query($link, getColleagues($id, $domain));
     $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
+    
     $prompt1 = "Choose <b>yes</b> to select assign a new owner to all ";
     $prompt2 = " files. Choose <b>no</b> to edit a single file";
     $prompt = "$prompt1 client $prompt2";
     doWhen($always(!$result), $doError) (null);
     while ($row = mysqli_fetch_array($result)) {
         $colleagues[$row['id']] = $row['name'];
-        $extent+= 1;
+        $extent++;
     }
     $prompt = !$extent ? "$prompt1 user $prompt2" : $extent === 1 ? "continue" : $prompt;
     $id = $_POST['id'];
@@ -251,10 +245,10 @@ if (isset($_POST['swap'])) { //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (
         $userid = $row['userid'];
         $aname = $row['name'];
         $button = "Update";
-        $answer = $_POST['swap'];
         $result = mysqli_query($link, getColleagues($row['id'], $domain));
         $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
         doWhen($always(!$result), $doError) (null);
+        
         while ($row = mysqli_fetch_array($result)) {
             $colleagues[$row['id']] = $row['name'];
             $extent++;
@@ -264,10 +258,12 @@ if (isset($_POST['swap'])) { //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (
             $result = mysqli_query($link, $sql);
             $doError = partialDefer('errorHandler', 'Database error fetching users.', $terror);
             doWhen($always(!$result), $doError) (null);
+            
             while ($row = mysqli_fetch_array($result)) {
                 $colleagues[$row['id']] = $row['name'];
             }
         }
+        //$answer used as conditional to load update.html.php
     } //if Admin
     else {
         header('Location: . ');
@@ -303,26 +299,19 @@ if (isset($_GET['p']) and is_numeric($_GET['p'])) {
         $email = $_SESSION['email'];
         $sql.= " INNER JOIN user on upload.userid = user.id WHERE user.email='$email'";
     }
-    $r = mysqli_query($link, $sql);
-    if (!$r) {
-        $error = 'Database error fetching requesting the list of files.';
-        include $terror;
-        exit();
-    }
+    
+    $doError = partialDefer('errorHandler', 'Database error fetching requesting the list of files', $terror);
+    doWhen($always(!mysqli_query($link, $sql)), $doError) (null);
+
     $row = mysqli_fetch_array($r, MYSQLI_NUM);
     $records = $row[0];
-    if ($records > $display) {
-        $pages = ceil($records / $display);
-    } else $pages = 1; //INITIAL SETTING OF PAGES
-    
+    $pages = ($records > $display) ? ceil($records / $display) : 1;
 } //end of IF NOT PAGES SET
-if (isset($_GET['s']) and is_numeric($_GET['s'])) {
-    $start = $_GET['s'];
-} else {
-    $start = 0;
-}
-$meswitch = array('f' => 'filename ASC', 'ff' => 'filename DESC', 'u' => 'user ASC', 'uu' => 'user DESC', 'uf' => 'user ASC, filename ASC', 'uuf' => 'user DESC, filename ASC', 'uff' => 'user ASC, filename DESC', 'uuff' => 'user DESC, filename DESC', 'ut' => 'user ASC, time ASC', 'utt' => 'user ASC, time DESC', 'uut' => 'user DESC, time ASC', 'uutt' => 'user DESC, time DESC', 't' => 'time ASC', 'tt' => 'time DESC');
+$start = (isset($_GET['s']) and is_numeric($_GET['s'])) ? $_GET['s'] : 0;
 $sort = (isset($_GET['sort']) ? $_GET['sort'] : '1');
+
+$meswitch = array('f' => 'filename ASC', 'ff' => 'filename DESC', 'u' => 'user ASC', 'uu' => 'user DESC', 'uf' => 'user ASC, filename ASC', 'uuf' => 'user DESC, filename ASC', 'uff' => 'user ASC, filename DESC', 'uuff' => 'user DESC, filename DESC', 'ut' => 'user ASC, time ASC', 'utt' => 'user ASC, time DESC', 'uut' => 'user DESC, time ASC', 'uutt' => 'user DESC, time DESC', 't' => 'time ASC', 'tt' => 'time DESC');
+
 foreach ($meswitch as $ix => $u) {
     if ($ix == $sort) break;
 }
@@ -409,7 +398,6 @@ if (isset($_GET['find'])) {
 $select = "SELECT upload.id, filename, mimetype, description, filepath, file, size, time,  MID(file, 11, 14) AS origin, user.email";
 $from = " FROM upload INNER JOIN user ON upload.userid=user.id";
 $order = " ORDER BY $order_by LIMIT $start, $display";
-//$domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
 //_______//_______//_______//_______//_______//_______//_______//_______//_______//_____
 if (isset($_GET['action']) and $_GET['action'] == 'search') {
     include $db;

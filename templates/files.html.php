@@ -116,7 +116,7 @@ echo date("g:i a F j ", strtotime($stamp)) ;?></td>
 <td><form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="<?php htmlout($f['id']); ?>">
 <div><input type="hidden" name="action" value="delete"/>
 <input type="hidden" name="id" value="<?php htmlout($f['id']); ?>"/>
-<input type="submit" value="Delete"/></div>
+<input type="submit" value="Edit"/></div>
 </form>
 </td>
 <?php endif; ?></tr><?php endforeach; ?>
@@ -182,7 +182,7 @@ echo '</div></body></html>';
 exit();
 }
 }//prompt
-if (isset($filename)) {
+if (isset($answer)) {
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/update.html.php';
 echo '</div></body></html>';
 }

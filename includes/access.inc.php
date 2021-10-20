@@ -74,8 +74,9 @@ $sql = "SELECT userrole.roleid, user.id, count(user.id) as total FROM userrole I
  $row = mysqli_fetch_array($result);
  if ($row['total'] > 0)
  {
-$roleplay[$row['id']]=$row['roleid'];
-return $roleplay;
+//$roleplay[$row['id']] = $row['roleid'];
+return $row;
+//return $roleplay;
  }
 else  {
 return FALSE;
