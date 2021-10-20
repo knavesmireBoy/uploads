@@ -48,8 +48,14 @@ function getBaseSelect(){
 function getBaseFrom(){
     return " FROM upload INNER JOIN user ON upload.userid=user.id";
 }
-function getBaseOrder(){
-    return " ORDER BY $order_by LIMIT $start, $display";
+function getBaseOrder($o, $s, $d){
+    return " ORDER BY $o LIMIT $s, $d";
+}
+
+function concatString($str){
+    return function($opt) use($str) {
+        return $str .= $opt;
+    };
 }
 
 function doEmail($link, $id){
@@ -299,9 +305,9 @@ if (isset($_GET['p']) and is_numeric($_GET['p'])) {
         $email = $_SESSION['email'];
         $sql.= " INNER JOIN user on upload.userid = user.id WHERE user.email='$email'";
     }
-    
+    $r = mysqli_query($link, $sql);
     $doError = partialDefer('errorHandler', 'Database error fetching requesting the list of files', $terror);
-    doWhen($always(!mysqli_query($link, $sql)), $doError) (null);
+    doWhen($always(!$r), $doError) (null);
 
     $row = mysqli_fetch_array($r, MYSQLI_NUM);
     $records = $row[0];
@@ -339,8 +345,7 @@ if (!$result) {
 while ($row = mysqli_fetch_array($result)) {
     $users[$row['id']] = $row['name'];
 }
-/*$sqlc ="SELECT employer.user_id, employer.name from
- (SELECT user.name, user.id as user_id, client.domain FROM user INNER JOIN client ON RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))=client.domain) AS employer";*/
+
 $sqlc = "SELECT name, domain, tel FROM client ORDER BY name";
 $result = mysqli_query($link, $sqlc);
 if (!$result) {
@@ -356,13 +361,14 @@ if (isset($_GET['find'])) {
     if ($priv != "Admin"): //CUSTOMISES SELECT MENU
         $email = "{$_SESSION['email']}";
         include $db;
-        $sql = "SELECT $domain  FROM user WHERE user.email='$email'";
+        $sql = "SELECT $domain FROM user WHERE user.email='$email'";
         $result = mysqli_query($sql);
         $row = mysqli_fetch_array($result);
         $dom = $row[0];
-        $sql = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain=client.domain WHERE $domain='$dom' AND client.domain='$dom'";
+        $sql = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain = client.domain WHERE $domain = '$dom' AND client.domain =' $dom'";
         $result = mysqli_query($sql);
         $row = mysqli_fetch_array($result);
+    
         $count = $row['dom'];
         if (count($count) > 0) {
             $where = " WHERE user.email='$email'"; //client
@@ -371,7 +377,7 @@ if (isset($_GET['find'])) {
             $where = " WHERE user.id=$key"; //user
             
         }
-        $sql = "SELECT employer.id, employer.name  FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain=client.domain) AS employer ON $domain=employer.domain $where";
+        $sql = "SELECT employer.id, employer.name  FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain $where";
         $result = mysqli_query($link, $sql);
         if (!$result) {
             $error = 'Database error fetching clients.';
@@ -394,40 +400,47 @@ if (isset($_GET['find'])) {
 }
 /// S E A R C H  M E !!
 //INITIAL FILE SELECTION
-//_______//_______//_______//_______//_______//_______//_______//_______//_______//_____
-$select = "SELECT upload.id, filename, mimetype, description, filepath, file, size, time,  MID(file, 11, 14) AS origin, user.email";
-$from = " FROM upload INNER JOIN user ON upload.userid=user.id";
-$order = " ORDER BY $order_by LIMIT $start, $display";
-//_______//_______//_______//_______//_______//_______//_______//_______//_______//_____
+
 if (isset($_GET['action']) and $_GET['action'] == 'search') {
     include $db;
     $tel = '';
-    $from.= " INNER JOIN userrole ON user.id=userrole.userid";
+    $from = getBaseFrom();
+    $from .= " INNER JOIN userrole ON user.id=userrole.userid";
     $user_id = doSanitize($link, $_GET['user']);
+    $check = null;
     if ($priv == 'Admin') {
-        $sql = "SELECT domain FROM client WHERE domain='" . $user_id . "'"; //will either return empty set(no error) or produce count. Test to see if a client has been selected.
+        //will either return empty set(no error) or produce count. Test to see if a client has been selected.
+        $sql = "SELECT domain FROM client WHERE domain = '" . $user_id . "'"; 
         $result = mysqli_query($link, $sql);
-        $row = mysqli_fetch_array($result);
-        if (count($row[0]) > 0 and !is_numeric($user_id)) { //user_id is text(domain) for Clients
-            $from.= " INNER JOIN client ON $domain =client.domain ";
-            $where = " WHERE domain='" . $user_id . "'";
-            $check = count($row[0]);
-        } else {
-            $where = ' WHERE TRUE';
+        $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+        $where = ' WHERE TRUE';
+        if (isset($row['domain']) && !is_numeric($user_id)) { //user_id is text(domain) for Clients
+            $from .= " INNER JOIN client ON $domain = client.domain ";
+            $where = " WHERE domain = '" . $user_id . "'";
+            $check = count($row);
         }
-        $select.= ", user.name as user";
+        $select = getBaseSelect();
+        $select .= ", user.name as user";
     } //admin
     else {
         $email = $_SESSION['email'];
         $where.= " WHERE user.email='$email' ";
     }
-    if ($user_id != '') { // A user is selected
-        if (!isset($check)) $where.= " AND user.id=$user_id";
-    }
+    $doConcat = concatString($where);
+    
+    $haveUser = partial(negate('isEmpty'), $user_id);
+    $notClient = partial('isEmpty', $check);
+    $res = array_reduce([$haveUser, $notClient], 'every', true);
     $text = doSanitize($link, $_GET['text']);
-    if ($text != '') { // Some search text was specified
-        $where.= " AND upload.filename LIKE '%$text%'";
-    }
+    
+   
+    $maybeText = doWhen($always($res), partial($doConcat, " AND user.id = $user_id"));
+    $where = $maybeText(null) ? $maybeText(null) : $where;
+    $doConcat = concatString($where);
+    $maybeText = doWhen(partial(negate('isEmpty')), partial($doConcat, " AND upload.filename LIKE '%$text%'"));
+    $where = $maybeText($text) ? $maybeText($text) : $where;
+    
+    exit($where);
     $suffix = doSanitize($link, $_GET['suffix']);
     if (isset($suffix)) {
         if ($suffix == 'owt') {
@@ -437,26 +450,20 @@ if (isset($_GET['action']) and $_GET['action'] == 'search') {
             //$where .= sprintf(" AND upload.filename LIKE %s", GetSQLValueString('%'.$suffix, "text"));//Tricky percent symbol
         }
     }
+    $order = getBaseOrder($order_by, $start, $display);
     $sql = $select . $from . $where . $order;
     $result = mysqli_query($link, $sql);
-    if (!$result) {
-        $error = 'Error fetching file details1.' . $sql;
-        include $terror;
-        exit();
-    }
-    $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . $order;
-    //exit($sqlcount);
+    $doError = partialDefer('errorHandler', 'Error fetching file details.' . $sql, $terror);
+    doWhen($always(!$result), $doError) (null);
+
+    $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;
     $r = mysqli_query($link, $sqlcount);
-    if (!$r) {
-        $error = 'Error getting file count.';
-        include $terror;
-        exit();
-    }
-    $row = mysqli_fetch_array($r);
+    $doError = partialDefer('errorHandler', 'Error getting file count.', $terror);
+    doWhen($always(!$r), $doError) (null);
+
+    $row = mysqli_fetch_array($r, MYSQLI_ASSOC);
     $records = $row['total'];
-    if ($records > $display) {
-        $pages = ceil($records / $display);
-    } else $pages = 1;
+    $pages = ($records > $display) ? ceil($records / $display) : 1;
     $files = array();
     while ($row = mysqli_fetch_array($result)) {
         $files[] = array('id' => $row['id'], 'user' => $row['user'], 'email' => $row['email'], 'filename' => $row['filename'], 'mimetype' => $row['mimetype'], 'description' => $row['description'], 'filepath' => $row['filepath'], 'file' => $row['file'], 'origin' => $row['origin'], 'time' => $row['time'], 'size' => $row['size']);
@@ -467,31 +474,36 @@ if (isset($_GET['action']) and $_GET['action'] == 'search') {
 }
 //ENDEND S E A R C H//ENDEND S E A R C H//ENDEND S E A R C H//ENDEND S E A R C H
 if ($priv == 'Admin') {
-    $select.= ", user.name as user"; //append to line 465(ish)
+    $select = getBaseSelect();
+    $select .= ", user.name as user"; //append to line 465(ish)
+    $from = getBaseFrom();
     $from.= " INNER JOIN userrole ON user.id=userrole.userid";
-    $where = ' WHERE TRUE';
+    $where = ' WHERE TRUE';    
+    
     if (isset($_GET['ext']) && $ext = doSanitize($link, $_GET['ext'])) {
         if ($ext == 'owt') {
             $where.= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')";
         } else $where.= " AND upload.filename LIKE '%$ext'";
     }
+    
     if (isset($useroo) && is_numeric($useroo)) { //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
         if ($useroo = doSanitize($_GET['u'])) $where.= " AND user.id=$useroo";
     } else {
         if (isset($_GET['u']) && $useroo = doSanitize($link, $_GET['u'])) $where.= " AND $domain='$useroo'";
     }
+    
     if (isset($_GET['t']) && $textme = doSanitize($link, $_GET['t'])) $where.= " AND upload.filename LIKE '%$textme%'";
 } //admin
 else {
     $email = $_SESSION['email'];
     $from.= " INNER JOIN userrole ON user.id=userrole.userid";
-    //$where .=" WHERE user.email='$email' ";
     $where = " WHERE user.email='$email' ";
 }
 //$sql= $select . $from . $where . $order; //DEFAULT; TELEPHONE BLOCK REQUIRED TO OBTAIN CLIENT PHONE NUMBER
 $sql = $select;
 $select_tel = ", client.tel";
 $from.= " LEFT JOIN client ON user.client_id=client.id"; //note LEFT join to include just 'users' also
+$order = getBaseOrder($order_by, $start, $display);
 $sql.= $select_tel . $from . $where . $order;
 //____________________________________________________________________________________________END OF TELEPHONE
 $result = doFetch($link, $sql, 'Database error fetching files. ' . $sql);

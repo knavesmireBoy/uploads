@@ -1,20 +1,21 @@
 <?php include_once $_SERVER['DOCUMENT_ROOT'].'/uploads/includes/helpers.inc.php'; ?>
 
-		<h1>Search Files</h1>
+<h1>Search Files</h1>
 <form action="?" method="get" name="searchFiles">
 <p>View files satisfying the following criteria:</p>
 <?php if(!isset($zero)) :?>
-<div><label for="user">By user: </label><select id="user" name="user">
+<div><label for="user">By user: </label>
+<select id="user" name="user">
 <option value="">Any User</option>
 <?php if($priv=="Admin"): ?><optgroup label="clients">
 <?php endif; ?>
-<?php  foreach ($client as $x => $c): ?>
-<option value="<?php htmlout($x); ?>"><?php htmlout($c); ?>
+<?php  foreach ($client as $k => $v): ?>
+<option value="<?php htmlout($k); ?>"><?php htmlout($v); ?>
 </option><?php endforeach; ?></optgroup>
-<?php if($priv=="Admin"): ?><optgroup label="users">
+<?php if($priv == "Admin"): ?><optgroup label="users">
 <?php endif; ?>
-<?php  foreach ($users as $ix => $u): ?>
-<option value="<?php htmlout($ix); ?>"><?php htmlout($u); ?>
+<?php  foreach ($users as $k => $v): ?>
+<option value="<?php htmlout($k); ?>"><?php htmlout($v); ?>
 </option><?php endforeach; ?></optgroup></select>
 </div>
 <?php endif; ?>
