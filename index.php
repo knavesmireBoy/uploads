@@ -461,19 +461,20 @@ if (isset($_GET['action']) and $_GET['action'] == 'search') {
     $ifOwt = curry2('concatString2')(" AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')");
     $ifNot = curry2('concatString2')(" AND upload.filename LIKE '%$suffix'");
     
-    $maybeOwt = array_reduce([partial('doIsset', $suffix), partial('equals', $suffix, 'owt')], 'every', true);
-    $maybeOther = array_reduce([partial('doIsset', $suffix), partial(negate('equals'), $suffix, 'owt')], 'every', true);
+    $maybeOwt = partial('array_reduce', [partial('doIsset', $suffix), partial('equals', $suffix, 'owt')], 'every', true);
+    $maybeOther = partial('array_reduce', [partial('doIsset', $suffix), partial(negate('equals'), $suffix, 'owt')], 'every', true);
     
     //https://stackoverflow.com/questions/6203026/how-to-concatenate-multiple-ternary-operator-in-php
-    $f = ($maybeOwt) ? $ifOwt : (($maybeOther) ? $ifNot : partial('myAlways'));
+    //$f = ($maybeOwt) ? $ifOwt : (($maybeOther) ? $ifNot : partial('myAlways'));
     
-    $options = [[$always($maybeOwt), $ifOwt], [$always($maybeOther), $ifNot], [$always(true), partial('myAlways')]];
+    $options = [[$maybeOwt, $ifOwt], [$maybeOther, $ifNot], [$always(true), partial('myAlways')]];
     
-    $ff = array_reduce($options, 'getBestZip', getDefaultPair());
+    //$ff = array_reduce($options, 'getBestZip', getDefaultPair());
+    $invoke = curry2('invokeArg')($where);
         
-    
-    //$where = $ff();
-    exit($ff[1]($where));
+    $cb = array_reduce($options, 'getBestZip', getDefaultPair());
+    //$where = $compose($compose(partial('array_reduce', $options, 'getBestZip', getDefaultPair())))('array_pop', $invoke);
+    exit($cb[1]($where));
     if (isset($suffix)) {
         if ($suffix == 'owt') {
             $where.= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')";
