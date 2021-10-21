@@ -11,6 +11,9 @@ $tmpl_error = '/uploads/includes/error.html.php';
 $myip = '86.133.121.115.';
 $doError = function () {
 };
+function doAlways($arg){
+        return $arg;
+    }
 function getRemoteAddr() {
     $ipAddress = $_SERVER['REMOTE_ADDR'];
     if (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
@@ -413,12 +416,7 @@ if (isset($_GET['find'])) {
 //INITIAL FILE SELECTION
 
 if (isset($_GET['action']) and $_GET['action'] == 'search') {
-    function invoke($f, $arg){
-        return $f($arg);
-}
-    function myAlways($arg){
-        return $arg;
-    }
+
     include $db;
     $tel = '';
     $from = getBaseFrom();
@@ -451,38 +449,25 @@ if (isset($_GET['action']) and $_GET['action'] == 'search') {
     $res = array_reduce([$haveUser, $notClient], 'every', true);
     
     $andUser = curry2('concatString2')(" AND user.id = $user_id");
-    $queryUser = getBestPred($always($res))($andUser, partial('myAlways'));
+    $queryUser = getBestPred($always($res))($andUser, partial('doAlways'));
     $likeText = curry2('concatString2')(" AND upload.filename LIKE '%$text%'");
     $tmp = getBestPred(partial(negate('isEmpty'), $text));
-    $queryText = $tmp($likeText, partial('myAlways')); 
+    $queryText = $tmp($likeText, partial('doAlways')); 
     $cb = $compose($queryUser, $queryText);
     $where = $cb($where);
     
     $ifOwt = curry2('concatString2')(" AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')");
     $ifNot = curry2('concatString2')(" AND upload.filename LIKE '%$suffix'");
-    
+    //$where .= sprintf(" AND upload.filename LIKE %s", GetSQLValueString('%'.$suffix, "text"));//Tricky percent symbol
     $maybeOwt = partial('array_reduce', [partial('doIsset', $suffix), partial('equals', $suffix, 'owt')], 'every', true);
     $maybeOther = partial('array_reduce', [partial('doIsset', $suffix), partial(negate('equals'), $suffix, 'owt')], 'every', true);
-    
     //https://stackoverflow.com/questions/6203026/how-to-concatenate-multiple-ternary-operator-in-php
-    //$f = ($maybeOwt) ? $ifOwt : (($maybeOther) ? $ifNot : partial('myAlways'));
-    
-    $options = [[$maybeOwt, $ifOwt], [$maybeOther, $ifNot], [$always(true), partial('myAlways')]];
-    
-    //$ff = array_reduce($options, 'getBestZip', getDefaultPair());
-    $invoke = curry2('invokeArg')($where);
-        
-    $cb = array_reduce($options, 'getBestZip', getDefaultPair());
-    //$where = $compose($compose(partial('array_reduce', $options, 'getBestZip', getDefaultPair())))('array_pop', $invoke);
-    exit($cb[1]($where));
-    if (isset($suffix)) {
-        if ($suffix == 'owt') {
-            $where.= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')";
-        } elseif ($suffix == 'pdf' or $suffix == 'zip') {
-            $where.= " AND upload.filename LIKE '%$suffix'";
-            //$where .= sprintf(" AND upload.filename LIKE %s", GetSQLValueString('%'.$suffix, "text"));//Tricky percent symbol
-        }
-    }
+    $cb = ($maybeOwt()) ? $ifOwt : (($maybeOther()) ? $ifNot : partial('doAlways'));
+    //zipping predicates and actions together works, but it returns a closure object not an array, so becomes tricky to compose further
+    //$options = [[$maybeOwt, $ifOwt], [$maybeOther, $ifNot], [$always(true), partial('doAlways')]];
+    //$cb = array_reduce($options, 'getBestZip', getDefaultPair());
+    //composing is cute but often a lot of bother trying to avoid if/else blocks
+    $where = $cb($where);
     $order = getBaseOrder($order_by, $start, $display);
     $sql = $select . $from . $where . $order;
     $result = mysqli_query($link, $sql);
@@ -490,11 +475,11 @@ if (isset($_GET['action']) and $_GET['action'] == 'search') {
     doWhen($always(!$result), $doError) (null);
 
     $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;
-    $r = mysqli_query($link, $sqlcount);
+    $result = mysqli_query($link, $sqlcount);
     $doError = partialDefer('errorHandler', 'Error getting file count.', $terror);
-    doWhen($always(!$r), $doError) (null);
+    doWhen($always(!$result), $doError) (null);
 
-    $row = mysqli_fetch_array($r, MYSQLI_ASSOC);
+    $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
     $records = $row['total'];
     $pages = ($records > $display) ? ceil($records / $display) : 1;
     $files = array();

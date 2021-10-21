@@ -139,4 +139,79 @@ function formatFileSize($size)
     return ceil($size) . 'kb';
 }
 
+function doSearch($db){
+    include $db;
+    $tel = '';
+    $from = getBaseFrom();
+    $from .= " INNER JOIN userrole ON user.id=userrole.userid";
+    $user_id = doSanitize($link, $_GET['user']);
+    $check = null;
+    if ($priv == 'Admin') {
+        //will either return empty set(no error) or produce count. Test to see if a client has been selected.
+        $sql = "SELECT domain FROM client WHERE domain = '" . $user_id . "'"; 
+        $result = mysqli_query($link, $sql);
+        $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+        $where = ' WHERE TRUE';
+        if (isset($row['domain']) && !is_numeric($user_id)) { //user_id is text(domain) for Clients
+            $from .= " INNER JOIN client ON $domain = client.domain ";
+            $where = " WHERE domain = '" . $user_id . "'";
+            $check = count($row);
+        }
+        $select = getBaseSelect();
+        $select .= ", user.name as user";
+    } //admin
+    else {
+        $email = $_SESSION['email'];
+        $where = " WHERE user.email='$email' ";
+    }
+    $text = doSanitize($link, $_GET['text']);
+    $suffix = isset($_GET['suffix']) ? doSanitize($link, $_GET['suffix']) : null;
+    
+    $haveUser = partial(negate('isEmpty'), $user_id);
+    $notClient = partial('isEmpty', $check);
+    $res = array_reduce([$haveUser, $notClient], 'every', true);
+    
+    $andUser = curry2('concatString2')(" AND user.id = $user_id");
+    $queryUser = getBestPred($always($res))($andUser, partial('doAlways'));
+    $likeText = curry2('concatString2')(" AND upload.filename LIKE '%$text%'");
+    $tmp = getBestPred(partial(negate('isEmpty'), $text));
+    $queryText = $tmp($likeText, partial('doAlways')); 
+    $cb = $compose($queryUser, $queryText);
+    $where = $cb($where);
+    
+    $ifOwt = curry2('concatString2')(" AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')");
+    $ifNot = curry2('concatString2')(" AND upload.filename LIKE '%$suffix'");
+    //$where .= sprintf(" AND upload.filename LIKE %s", GetSQLValueString('%'.$suffix, "text"));//Tricky percent symbol
+    $maybeOwt = partial('array_reduce', [partial('doIsset', $suffix), partial('equals', $suffix, 'owt')], 'every', true);
+    $maybeOther = partial('array_reduce', [partial('doIsset', $suffix), partial(negate('equals'), $suffix, 'owt')], 'every', true);
+    //https://stackoverflow.com/questions/6203026/how-to-concatenate-multiple-ternary-operator-in-php
+    $cb = ($maybeOwt()) ? $ifOwt : (($maybeOther()) ? $ifNot : partial('doAlways'));
+    //zipping predicates and actions together works, but it returns a closure object not an array, so becomes tricky to compose further
+    //$options = [[$maybeOwt, $ifOwt], [$maybeOther, $ifNot], [$always(true), partial('doAlways')]];
+    //$cb = array_reduce($options, 'getBestZip', getDefaultPair());
+    //composing is cute but often a lot of bother trying to avoid if/else blocks
+    $where = $cb($where);
+    $order = getBaseOrder($order_by, $start, $display);
+    $sql = $select . $from . $where . $order;
+    $result = mysqli_query($link, $sql);
+    $doError = partialDefer('errorHandler', 'Error fetching file details.' . $sql, $terror);
+    doWhen($always(!$result), $doError) (null);
+
+    $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;
+    $result = mysqli_query($link, $sqlcount);
+    $doError = partialDefer('errorHandler', 'Error getting file count.', $terror);
+    doWhen($always(!$result), $doError) (null);
+
+    $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+    $records = $row['total'];
+    $pages = ($records > $display) ? ceil($records / $display) : 1;
+    $files = array();
+    while ($row = mysqli_fetch_array($result)) {
+        $files[] = array('id' => $row['id'], 'user' => $row['user'], 'email' => $row['email'], 'filename' => $row['filename'], 'mimetype' => $row['mimetype'], 'description' => $row['description'], 'filepath' => $row['filepath'], 'file' => $row['file'], 'origin' => $row['origin'], 'time' => $row['time'], 'size' => $row['size']);
+    }
+    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
+    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
+    exit();
+}
+
 ?>
