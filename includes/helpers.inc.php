@@ -139,7 +139,22 @@ function formatFileSize($size)
     return ceil($size) . 'kb';
 }
 
-function doSearch($db){
+function getBaseSelect(){
+    return "SELECT upload.id, filename, mimetype, description, filepath, file, size, time,  MID(file, 11, 14) AS origin, user.email";
+}
+
+function getBaseFrom(){
+    return " FROM upload INNER JOIN user ON upload.userid=user.id";
+}
+function getBaseOrder($o, $s, $d){
+    return " ORDER BY $o LIMIT $s, $d";
+}
+
+function concatString($str, $opt = ''){
+        return $str .= $opt;
+}
+
+function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users){
     include $db;
     $tel = '';
     $from = getBaseFrom();
@@ -171,16 +186,16 @@ function doSearch($db){
     $notClient = partial('isEmpty', $check);
     $res = array_reduce([$haveUser, $notClient], 'every', true);
     
-    $andUser = curry2('concatString2')(" AND user.id = $user_id");
-    $queryUser = getBestPred($always($res))($andUser, partial('doAlways'));
-    $likeText = curry2('concatString2')(" AND upload.filename LIKE '%$text%'");
+    $andUser = curry2('concatString')(" AND user.id = $user_id");
+    $queryUser = getBestPred(partial('doAlways', $res))($andUser, partial('doAlways'));
+    $likeText = curry2('concatString')(" AND upload.filename LIKE '%$text%'");
     $tmp = getBestPred(partial(negate('isEmpty'), $text));
     $queryText = $tmp($likeText, partial('doAlways')); 
     $cb = $compose($queryUser, $queryText);
     $where = $cb($where);
     
-    $ifOwt = curry2('concatString2')(" AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')");
-    $ifNot = curry2('concatString2')(" AND upload.filename LIKE '%$suffix'");
+    $ifOwt = curry2('concatString')(" AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')");
+    $ifNot = curry2('concatString')(" AND upload.filename LIKE '%$suffix'");
     //$where .= sprintf(" AND upload.filename LIKE %s", GetSQLValueString('%'.$suffix, "text"));//Tricky percent symbol
     $maybeOwt = partial('array_reduce', [partial('doIsset', $suffix), partial('equals', $suffix, 'owt')], 'every', true);
     $maybeOther = partial('array_reduce', [partial('doIsset', $suffix), partial(negate('equals'), $suffix, 'owt')], 'every', true);
@@ -194,13 +209,13 @@ function doSearch($db){
     $order = getBaseOrder($order_by, $start, $display);
     $sql = $select . $from . $where . $order;
     $result = mysqli_query($link, $sql);
-    $doError = partialDefer('errorHandler', 'Error fetching file details.' . $sql, $terror);
-    doWhen($always(!$result), $doError) (null);
+    $doError = partialDefer('errorHandler', 'Error fetching file details.' . $sql, $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php');
+    doWhen(partial('doAlways',!$result), $doError) (null);
 
     $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;
     $result = mysqli_query($link, $sqlcount);
-    $doError = partialDefer('errorHandler', 'Error getting file count.', $terror);
-    doWhen($always(!$result), $doError) (null);
+    $doError = partialDefer('errorHandler', 'Error getting file count.', $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php');
+    doWhen(partial('doAlways', !$result), $doError) (null);
 
     $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
     $records = $row['total'];
