@@ -443,22 +443,37 @@ if (isset($_GET['action']) and $_GET['action'] == 'search') {
         $email = $_SESSION['email'];
         $where = " WHERE user.email='$email' ";
     }
+    $text = doSanitize($link, $_GET['text']);
+    $suffix = isset($_GET['suffix']) ? doSanitize($link, $_GET['suffix']) : null;
     
     $haveUser = partial(negate('isEmpty'), $user_id);
     $notClient = partial('isEmpty', $check);
     $res = array_reduce([$haveUser, $notClient], 'every', true);
-    $andUser = partial('concatString2', $where, " AND user.id = $user_id");
-    $text = doSanitize($link, $_GET['text']);       
-    $chooseUser = getBestPred($always($res))($andUser, $always);
-    $where = $chooseUser($where);
-    $tmp = getBestPred(partial(negate('isEmpty'), $text));
-    $likeText = partial('concatString2', $where, " AND upload.filename LIKE '%$text%'");
-    $chooseText = $tmp($likeText, partial('myAlways'));    
-    //$cb = $compose(partial('myAdd', 5, 3), partial('myMult', 10), partial('myMult', 2));
-    //$cb = $compose(partial('myAdd', 5, 3), partial('myMult', 10), partial('myMult', 2));
     
-    exit($chooseText($where));
-    $suffix = doSanitize($link, $_GET['suffix']);
+    $andUser = curry2('concatString2')(" AND user.id = $user_id");
+    $queryUser = getBestPred($always($res))($andUser, partial('myAlways'));
+    $likeText = curry2('concatString2')(" AND upload.filename LIKE '%$text%'");
+    $tmp = getBestPred(partial(negate('isEmpty'), $text));
+    $queryText = $tmp($likeText, partial('myAlways')); 
+    $cb = $compose($queryUser, $queryText);
+    $where = $cb($where);
+    
+    $ifOwt = curry2('concatString2')(" AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')");
+    $ifNot = curry2('concatString2')(" AND upload.filename LIKE '%$suffix'");
+    
+    $maybeOwt = array_reduce([partial('doIsset', $suffix), partial('equals', $suffix, 'owt')], 'every', true);
+    $maybeOther = array_reduce([partial('doIsset', $suffix), partial(negate('equals'), $suffix, 'owt')], 'every', true);
+    
+    //https://stackoverflow.com/questions/6203026/how-to-concatenate-multiple-ternary-operator-in-php
+    $f = ($maybeOwt) ? $ifOwt : (($maybeOther) ? $ifNot : partial('myAlways'));
+    
+    $options = [[$always($maybeOwt), $ifOwt], [$always($maybeOther), $ifNot], [$always(true), partial('myAlways')]];
+    
+    $ff = array_reduce($options, 'getBestZip', getDefaultPair());
+        
+    
+    //$where = $ff();
+    exit($ff[1]($where));
     if (isset($suffix)) {
         if ($suffix == 'owt') {
             $where.= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')";
