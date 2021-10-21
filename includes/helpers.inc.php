@@ -213,11 +213,13 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     doWhen(partial('doAlways',!$result), $doError) (null);
 
     $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;
+    
+   
     $result = mysqli_query($link, $sqlcount);
     $doError = partialDefer('errorHandler', 'Error getting file count.', $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php');
     doWhen(partial('doAlways', !$result), $doError) (null);
 
-    $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+    //$row = mysqli_fetch_array($result, MYSQLI_ASSOC);
     $records = $row['total'];
     $pages = ($records > $display) ? ceil($records / $display) : 1;
     $files = array();
