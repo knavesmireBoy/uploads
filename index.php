@@ -388,7 +388,7 @@ if (isset($_GET['find'])) {
 
 if (isset($_GET['action']) and $_GET['action'] == 'search') {
     
-    doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users);
+    doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip);
 }
 //ENDEND S E A R C H//ENDEND S E A R C H//ENDEND S E A R C H//ENDEND S E A R C H
 if ($priv == 'Admin') {

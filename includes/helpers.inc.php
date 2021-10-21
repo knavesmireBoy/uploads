@@ -154,7 +154,7 @@ function concatString($str, $opt = ''){
         return $str .= $opt;
 }
 
-function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users){
+function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip){
     include $db;
     $tel = '';
     $from = getBaseFrom();
