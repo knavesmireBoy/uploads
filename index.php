@@ -62,6 +62,14 @@ function concatString2($str, $opt = ''){
         return $str .= $opt;
 }
 
+function myadd($a, $b) {
+    return $a + $b;
+}
+
+function myMult($a, $b) {
+    return $a * $b;
+}
+
 function doEmail($link, $id){
     $sql = "select user.email, user.name, upload.id, upload.filename from user INNER JOIN upload ON user.id=upload.userid WHERE upload.id=$id";
     doFetch($link, $sql, 'Error selecting email address.');
@@ -375,13 +383,12 @@ if (isset($_GET['find'])) {
     
         $count = $row['dom'];
         if (count($count) > 0) {
-            $where = " WHERE user.email='$email'"; //client
+            $mywhere = " WHERE user.email='$email'"; //client
             
         } else {
-            $where = " WHERE user.id=$key"; //user
-            
+            $mywhere = " WHERE user.id=$key"; //user
         }
-        $sql = "SELECT employer.id, employer.name  FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain $where";
+        $sql = "SELECT employer.id, employer.name  FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain $mywhere";
         $result = mysqli_query($link, $sql);
         if (!$result) {
             $error = 'Database error fetching clients.';
@@ -406,6 +413,12 @@ if (isset($_GET['find'])) {
 //INITIAL FILE SELECTION
 
 if (isset($_GET['action']) and $_GET['action'] == 'search') {
+    function invoke($f, $arg){
+        return $f($arg);
+}
+    function myAlways($arg){
+        return $arg;
+    }
     include $db;
     $tel = '';
     $from = getBaseFrom();
@@ -428,20 +441,23 @@ if (isset($_GET['action']) and $_GET['action'] == 'search') {
     } //admin
     else {
         $email = $_SESSION['email'];
-        $where.= " WHERE user.email='$email' ";
+        $where = " WHERE user.email='$email' ";
     }
-    $doConcat = concatString($where);
     
     $haveUser = partial(negate('isEmpty'), $user_id);
     $notClient = partial('isEmpty', $check);
     $res = array_reduce([$haveUser, $notClient], 'every', true);
-    $text = doSanitize($link, $_GET['text']);   
-    $pass1 = getBestThunk($always($res))(partial($doConcat, " AND user.id = $user_id"), $always($where));
-    $where = $pass1();
-    $doConcat = concatString($where);
-    $pass2 = getBestThunk(partial(negate('isEmpty'), $text))(partial($doConcat, " AND upload.filename LIKE '%$text%'"), $always($where));
-    $where = $pass2();
-    exit($where);
+    $andUser = partial('concatString2', $where, " AND user.id = $user_id");
+    $text = doSanitize($link, $_GET['text']);       
+    $chooseUser = getBestPred($always($res))($andUser, $always);
+    $where = $chooseUser($where);
+    $tmp = getBestPred(partial(negate('isEmpty'), $text));
+    $likeText = partial('concatString2', $where, " AND upload.filename LIKE '%$text%'");
+    $chooseText = $tmp($likeText, partial('myAlways'));    
+    //$cb = $compose(partial('myAdd', 5, 3), partial('myMult', 10), partial('myMult', 2));
+    //$cb = $compose(partial('myAdd', 5, 3), partial('myMult', 10), partial('myMult', 2));
+    
+    exit($chooseText($where));
     $suffix = doSanitize($link, $_GET['suffix']);
     if (isset($suffix)) {
         if ($suffix == 'owt') {
