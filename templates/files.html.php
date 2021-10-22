@@ -174,7 +174,6 @@ if(isset($_GET['ext'])) {
     $suffix = $ext;
 }
 if(isset($_GET['u'])) {
-    //exit('vvo');
     $user_id = $useroo;
 }
 if(isset($_GET['t'])) {

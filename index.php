@@ -188,14 +188,14 @@ if ($priv == 'Admin') {
     $ext = isset($_GET['ext']) ? doSanitize($link, $_GET['ext']) : null;
     $where = getFileTypeQuery($where, $ext);
     
-    
+    //pagination stuff for users??
     if (isset($useroo) && is_numeric($useroo)) { //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
         if($useroo = doSanitize($link, $_GET['u'])){
             $where.= " AND user.id=$useroo";
         }
     } else if (isset($_GET['u'])) {
         if($useroo = doSanitize($link, $_GET['u'])){
-            $where .= " AND $domain='$useroo'";
+            $where .= " AND $domain = '$useroo'";
         }
     }
     
@@ -204,22 +204,22 @@ if ($priv == 'Admin') {
            $where.= " AND upload.filename LIKE '%$textme%'"; 
         }
     }
+    
 }//admin
 else {
     $select = getBaseSelect();
     $from = getBaseFrom();
     $email = $_SESSION['email'];
-    $from.= " INNER JOIN userrole ON user.id=userrole.userid";
+    $from.= " INNER JOIN userrole ON user.id = userrole.userid";
     $where = " WHERE user.email='$email' ";
 }
 //$sql= $select . $from . $where . $order; //DEFAULT; TELEPHONE BLOCK REQUIRED TO OBTAIN CLIENT PHONE NUMBER
 $sql = $select;
 $select_tel = ", client.tel";
-$from.= " LEFT JOIN client ON user.client_id=client.id"; //note LEFT join to include just 'users' also
+$from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to include just 'users' also
 $order = getBaseOrder($order_by, $start, $display);
-$sql.= $select_tel . $from . $where . $order;
+$sql .= $select_tel . $from . $where . $order;
 
-//____________________________________________________________________________________________END OF TELEPHONE
 $result = doFetch($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();
 while ($row = mysqli_fetch_array($result)) {
@@ -227,11 +227,11 @@ while ($row = mysqli_fetch_array($result)) {
     'size' => $row['size']);
 }
 $base = 'North Wolds Printers | The File Uploads';
-/*
+
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
 if($findmode){
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/search.html.php';
 }
-*/
+
 ?>
