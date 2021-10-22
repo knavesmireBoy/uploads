@@ -352,27 +352,19 @@ if (isset($_GET['find'])) {
     $perform($punter, $prepFind)();//CUSTOMISES SELECT MENU FOR NON ADMIN
     exit();
 }
-/// S E A R C H  M E !!
-//INITIAL FILE SELECTION
 
 if (isset($_GET['action']) and $_GET['action'] == 'search') {
-    
     doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip);
 }
-//ENDEND S E A R C H//ENDEND S E A R C H//ENDEND S E A R C H//ENDEND S E A R C H
+//INITIAL FILE SELECTION
 if ($priv == 'Admin') {
     $select = getBaseSelect();
     $select .= ", user.name as user"; //append to line 465(ish)
     $from = getBaseFrom();
     $from.= " INNER JOIN userrole ON user.id=userrole.userid";
-    $where = ' WHERE TRUE';    
-    
-    if (isset($_GET['ext']) && $ext = doSanitize($link, $_GET['ext'])) {
-        if ($ext == 'owt') {
-            $where.= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')";
-        } else $where.= " AND upload.filename LIKE '%$ext'";
-    }
-    
+    $where = ' WHERE TRUE';
+    $ext = isset($_GET['ext']) ? doSanitize($link, $_GET['ext']) : null;
+    $where = getFileTypeQuery($where, $ext);
     if (isset($useroo) && is_numeric($useroo)) { //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
         if ($useroo = doSanitize($_GET['u'])) $where.= " AND user.id=$useroo";
     } else {
@@ -382,6 +374,8 @@ if ($priv == 'Admin') {
     if (isset($_GET['t']) && $textme = doSanitize($link, $_GET['t'])) $where.= " AND upload.filename LIKE '%$textme%'";
 } //admin
 else {
+    $select = getBaseSelect();
+    $from = getBaseFrom();
     $email = $_SESSION['email'];
     $from.= " INNER JOIN userrole ON user.id=userrole.userid";
     $where = " WHERE user.email='$email' ";

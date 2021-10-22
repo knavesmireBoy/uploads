@@ -141,18 +141,17 @@ if ($priv =='Admin' or $priv =='Client') : ?>
 endif;
 //$wither = ($suffix || $user_id || $text || $ext || $useroo || $textme ? '.' : '?find'); 
 $wither = seek();
-$link = ($wither=='.'  ? 'Clear search results' : 'Search files');
+$link = ( $wither == '.'  ? 'Clear search results' : 'Search files');
 ?>
-<p><a href="<?php echo $wither;?>"><?php echo $link; ?></a></p>
+<p><a href="<?php echo $wither; ?>"><?php echo $link; ?></a></p>
 
 <p class="footer">
 
 <?php
-if(isset($_GET['ext'])) $suffix=$ext;
-if(isset($_GET['u'])) $user_id=$useroo;
-if(isset($_GET['u'])) $text= $textme;
+if(isset($_GET['ext'])) $suffix = $ext;
+if(isset($_GET['u'])) $user_id = $useroo;
+if(isset($_GET['u'])) $text = $textme;
 if ($pages > 1) {
-    
 $current_page = ($start/$display) + 1;
 if ($current_page != 1) { ?>
 <a href="?s=<?php echo $start-$display; ?>&p=<?php echo ($pages); ?>&u=<?php echo $user_id; ?>&t=<?php echo $text; ?>&ext=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>">Previous</a>

@@ -154,6 +154,16 @@ function concatString($str, $opt = ''){
         return $str .= $opt;
 }
 
+function getFileTypeQuery($where, $ext){
+    if(isset($ext) && $ext === 'owt'){
+       return $where .= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')";
+    }
+    elseif(isset($ext)){
+        return $where .= " AND upload.filename LIKE '%$ext'";
+    }
+    return $where;
+}
+
 function doFind($db, $key, $domain){
     $email = "{$_SESSION['email']}";
     include $db;
@@ -224,35 +234,18 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     $likeText = curry2('concatString')(" AND upload.filename LIKE '%$text%'");
     $tmp = getBestPred(partial(negate('isEmpty'), $text));
     $queryText = $tmp($likeText, partial('doAlways')); 
-    $cb = $compose($queryUser, $queryText);
-    $where = $cb($where);
-    
-    $ifOwt = curry2('concatString')(" AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')");
-    $ifNot = curry2('concatString')(" AND upload.filename LIKE '%$suffix'");
-    //$where .= sprintf(" AND upload.filename LIKE %s", GetSQLValueString('%'.$suffix, "text"));//Tricky percent symbol
-    $maybeOwt = partial('array_reduce', [partial('doIsset', $suffix), partial('equals', $suffix, 'owt')], 'every', true);
-    $maybeOther = partial('array_reduce', [partial('doIsset', $suffix), partial(negate('equals'), $suffix, 'owt')], 'every', true);
-    //https://stackoverflow.com/questions/6203026/how-to-concatenate-multiple-ternary-operator-in-php
-    $cb = ($maybeOwt()) ? $ifOwt : (($maybeOther()) ? $ifNot : partial('doAlways'));
-    //zipping predicates and actions together works, but it returns a closure object not an array, so becomes tricky to compose further
-    //$options = [[$maybeOwt, $ifOwt], [$maybeOther, $ifNot], [$always(true), partial('doAlways')]];
-    //$cb = array_reduce($options, 'getBestZip', getDefaultPair());
-    //composing is cute but often a lot of bother trying to avoid if/else blocks
+    $cb = $compose($queryUser, $queryText, partial('getFileTypeQuery', $where, $suffix));
     $where = $cb($where);
     $order = getBaseOrder($order_by, $start, $display);
     $sql = $select . $from . $where . $order;
     $result = mysqli_query($link, $sql);
     $doError = partialDefer('errorHandler', 'Error fetching file details.' . $sql, $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php');
     doWhen(partial('doAlways',!$result), $doError) (null);
-
-    $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;
-    
-   
+    $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;   
     $result = mysqli_query($link, $sqlcount);
     $doError = partialDefer('errorHandler', 'Error getting file count.', $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php');
     doWhen(partial('doAlways', !$result), $doError) (null);
 
-    //$row = mysqli_fetch_array($result, MYSQLI_ASSOC);
     $records = $row['total'];
     $pages = ($records > $display) ? ceil($records / $display) : 1;
     $files = array();
