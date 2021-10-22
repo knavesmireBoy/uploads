@@ -25,15 +25,12 @@
 		<p>The following files are stored in the database:</p>
 		<table>
 			<thead>
-				<tr>
+				<tr> 
 <?php 
 $tel = '';
 $sort = '';
-                    $toggle = ['f', 'u', 't'];
-                    
-                    $getToggle = getToggle($toggle);
-                    
-                   
+$toggle = ['f', 'u', 't'];
+$getToggle = getToggle($toggle);
                     
 // TABLE ORDERING...
 $q = $_SERVER['QUERY_STRING'];
@@ -43,7 +40,6 @@ $q = preg_replace('/(\?[a-z0-9=&]*)(&sort|&flag)(=?[a-z]*)/','$1','?' .$q );
 if($q == '?') {//first run
     $sort = 'sort='; 
 }
-        
                     
 elseif (isDouble($q)) {//double
     
@@ -166,7 +162,6 @@ if ($priv =='Admin' or $priv =='Client') : ?>
 
 <?php 
 endif;
-//$wither = ($suffix || $user_id || $text || $ext || $useroo || $textme ? '.' : '?find'); 
 $wither = seek();
 $link = ( $wither == '.'  ? 'Clear search results' : 'Search files');
 ?>
@@ -175,9 +170,17 @@ $link = ( $wither == '.'  ? 'Clear search results' : 'Search files');
 <p class="footer">
 
 <?php
-if(isset($_GET['ext'])) $suffix = $ext;
-if(isset($_GET['u'])) $user_id = $useroo;
-if(isset($_GET['u'])) $text = $textme;
+if(isset($_GET['ext'])) {
+    $suffix = $ext;
+}
+if(isset($_GET['u'])) {
+    //exit('vvo');
+    $user_id = $useroo;
+}
+if(isset($_GET['t'])) {
+    $text = $textme;
+}
+    
 if ($pages > 1) {
 $current_page = ($start/$display) + 1;
 if ($current_page != 1) { ?>
@@ -190,7 +193,6 @@ if ($i != $current_page) { ?>
 <?php
 }
 else {  ?>
-    
 <span class="current"><?php echo($i); ?></span>
 <?php
 }
@@ -201,7 +203,7 @@ if ($current_page <> $pages) { ?>
 }
 }//If Pages > 1
 
-if (isset($prompt)) {
+if (isset($call)) {
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
 if (!isset($filename)) { 
 echo '</div></body></html>';

@@ -4,6 +4,10 @@
 /*NOT REQUIRED : WAS USED TO PROVIDE A CLIENT LIST DROP DOWN MENU
 FOR PRE-SELECTING A DOMAIN PRIOR TO ADDING A NEW USER TO AN EXISITING CLIENT
 NOT REALLY USED IN PRACTICE*/
+$confirmed = ($call === 'confirmed') ? 'confirmed' : '';
+if(!isset($prompt)){
+    $prompt = ($call === 'confirm') ? "Choose <b>yes</b> for deletion options and <b>no</b> for editing options" : "Select the extent of deletions";
+}
 if(isset($clientlist)):?>
 <form action="." method="post" name="clientform">
 <div><label for="employer">If existing client:</label>
@@ -17,7 +21,7 @@ if(isset($clientlist)):?>
 <input type="submit" name="action" value="continue"/></div>
 </form> 
 
-<?php elseif(!isset($clientlist) and !isset($confirmed)):?>
+<?php elseif(!isset($clientlist) and !$confirmed):?>
 
 <form action="." method="post" name="choice">
 <input type="hidden" name="id" value="<?php echo $id; ?>"/>
@@ -34,7 +38,7 @@ if(isset($clientlist)):?>
 <?php endif;  ?>
 
 
-<?php if(isset($confirmed)):?>
+<?php if($confirmed):?>
 <p><?php echo $prompt; ?></p>
 <form action="." method="post" name="deletions" class="block">
 <input type="hidden" name="id" value="<?php echo $id; ?>"/>

@@ -1,4 +1,6 @@
 <?php
+include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
+
 function seek()
 {
     $arr = array(
@@ -6,8 +8,8 @@ function seek()
         'user_id',
         'text',
         'ext',
-        'useroo',
-        'textme'
+        'textme',
+        'useroo'
     );
     $i = count($arr);
     while ($i--)
@@ -18,6 +20,10 @@ function seek()
         }
     }
     return '?find';
+}
+
+function uploadedfile($arg) {
+    return $_FILES['upload'][$arg];
 }
 function isDouble($q){
     return substr($q,-3, 1) === '=';
@@ -181,6 +187,71 @@ function getFileTypeQuery($where, $ext){
     return $where;
 }
 
+
+function getColleagues($id, $dom) {
+    return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id= $id ORDER BY name";
+}
+function getColleagues2($id) {
+    return "SELECT user.id, user.name FROM user INNER JOIN (SELECT tgt.client_id FROM user 
+INNER JOIN upload ON user.id = upload.userid 
+INNER JOIN (SELECT user.client_id FROM user INNER JOIN upload ON user.id = upload.userid  WHERE upload.id = $id)  AS tgt 
+ON user.client_id  =  tgt.client_id LIMIT 1)  AS client ON client.client_id = user.client_id ORDER BY name";
+}
+
+function assignColleague($upload_id, $user_id) {
+    return "UPDATE upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.client_id FROM upload INNER JOIN user 
+ON upload.userid = user.id WHERE upload.id = $upload_id) AS tgt ON user.client_id = tgt.client_id SET upload.userid = $user_id WHERE user.client_id = tgt.client_id";
+}
+
+function doInsert($link){
+    return function() use($link){
+        $doSanitize = partial('doSanitize', $link);
+        $args = array_map($doSanitize, func_get_args());
+        return "INSERT INTO upload SET filename = '$args[0]', mimetype = '$args[1]', description = '$args[2]', filepath = '$args[3]', file = '$args[4]', size ='$args[5]'/1024, userid='$args[6]', time=NOW()";
+    };
+}
+
+function doEmail($link, $id){
+    $sql = "select user.email, user.name, upload.id, upload.filename from user INNER JOIN upload ON user.id=upload.userid WHERE upload.id=$id";
+    doFetch($link, $sql, 'Error selecting email address.');
+    $row = doSafeFetch($link, $sql);
+    $email = $row['email'];
+    $file = $row['filename'];
+    $name = $row['name'];
+    if ($priv == 'Admin') {
+        $body = 'We have just uploaded the file' . $file . 'for checking.';
+        $body = wordwrap($body, 70);
+        //mail($email, $file, $body, "From: $name <{$_SESSION['email']}>");
+    }
+}
+
+function getInitialKey($conn, $privilege, $user, $domn){
+    function assignInitialUser($id, $dom){
+        return "SELECT employer.name, employer.id FROM (SELECT user.name, user.id, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer WHERE employer.domain='$id' LIMIT 1"; 
+    }
+    
+    if ($privilege == 'Admin' and !empty($user)) { //ie Admin selects user
+        $key = $user;
+        include $conn;
+         //will either return empty set(no error) or produce count. Test to see if a client has been selected.
+        $row = doSafeFetch($link, "SELECT domain FROM client WHERE domain='$key'");
+        if (isset($row[0])) {
+            //RETURNS one user, as relationship between file and user is one to one.
+            $row = doSafeFetch($link, assignInitialUser($key, $domn));
+            $key = $row['id'];
+            if (!$key) {
+                $key = $user; //$key will be empty if above query returned empty set, reset
+                $sql = "SELECT user.id from user INNER JOIN client ON user.client_id = client.id WHERE user.email='$key'";
+                $row = doSafeFetch($link, $sql);
+                $key = $row['id'];
+            } // @ clients use domain or full email as key if neither tests produce a result key refers to a user only
+        } //END OF COUNT
+        return $key;
+    }
+    return null;
+}
+
+
 function doFind($db, $key, $domain){
     $email = "{$_SESSION['email']}";
     include $db;
@@ -260,17 +331,150 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     doWhen(partial('doAlways',!$result), $doError) (null);
     $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;   
     $result = mysqli_query($link, $sqlcount);
+    
     $doError = partialDefer('errorHandler', 'Error getting file count.', $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php');
     doWhen(partial('doAlways', !$result), $doError) (null);
 
-    $records = $row['total'];
-    $pages = ($records > $display) ? ceil($records / $display) : 1;
+    
     $files = array();
     while ($row = mysqli_fetch_array($result)) {
         $files[] = array('id' => $row['id'], 'user' => $row['user'], 'email' => $row['email'], 'filename' => $row['filename'], 'mimetype' => $row['mimetype'], 'description' => $row['description'], 'filepath' => $row['filepath'], 'file' => $row['file'], 'origin' => $row['origin'], 'time' => $row['time'], 'size' => $row['size']);
     }
+    $records = $row['total'];
+    $pages = ($records > $display) ? ceil($records / $display) : 1;
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
+    exit();
+}
+
+function doUpload($db, $priv, $key, $domain) {
+    //Bail out if the file isn't really an upload
+    $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+    $doError = partialDefer('errorHandler', 'There was no file uploaded!', $terror);
+    doWhen(partial('doAlways', !is_uploaded_file($_FILES['upload']['tmp_name'])), $doError)(null);
+    
+    $realname = uploadedfile('name');
+    $ext = preg_replace('/(.*)(\.[^0-9.]+$)/i', '$2', $realname);
+    $uploadname = time() . getRemoteAddr() . $ext;
+    $path = '../../filestore/';
+    $filedname = $path . $uploadname;
+    // Copy the file (if it is deemed safe)
+    $doError = partialDefer('errorHandler', "Could not  save file as $filedname!", $terror);
+    doWhen(partial('doAlways', !copy(uploadedfile('tmp_name'), $filedname)), $doError)(null);
+    
+    $theKey = getInitialKey($db, $priv, $_POST['user'], $domain);
+    $mykey = $theKey ? $theKey : $key;
+    // Prepare user-submitted values for safe database insert
+    include $db;
+    $uploaddesc = isset($_POST['desc']) ? $_POST['desc'] : '';
+    $doInsert = doInsert($link);//older versions of php may need to capture closure in a variable as opposed to func()();
+    $sql = $doInsert($realname, uploadedfile('type'), $uploaddesc, $path, $uploadname, uploadedfile('size'), $mykey);          
+    doFetch($link, $sql, 'Database error storing file information!' . $sql);
+    
+    doEmail($link, mysqli_insert_id($link));
+    header('Location: .');
+    exit();
+}
+
+function doView($db){
+    include $db;
+    $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+    $id = doSanitize($link, $_GET['id']);
+    $result = mysqli_query($link, "SELECT filename, mimetype, filepath, file, size FROM upload WHERE id = '$id'");
+    $doError = partialDefer('errorHandler', 'Database error fetching requested file.', $terror);
+    doWhen(partial('doAlways', !$result), $doError) (null);
+    
+    $file = mysqli_fetch_array($result);
+    $doError = partialDefer('errorHandler', 'File with specified ID not found in the database!', $terror);
+    doWhen(partial('doAlways', !$file), $doError)(null);
+    
+    $filename = $file['filename'];
+    $mimetype = $file['mimetype'];
+
+    $filedata = file_get_contents($_SERVER['DOCUMENT_ROOT'] . $file['filepath'] . $file['file']);
+    $disposition = ($_GET['action'] == 'download') ? 'attachment' : 'inline';
+    //$mimetype = 'application/x-unknown'; application/octet-stream
+    //Content-type must come before Content-disposition
+    header("Content-type: $mimetype");
+    header('Content-disposition: ' . $disposition . '; filename=' . '"' . $filename . '"'); //this works
+    //header("Content-Transfer-Encoding: binary");
+    header('Content-length:' . strlen($filedata)); //optional?
+    echo $filedata;
+    exit();
+}
+
+function doDelete($db, $compose){
+    include $db;
+    $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+    $findIndex = curry2('array_search') (array("c", "u", "f"));
+    $id = doSanitize($link, $_POST['id']);
+    $routes = array("SELECT c.file FROM user INNER JOIN client ON user.client_id = client.id INNER JOIN upload AS c ON user.id = c.userid  INNER JOIN upload AS d ON d.userid=user.id WHERE d.id=$id", "SELECT upload.file FROM upload INNER JOIN user ON upload.userid=user.id INNER JOIN upload AS d ON upload.userid=d.userid WHERE d.id=$id", "SELECT file FROM upload WHERE id=$id");
+    $getRoute = partial('getProperty', $routes);
+    $sql = $compose($findIndex, $getRoute) ($_POST['extent']);
+    if (!$sql) {
+        header('Location: .');
+    }
+    $result = mysqli_query($link, $sql);
+    $doError = partialDefer('errorHandler', 'Database error fetching stored files.', $terror);
+    doWhen(partial('doAlways', !$result), $doError) (null);
+    
+    while ($row = mysqli_fetch_array($result)) {
+        $file = $row['file'];
+        $sql = "DELETE FROM upload WHERE file = '$file'";
+        $doError = partialDefer('errorHandler', 'Error deleting file.', $terror);
+        doWhen(partial('doAlways', !mysqli_query($link, $sql)), $doError) (null);
+        
+        unlink('../../filestore/' . $file);
+    }
+    header('Location: .');
+    exit();
+}
+
+function prepUpdate($db, $priv, $id, $domain){
+    
+    $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+    $sql = "SELECT upload.id, filename, description, upload.userid, user.name FROM upload INNER JOIN user ON upload.userid=user.id  WHERE upload.id=$id";
+    include $db;
+        $result = mysqli_query($link, $sql);
+        $doError = partialDefer('errorHandler', 'Database error fetching stored files', $terror);
+        doWhen(partial('doAlways', !$result), $doError) (null); //doWhen expects an argument to pass to predicate and action functions
+        return mysqli_fetch_array($result);      
+}
+
+function prepUpdateUser($db, $priv){
+    if ($priv == 'Admin') {
+        include $db;
+        $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+            $sql = "SELECT user.name, user.id FROM user LEFT JOIN client ON user.client_id=client.id  WHERE client.domain IS NULL UNION SELECT user.name, user.id FROM user INNER JOIN client ON user.client_id = client.id ORDER BY name";
+            $result = mysqli_query($link, $sql);
+            
+            $doError = partialDefer('errorHandler', 'Database error fetching users.', $terror);
+            doWhen(partial('doAlways', !$result), $doError) (null);
+            
+            while ($row = mysqli_fetch_array($result)) {
+                $colleagues[$row['id']] = $row['name'];
+            }
+        return $colleagues;
+        }
+}
+
+function doUpdate($db){
+    include $db;
+    $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+    $fid = doSanitize($link, $_POST['fileid']);
+    $orig = doSanitize($link, $_POST['update']);
+    $user = isset($_POST['user']) ? doSanitize($link, $_POST['user']) : null;
+    $user = isset($_POST['colleagues']) ? doSanitize($link, $_POST['colleagues']) : $user;
+    $diz = isset($_POST['description']) ? doSanitize($link, $_POST['description']) : null;
+    $fname = isset($_POST['filename']) ? doSanitize($link, $_POST['filename']) : null;
+    $user = !(isset($user)) ? $orig : $user;
+    $single = "UPDATE upload SET userid='$user', description='$diz', filename='$fname' WHERE id ='$fid'";
+    $extent = isset($_POST['blanket']) ? assignColleague($fid, $user) : "UPDATE upload SET userid='$user' WHERE userid='$orig'";
+    $sql = $_POST['answer'] === "Yes" ? $extent : $single;
+    $doError = partialDefer('errorHandler', 'error updating details', $terror);
+    doWhen(partial('doAlways', !mysqli_query($link, $sql)), $doError) (null);
+    
+    header('Location: . ');
     exit();
 }
 
