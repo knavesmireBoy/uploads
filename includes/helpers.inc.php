@@ -280,8 +280,7 @@ function doFind($db, $key, $domain){
 }
 
 function prepFind($users, $client){
-    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
-    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/search.html.php';
+    
 }
 
 function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip){

@@ -224,4 +224,7 @@ while ($row = mysqli_fetch_array($result)) {
 $base = 'North Wolds Printers | The File Uploads';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
+if($findmode){
+    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/search.html.php';
+}
 ?>
