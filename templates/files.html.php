@@ -29,33 +29,61 @@
 <?php 
 $tel = '';
 $sort = '';
-$toggle = ['f', 'u', 't'];
+                    $toggle = ['f', 'u', 't'];
+                    
+                    $getToggle = getToggle($toggle);
+                    
+                   
                     
 // TABLE ORDERING...
 $q = $_SERVER['QUERY_STRING'];
-$q = preg_replace('/(\?[a-z0-9=&]*)(&sort|&flag)(=?[a-z]*)/','$1','?'.$q);
-                
-if($q=='?') {//first run
-    $sort='sort='; 
+               
+$q = preg_replace('/(\?[a-z0-9=&]*)(&sort|&flag)(=?[a-z]*)/','$1','?' .$q );
+                                        
+if($q == '?') {//first run
+    $sort = 'sort='; 
 }
-elseif (substr($q,-3, 1)=='=') {//double
-   if(substr($q,-2, 1) != substr($q,-1, 1)){
-       $q = substr($q,-2, 1);
-       $sort = '&sort=' . substr($q,-1, 1); 
+        
+                    
+elseif (isDouble($q)) {//double
+    
+$pos = strpos($q, 'u');
+   
+    if(!empty($pos) && $pos > 6) {
+        
+    }
+   if(substr($q,-2, 1) != substr($q,-1, 1)){//not toggled
+       $q='?sort='; 
+       
+       //$q = substr($q,-2, 1);//leading
+       //$sort = '&sort=' . substr($q,-1, 1); 
    }
     else {
+        
+        $sort = substr($q,-2);
+        $i = array_search($sort, $toggle);
+        $t[$i] = $sort;
+        $sort = '';
         $q='?sort='; 
     }
        
 }
-//elseif (substr($q,1,4)=='sort') {//single
-elseif (substr($q,-2, 1)=='='){
+elseif (isSingle($q)){
+    
+   /*
     $sort = substr($q,-1);
+    $i = array_search($sort, $toggle);
+    //https://stackoverflow.com/questions/1532618/is-there-a-function-to-make-a-copy-of-a-php-array-to-another
+    $t = $toggle;
+    $t[$i] = $sort . $sort;
+    exit($t[$i]);
+    $getToggle = getToggle($t);
     $q='?sort='; 
+    */
 }
 
 else {
-    $sort='&sort='; 
+    //$sort='&sort='; 
 }
 /*
 if ((substr($sort,0,2)=='uu' and strlen($sort)<=3)) {
@@ -73,10 +101,10 @@ else {
 */
 ?>
 
-<th><a href="<?php echo $q . $sort . $toggle[0]; ?>">File name</a></th>
+<th><a href="<?php echo $q . $sort . $getToggle(0); ?>">File name</a></th>
 <?php $choice = ($priv =='Admin')  ? 'User' : 'Description'  ?>
-<th><a href="<?php echo $q . $sort . $toggle[1]; ?>"><?php echo $choice; ?></a></th>
-<th><a href="<?php echo $q . $sort . $toggle[2]; ?>">Time</a></th>
+<th><a href="<?php echo $q . $sort . $getToggle(1); ?>"><?php echo $choice; ?></a></th>
+<th><a href="<?php echo $q . $sort . $getToggle(2); ?>">Time</a></th>
 
 <?php $num = ($priv !='Browser'  ? '2' : '1')  ?>
 <th colspan="<?php echo($num) ?>" class="control">Control<?php ?></th>
@@ -123,9 +151,8 @@ echo date("g:i a F j ", strtotime($stamp)) ;?></td>
 </tbody>
 </table>
 
-
 <?php else :
- $greeting=($_SERVER['QUERY_STRING']) ? 'There were no files that matched your criteria' : 'There are currently no files in the database' ?>
+ $greeting = ($_SERVER['QUERY_STRING']) ? 'There were no files that matched your criteria' : 'There are currently no files in the database' ?>
 
 <h2><a href="<?php $_SERVER['PHP_SELF']?>" title="Click to return"><?php echo $greeting; ?>
 

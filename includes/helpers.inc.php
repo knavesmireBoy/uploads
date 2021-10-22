@@ -19,6 +19,23 @@ function seek()
     }
     return '?find';
 }
+function isDouble($q){
+    return substr($q,-3, 1) === '=';
+}
+
+function isSingle($q){
+    return substr($q,-2, 1) === '=';
+}
+
+function isSubList($q){
+    return substr($q,-2, 1) !== substr($q,-1, 1);
+}
+
+function getToggle($arr){
+    return function($i) use($arr) {
+        return isset($i) ? $arr[$i] : $arr;
+    };
+}
 
 if (!function_exists("GetSQLValueString"))
 {

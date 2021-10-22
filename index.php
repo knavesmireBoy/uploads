@@ -9,6 +9,7 @@ $base = 'Log In';
 $error = '';
 $tmpl_error = '/uploads/includes/error.html.php';
 $myip = '86.133.121.115.';
+$lookup = array( 'tu' => 'ut');
 $doError = function () {
 };
 function doAlways($arg){
@@ -302,14 +303,15 @@ if (isset($_GET['p']) and is_numeric($_GET['p'])) {
 $start = (isset($_GET['s']) and is_numeric($_GET['s'])) ? $_GET['s'] : 0;
 $sort = (isset($_GET['sort']) ? $_GET['sort'] : '1');
 
+$sort = isset($lookup[$sort]) ? $lookup[$sort] : $sort;
 $meswitch = array('f' => 'filename ASC', 'ff' => 'filename DESC', 'u' => 'user ASC', 'uu' => 'user DESC', 'uf' => 'user ASC, filename ASC', 'uuf' => 'user DESC, filename ASC', 'uff' => 'user ASC, filename DESC', 'uuff' => 'user DESC, filename DESC', 'ut' => 'user ASC, time ASC', 'utt' => 'user ASC, time DESC', 'uut' => 'user DESC, time ASC', 'uutt' => 'user DESC, time DESC', 't' => 'time ASC', 'tt' => 'time DESC');
 
-foreach ($meswitch as $ix => $u) {
-    if ($ix == $sort) break;
+foreach ($meswitch as $k => $v) {
+    if ($k == $sort) break;
 }
 switch ($sort) {
-    case $ix:
-        $order_by = $meswitch[$ix];
+    case $k:
+        $order_by = $meswitch[$k];
     break;
     default:
         $order_by = 'time DESC';
