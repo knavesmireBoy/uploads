@@ -7,7 +7,7 @@
 <div><label for="user">By user: </label>
 <select id="user" name="user">
 <option value="">Any User</option>
-<?php if($priv=="Admin"): ?><optgroup label="clients">
+<?php if($priv == "Admin"): ?><optgroup label="clients">
 <?php endif; ?>
 <?php  foreach ($client as $k => $v): ?>
 <option value="<?php htmlout($k); ?>"><?php htmlout($v); ?>

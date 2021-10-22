@@ -154,7 +154,40 @@ function concatString($str, $opt = ''){
         return $str .= $opt;
 }
 
+function doFind($db, $key, $domain){
+    $email = "{$_SESSION['email']}";
+    include $db;
+        $sql = "SELECT $domain FROM user WHERE user.email='$email'";
+        $result = mysqli_query($sql);
+        $row = mysqli_fetch_array($result);
+        $dom = $row[0];
+        $sql = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain = client.domain WHERE $domain = '$dom' AND client.domain =' $dom'";
+        $result = mysqli_query($sql);
+        $row = mysqli_fetch_array($result);
+    $where = count($count) > 0 ? " WHERE user.email='$email'" : " WHERE user.id=$key"; //user
+        $sql = "SELECT employer.id, employer.name  FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain $where";
+        $result = mysqli_query($link, $sql);
+    $doError = partialDefer('errorHandler', 'Database error fetching clients.', $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php');
+    doWhen($always(!$result), $doError) (null);
+    
+        $users = array(); //resets user array to display users of current client
+        while ($row = mysqli_fetch_array($result)) {
+            $users[$row['id']] = $row['name'];
+        }
+        if ($count <= 1) { //SELECT MENU in SEARCH for only more than one "employee"
+            $users = array();
+            $zero = true;
+        }
+        $client = array();
+}
+
+function prepFind($users, $client){
+    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
+    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/search.html.php';
+}
+
 function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip){
+    
     include $db;
     $tel = '';
     $from = getBaseFrom();

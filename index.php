@@ -344,43 +344,12 @@ while ($row = mysqli_fetch_array($result)) {
 }
 //end of default_______________________________________________________________________
 if (isset($_GET['find'])) {
-    if ($priv != "Admin"): //CUSTOMISES SELECT MENU
-        $email = "{$_SESSION['email']}";
-        include $db;
-        $sql = "SELECT $domain FROM user WHERE user.email='$email'";
-        $result = mysqli_query($sql);
-        $row = mysqli_fetch_array($result);
-        $dom = $row[0];
-        $sql = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain = client.domain WHERE $domain = '$dom' AND client.domain =' $dom'";
-        $result = mysqli_query($sql);
-        $row = mysqli_fetch_array($result);
-    
-        $count = $row['dom'];
-        if (count($count) > 0) {
-            $mywhere = " WHERE user.email='$email'"; //client
-            
-        } else {
-            $mywhere = " WHERE user.id=$key"; //user
-        }
-        $sql = "SELECT employer.id, employer.name  FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain $mywhere";
-        $result = mysqli_query($link, $sql);
-        if (!$result) {
-            $error = 'Database error fetching clients.';
-            include $terror;
-            exit();
-        }
-        $users = array(); //resets user array to display users of current client
-        while ($row = mysqli_fetch_array($result)) {
-            $users[$row['id']] = $row['name'];
-        }
-        if ($count <= 1) { //SELECT MENU in SEARCH for only more than one "employee"
-            $users = array();
-            $zero = true;
-        }
-        $client = array();
-    endif;
-    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
-    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/search.html.php';
+    $isAdmin = partial('equals', $priv, 'Admin');
+    $prepFind = partial('prepFind', $users, $client);
+    $punter = $compose(partial('doFind', $db, $key, $domain), $prepFind);
+    $admin = $compose('prepFind');
+    $perform = getBest(negate($isAdmin));
+    $perform($punter, $prepFind)();//CUSTOMISES SELECT MENU FOR NON ADMIN
     exit();
 }
 /// S E A R C H  M E !!
