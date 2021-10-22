@@ -280,8 +280,57 @@ function doFind($db, $key, $domain){
 }
 
 function prepFind($users, $client){
-    
+    /*
+    if (isset($_GET['find']))
+{
+    if ($priv != "Admin"): //CUSTOMISES SELECT MENU
+        $email = "{$_SESSION['email']}";
+        include $db;
+        $sql = "SELECT $domain  FROM user WHERE user.email='$email'";
+        $result = mysqli_query($sql);
+        $row = mysqli_fetch_array($result);
+        $dom = $row[0];
+        $sql = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain=client.domain WHERE $domain='$dom' AND client.domain='$dom'";
+        $result = mysqli_query($sql);
+        $row = mysqli_fetch_array($result);
+        $count = $row['dom'];
+        if (count($count) > 0)
+        {
+            $where = " WHERE user.email='$email'"; //client
+
+        }
+        else
+        {
+            $where = " WHERE user.id=$key"; //user
+
+        }
+        $sql = "SELECT employer.id, employer.name  FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain=client.domain) AS employer ON $domain=employer.domain $where";
+        $result = mysqli_query($link, $sql);
+        if (!$result)
+        {
+            $error = 'Database error fetching clients.';
+            include $terror;
+            exit();
+        }
+        $users = array(); //resets user array to display users of current client
+        while ($row = mysqli_fetch_array($result))
+        {
+            $users[$row['id']] = $row['name'];
+        }
+        if ($count <= 1)
+        { //SELECT MENU in SEARCH for only more than one "employee"
+            $users = array();
+            $zero = true;
+        }
+        $client = array();
+    endif;
+    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
+    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/search.html.php';
+    exit();
 }
+  */  
+}
+
 
 function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip){
     

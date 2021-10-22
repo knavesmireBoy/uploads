@@ -158,11 +158,13 @@ $result = mysqli_query($link, $sql);
 $doError = partialDefer('errorHandler', 'Database error fetching clients.', $terror);
 doWhen(partial('doAlways', !$result), $doError) (null);
 
+
 while ($row = mysqli_fetch_array($result)) {
     $client[$row['domain']] = $row['name'];
 }
 //end of default_______________________________________________________________________
 if (isset($_GET['find'])) {
+    
     $isAdmin = partial('equals', $priv, 'Admin');
     $prepFind = partial('prepFind', $users, $client);
     $punter = $compose(partial('doFind', $db, $key, $domain), $prepFind);
@@ -181,10 +183,12 @@ if ($priv == 'Admin') {
     
     $select .= ", user.name as user"; 
     $from = getBaseFrom();
-    $from.= " INNER JOIN userrole ON user.id=userrole.userid";
+    $from.= " INNER JOIN userrole ON user.id = userrole.userid";
     $where = ' WHERE TRUE';
     $ext = isset($_GET['ext']) ? doSanitize($link, $_GET['ext']) : null;
     $where = getFileTypeQuery($where, $ext);
+    
+    
     if (isset($useroo) && is_numeric($useroo)) { //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
         if($useroo = doSanitize($link, $_GET['u'])){
             $where.= " AND user.id=$useroo";
@@ -214,6 +218,7 @@ $select_tel = ", client.tel";
 $from.= " LEFT JOIN client ON user.client_id=client.id"; //note LEFT join to include just 'users' also
 $order = getBaseOrder($order_by, $start, $display);
 $sql.= $select_tel . $from . $where . $order;
+
 //____________________________________________________________________________________________END OF TELEPHONE
 $result = doFetch($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();
@@ -222,9 +227,11 @@ while ($row = mysqli_fetch_array($result)) {
     'size' => $row['size']);
 }
 $base = 'North Wolds Printers | The File Uploads';
+/*
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
 if($findmode){
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/search.html.php';
 }
+*/
 ?>
