@@ -2,8 +2,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-		<link href="../css/lofi.css" type="text/css" rel="stylesheet" media="all"/>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <link href="../css/lofi.css" type="text/css" rel="stylesheet" media="all"/>
 	</head>
 	<body><div>
 		<h1><?php htmlout($pagetitle); ?></h1>
@@ -29,13 +29,10 @@
 </select></div>
 <?php endif; ?>
 <div><input type="hidden" name="id" value="<?php htmlout($id); ?>"/><input type="submit" value="<?php htmlout($button); ?>"/></div></form>
-		<p><a href=".">Return to User List</a></p>
           <!--<p><a href="<?php //$_SERVER['DOCUMENT_ROOT'] . '/admin/index.php';?>">Return to User List</a></p>-->
-		<?php if ($priv =='Admin') : ?>
+		<?php if ($priv == 'Admin') : ?>
 		<p><a href="../clients/">Edit Clients</a></p>
-      <!--<p><a href="<?php //$_SERVER['DOCUMENT_ROOT'] . '/clients/';?>">Edit Clients</a></p>-->
-
-<?php endif;  ?>
+        <?php endif;  ?>
 
 </div></body>
 

@@ -1,6 +1,6 @@
 <?php
 /*mysql_real_escape_string\(([^,]+),([^)]+\);)
- mysqli_real_escape_string($2, $1);*/
+ doSanitize($2, $1);*/
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/magicquotes.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
@@ -81,7 +81,7 @@ if (isset($_GET['add']))
 
 	if (isset($_POST['employer']) && !empty($_POST['employer']))
 	{
-		$id = mysqli_real_escape_string($link, $_POST['employer']);
+		$id = doSanitize($link, $_POST['employer']);
 		$sql = "SELECT id, domain FROM client WHERE id=$id";
 		$result = mysqli_query($link, $sql);
 	}
@@ -115,8 +115,8 @@ if (isset($_GET['add']))
 if (isset($_GET['addform']))
 {
 	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-	$name = mysqli_real_escape_string($link, $_POST['name']);
-	$email = mysqli_real_escape_string($link, $_POST['email']);
+	$name = doSanitize($link, $_POST['name']);
+	$email = doSanitize($link, $_POST['email']);
 	$sql = "INSERT INTO user SET name='$name', email='$email' ";
 	if (!mysqli_query($link, $sql))
 	{
@@ -128,7 +128,7 @@ if (isset($_GET['addform']))
 	if (isset($_POST['password']) && $_POST['password'] != '')
 	{
 		$password = md5($_POST['password'] . 'uploads');
-		$password = mysqli_real_escape_string($link, $password);
+		$password = doSanitize($link, $password);
 		$sql = "UPDATE user SET password = '$password'  WHERE id = '$aid'";
 		if (!mysqli_query($link, $sql))
 		{
@@ -140,7 +140,7 @@ if (isset($_GET['addform']))
 	if (isset($_POST['employer']) && $_POST['employer'] != '')
 	{
 		$client = $_POST['employer'];
-		$cid = mysqli_real_escape_string($link, $client);
+		$cid = doSanitize($link, $client);
 		$sql = "UPDATE user SET client_id=$cid WHERE id=$aid";
 		if (!mysqli_query($link, $sql))
 		{
@@ -153,7 +153,7 @@ if (isset($_GET['addform']))
 	{
 		foreach ($_POST['roles'] as $role)
 		{
-			$roleid = mysqli_real_escape_string($link, $role);
+			$roleid = doSanitize($link, $role);
 			$sql = "INSERT INTO userrole SET userid='$aid', roleid='$roleid'";
 			if (!mysqli_query($link, $sql))
 			{
@@ -208,68 +208,46 @@ if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 } //edit
 if (isset($_GET['editform']))
 {
-	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-	$id = mysqli_real_escape_string($link, $_POST['id']);
-	$name = mysqli_real_escape_string($link, $_POST['name']);
-	$email = mysqli_real_escape_string($link, $_POST['email']);
+	include $db;
+    $id = doSanitize($link, $_POST['id']);
+	$name = doSanitize($link, $_POST['name']);
+	$email = doSanitize($link, $_POST['email']);    
 	$sql = "UPDATE user SET name='$name', email='$email' WHERE id='$id'";
-	if (!mysqli_query($link, $sql))
-	{
-		$error = 'Error setting user details.';
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-
-	if (isset($_POST['password']) && $_POST['password'] != '')
+    //dump($email);
+    doQuery($link, $sql, 'Error setting user details.');
+	if (isset($_POST['password']) && !empty($_POST['password']))
 	{
 		$password = md5($_POST['password'] . 'uploads');
-		$password = mysqli_real_escape_string($link, $password);
+		$password = doSanitize($link, $password);
 		$sql = "UPDATE user SET password = '$password' WHERE id = '$id'";
-		if (!mysqli_query($link, $sql))
-		{
-			$error = 'Error setting user password.';
-			include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-			exit();
-		}
+        doQuery($link, $sql, 'Error setting user password.');
 	}
 
-	if ($priv && $priv == 'Admin')
+	if ($priv == 'Admin')
 	{
 		$sql = "DELETE FROM userrole WHERE userid='$id'";
-		if (!mysqli_query($link, $sql))
-		{
-			$error = 'Error removing obsolete user role entries.';
-			include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-			exit();
-		}
+        //clear existing before - optionally - re-assigning
+        doQuery($link, $sql, 'Error setting user password.', 'Error removing obsolete user role entries.');
 	}
 	if (isset($_POST['roles']))
 	{
 		foreach ($_POST['roles'] as $role)
 		{
-			$roleid = mysqli_real_escape_string($link, $role);
+			$roleid = doSanitize($link, $role);
 			$sql = "INSERT INTO userrole SET userid='$id', roleid='$roleid'";
-			if (!mysqli_query($link, $sql))
-			{
-				$error = 'Error assigning selected role to user.';
-				include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-				exit();
-			}
+            doQuery($link, $sql, 'Error setting user password.', 'Error assigning selected role to user.');
 		} //end foreach
-		
 	}
 
 	if (isset($_POST['employer']) && !empty($_POST['employer']))
 	{
 		$client = $_POST['employer'];
-		$cid = mysqli_real_escape_string($link, $client);
-		$sql = "UPDATE user SET client_id=$cid WHERE id = $id";
-		if (!mysqli_query($link, $sql))
-		{
-			$error = 'Error setting client id 287.';
-			include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-			exit();
-		}
+		$cid = doSanitize($link, $client);
+        $sql = "SELECT domain FROM client WHERE id = $cid";
+        $res = doQuery($link, $sql, "Error getting client domain");
+        $email = fixDomain($email, goFetch($res)[0]);
+		$sql = "UPDATE user SET user.client_id = $cid, user.email = '$email' WHERE id = $id";
+        doQuery($link, $sql, "Error setting user details");        
 	}
 	header('Location: . ');
 	exit();
