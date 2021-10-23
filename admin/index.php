@@ -3,8 +3,12 @@
 mysqli_real_escape_string($2, $1);*/
 include_once $_SERVER['DOCUMENT_ROOT'] .    '/uploads/includes/magicquotes.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
+include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/admin_helpers.inc.php';
 $users = [];
 $id ='';
+$terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+$manage = "Manage Users";
 if (!userIsLoggedIn()){
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/login.html.php';
 exit();
@@ -17,12 +21,12 @@ include 'accessdenied.html.php';
 exit();
 }
 $sql = "SELECT id, name FROM user "; // THE DEFAULT QUERY___________________________________
-foreach ($roleplay as $key => $priv):
-if ($priv =='Client'){
+$key = $roleplay['id'];
+$priv = $roleplay['roleid'];
+if ($priv === 'Client'){
 // constrains the query to one user if a client is logged in
 $sql = "SELECT id, name FROM user where id ='$key' ORDER BY name";
 }
-endforeach;
 
 if (isset($_POST['action']) and $_POST['action'] == 'Delete') {
 $id = $_POST['id'];
@@ -34,7 +38,7 @@ $neg="No";
 $action =''; 
 //include $_SERVER['DOCUMENT_ROOT'] . '/uploads/prompt.html.php';
 //exit(); 
-}
+}//DELETE
 
 if (isset($_POST['confirm']) and $_POST['confirm'] == 'Yes') {
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
@@ -51,7 +55,7 @@ exit();
 if (isset($_POST['confirm']) and $_POST['confirm'] == 'No') {
 header('Location: . ');
 exit();
-}////////////END OF DELETE
+}////////////END OF CONFIRM
 
 /*OVERWRITING BELOW, WAS USED TO PROVIDE A CLIENT LIST DROP DOWN MENU
 FOR PRE-SELECTING A DOMAIN PRIOR TO ADDING A NEW USER TO AN EXISITING CLIENT
@@ -96,7 +100,6 @@ exit();
 while ($row = mysqli_fetch_array($result))  {
 $roles[] = array(  'id' => $row['id'], 'description' => $row['description'], 'selected' => FALSE);
 }
-
 
 if (isset($_POST['employer']) && !empty($_POST['employer'])){
 $id = mysqli_real_escape_string($link, $_POST['employer']);
@@ -238,7 +241,6 @@ include 'form.html.php';
 exit();
 }//edit
 
-
 if (isset($_GET['editform']))
 {
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
@@ -297,60 +299,64 @@ header('Location: . ');
 exit();
 }///END OF EDIT
 
-//display users___________________________________________________________________
-$domain="RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
-$sql ="SELECT user.id, user.name FROM user LEFT JOIN (SELECT user.name, client.domain FROM user INNER JOIN client ON $domain=client.domain) AS employer ON $domain=employer.domain WHERE employer.domain IS NULL";//this overwrites above query to filter out users as employees
 
-$sql ="SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id=client.id WHERE client.domain IS NULL";//USING ID NOT DOMAIN
+
+//display users___________________________________________________________________
+$domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
+$sql = "SELECT user.id, user.name FROM user LEFT JOIN (SELECT user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain=employer.domain WHERE employer.domain IS NULL";//this overwrites above query to filter out users as employees
+
+$sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id=client.id WHERE client.domain IS NULL";//USING ID NOT DOMAIN
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 //_______________________________________________________________________________
 
-if (isset($_POST['act']) and $_POST['act'] == 'Choose'  and isset($_POST['user']) && $_POST['user'] !=''){
+if (isset($_POST['act']) and $_POST['act'] == 'Choose' and isset($_POST['user']) && $_POST['user'] !=''){
 $return = "Return to users";
-$manage = "Manage Users";
 $key =  mysqli_real_escape_string($link, $_POST['user']);
-$sqlc="SELECT domain FROM client WHERE domain='$key'";
-$result = mysqli_query($link, $sqlc);
+$sql = "SELECT domain FROM client WHERE domain = '$key' ";
+$result = mysqli_query($link, $sql);
+$doError = partialDefer('errorHandler', 'Database error fetching clients.', $terror);
+doWhen($always(!$result), $doError) (null);        
 $row = mysqli_fetch_array($result);
+
 if (strrpos($key, "@")) { // some clients need full domain for identification, in which case the query is simplified to a straight match to a users email address which corresponds to the client domain.
-$domain="user.email";
+$domain = "user.email";
 }
 
-if(count($row[0])>0){
-$sqlc="SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain=client.domain) AS employer WHERE employer.domain='$key'";//
+if(isset($row[0])){
+$sql ="SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain=client.domain) AS employer WHERE employer.domain='$key'";//
 //exit($sqlc);
-$result = mysqli_query($link, $sqlc);
-if (!$result)
-{
-$error = 'Database error fetching users.' .$sql;
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-exit();
-}
+$result = mysqli_query($link, $sql);
+    
+$doError = partialDefer('errorHandler', 'Database error fetching users.', $terror);
+doWhen($always(!$result), $doError) (null);  
+
 while ($row = mysqli_fetch_array($result)){
 $users[$row['user_id']]=$row['user_name'];
 }
-$flag=true;
-$class="edit";
+$flag = true;
+$class  ="edit";
 include 'users.html.php';
 }
-else $sql.=" AND user.id=$key";
+else $sql .= " AND user.id = $key";
 }///CHOOSE________________________________________________________________________
 
-if($priv && $priv != "Admin") {
-	$sql.=" AND user.id=$key"; 
-$manage = "Edit details";
+////\\\\\/////\\\\\////\\\\\/////\\\\\////\\\\\/////\\\\\////\\\\\/////\\\\\////\\\\\/////\\\\\////\\\\\/////\\\\\
+
+if($priv && $priv !== "Admin") {
+	$sql .= " AND user.id = $key"; 
+    $manage = "Edit details";
 }
-$sql.= " ORDER BY name";
+$sql .= " ORDER BY name";
+
 if(!isset($flag)){
 $result = mysqli_query($link, $sql);
-if (!$result ) {
-$error = "Error retrieving users from t'database!";
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-exit();
-}
+    
+$doError = partialDefer('errorHandler', "Error retrieving users from t'database!", $terror);
+doWhen($always(!$result), $doError) (null);  
+    
 while ($row = mysqli_fetch_array($result)) {
-$users[$row['id']] =$row['name'];
+$users[$row['id']] = $row['name'];
 }
 }
 
@@ -372,31 +378,26 @@ if($count > 0) {
 $sql="SELECT employer.id, employer.name FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain=client.domain) AS employer ON $domain=employer.domain WHERE user.email='$email'";
 $result = mysqli_query($link, $sql);
 
-if (!$result){
-$error = 'Database error fetching client list.' .$sql;
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-exit();
-}
+$doError = partialDefer('errorHandler', 'Database error fetching client list.' .$sql, $terror);
+doWhen($always(!$result), $doError) (null);
+    
 while ($row = mysqli_fetch_array($result)){
 $users[$row['id']]=$row['name'];
 }
 include 'users.html.php';
 }
-}
+}//NOT ADMIN
 
 if($priv && $priv == "Admin") {
-$manage = "Manage Users";
-$sqlc ="SELECT client.domain, client.name FROM client ORDER BY name";
-$result = mysqli_query($link, $sqlc);
-if (!$result)
-{
-$error = 'Database error fetching clients.';
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-exit();
-}
+$sql = "SELECT client.domain, client.name FROM client ORDER BY name";
+$result = mysqli_query($link, $sql);
+$doError = partialDefer('errorHandler', 'Database error fetching client list.' .$sql, $terror);
+doWhen($always(!$result), $doError) (null);
+    
 while ($row = mysqli_fetch_array($result)){
-$client[$row['domain']]=$row['name'];
+$client[$row['domain']] = $row['name'];
 }
 }
+
 include 'users.html.php';
 ?>

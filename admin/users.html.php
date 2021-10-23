@@ -45,7 +45,7 @@ foreach ($users as $k =>$user):?>
 </form>-->
 
 <form action="" method="post" name="edituserform">
-<ul><li><label><?php htmlout($user); ?></label></li>
+<ul class="list"><li><label><?php htmlout($user); ?></label></li>
 <li><label>Edit<input type="radio" name="action" value="Edit"/></label>
 <label>Delete<input type="radio" name="action" value="Delete"/></label></li>
 <input type="hidden" name="id" value="<?php echo $k ;?>"/>

@@ -62,6 +62,7 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'No') { //swap
     $id = doSanitize($link, $_POST['id']);
     $result = mysqli_query($link, getColleagues($id, $domain));
     $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
+    doWhen($always(!$result), $doError) (null);
     
     $prompt1 = "Choose <b>yes</b> to select assign a new owner to all ";
     $prompt2 = " files. Choose <b>no</b> to edit a single file";
