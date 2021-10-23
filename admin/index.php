@@ -10,6 +10,8 @@ $users = [];
 $id = '';
 $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 $manage = "Manage Users";
+
+
 if (!userIsLoggedIn())
 {
 	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/login.html.php';
@@ -29,13 +31,8 @@ $priv = $roleplay['roleid'];
 if(!isset($priv)){
     exit();
 }
-$sql = "SELECT id, name FROM user "; // THE DEFAULT QUERY___________________________________
-
-if ($priv === 'Client')
-{
-	// constrains the query to one user if a client is logged in
-	$sql = "SELECT id, name FROM user where id ='$key' ORDER BY name";
-}
+// THE DEFAULT QUERY___________________________________
+$sql = $priv === 'Client' ? "SELECT id, name FROM user where id ='$key' ORDER BY name" : "SELECT id, name FROM user "; 
 
 if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 {
@@ -46,56 +43,15 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 	$pos = "Yes";
 	$neg = "No";
 	$action = '';
-	//include $_SERVER['DOCUMENT_ROOT'] . '/uploads/prompt.html.php';
-	//exit();
-	
+	include 'edit_users.html.php';
+    exit();
 } //DELETE
-if (isset($_POST['confirm']) and $_POST['confirm'] == 'Yes')
+
+if (isset($_POST['confirm']))
 {
-	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-	$id = mysqli_real_escape_string($link, $_POST['id']);
-	$result = mysqli_query($link, "DELETE FROM user WHERE id = $id");
-	if (!$result)
-	{
-		$error = 'Error deleting user.';
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-	header('Location: . ');
-	exit();
+	doConfirm($db, $_POST['confirm']);
 }
-if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
-{
-	header('Location: . ');
-	exit();
-} ////////////END OF CONFIRM
-/*OVERWRITING BELOW, WAS USED TO PROVIDE A CLIENT LIST DROP DOWN MENU
-FOR PRE-SELECTING A DOMAIN PRIOR TO ADDING A NEW USER TO AN EXISITING CLIENT
-NOT REALLY USED IN PRACTICE*/
-if (isset($_GET['add']))
-{
-	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-	$title = 'Prompt';
-	$prompt = 'Employer:';
-	$prompt = false;
-	$action = 'assign';
-	$sql = "SELECT id, name FROM client ORDER BY name";
-	$result = mysqli_query($link, $sql);
-	if (!$result)
-	{
-		$error = "Error retrieving clients from database!";
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-	while ($row = mysqli_fetch_array($result))
-	{
-		$clientlist[$row['id']] = $row['name'];
-	}
-	//include $_SERVER['DOCUMENT_ROOT'] . '/uploads/prompt.html.php';
-	//exit();
-	
-} //////////////END OF ADD
-//if (isset($_POST['action']) and $_POST['action'] == 'continue'){
+
 if (isset($_GET['add']))
 {
 	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
@@ -212,48 +168,33 @@ if (isset($_GET['addform']))
 } //end of addform
 if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 {
-	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-	$id = mysqli_real_escape_string($link, $_POST['id']);
-	$thename = "SELECT id, name, email FROM user WHERE id =$id";
-	$result1 = mysqli_query($link, $thename);
-	if (!$result1)
-	{
-		$error = 'Error fetching user details.';
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-	$row = mysqli_fetch_array($result1);
-	$pagetitle = 'Edit User';
+    $pagetitle = 'Edit User';
 	$action = 'editform';
+    $button = 'Update User';
+    $name;
+    $email;
+    $clientlist;
+    $job;
+    $roles = array();
+    
+    include $db;
+	$id = doSanitize($link, $_POST['id']);
+    $res = doQuery($link, "SELECT id, name, email FROM user WHERE id = $id", 'Error fetching user details.');
+	$row = goFetch($res);
 	$name = $row['name'];
 	$email = $row['email'];
 	$id = $row['id'];
-	$button = 'Update User';
-
+	
 	// Get list of roles assigned to this user
-	$sql = "SELECT roleid FROM userrole WHERE userid='$id'";
-	$result = mysqli_query($link, $sql);
-	if (!$result)
-	{
-		$error = 'Error fetching list of assigned roles.';
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-	$selectedRoles = array();
-	while ($row = mysqli_fetch_array($result))
-	{
-		$selectedRoles[] = $row['roleid'];
-	}
+	$res = doQuery($link, "SELECT roleid FROM userrole WHERE userid='$id'", 'Error fetching list of assigned roles.');
+    $selectedRoles = doBuild($res, 'roleid');
+    
 	// Build the list of all roles
-	$sql = "SELECT id, description FROM role";
-	$result = mysqli_query($link, $sql);
-	if (!$result)
-	{
-		$error = 'Error fetching list of roles.';
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-	while ($row = mysqli_fetch_array($result))
+    $res = doQuery($link, "SELECT id, description FROM role", 'Error fetching list of roles.');
+    
+    dump($selectedRoles);
+    
+	while ($row = mysqli_fetch_array($res))
 	{
 		$roles[] = array(
 			'id' => $row['id'],
@@ -261,28 +202,10 @@ if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 			'selected' => in_array($row['id'], $selectedRoles)
 		);
 	}
-
-	$sql = "SELECT id, name FROM client ORDER BY name";
-	$result = mysqli_query($link, $sql);
-	if (!$result)
-	{
-		$error = "Error retrieving clients from database!";
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-	while ($row = mysqli_fetch_array($result))
-	{
-		$clientlist[$row['id']] = $row['name'];
-	}
-	$sql = "SELECT client_id FROM user WHERE id=$id";
-	$result = mysqli_query($link, $sql);
-	if (!$result)
-	{
-		$error = "Error retrieving client id from user!";
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-	$row = mysqli_fetch_array($result);
+	$res = doQuery($link, "SELECT id, name FROM client ORDER BY name", "Error retrieving clients from database!");
+    $clientlist = doProcess($res, 'id', 'name');//for assigning to client
+    $res = doQuery($link, "SELECT client_id FROM user WHERE id=$id", "Error retrieving client id from user!");
+	$row = goFetch($res);
 	$job = $row['client_id']; //selects client in drop down menu
 	include 'form.html.php';
 	exit();
@@ -376,7 +299,7 @@ if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
 	{
 		$sql = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
 		$result = doQuery($link, $sql, 'Database error fetching users.');
-        $client = $row['name'];
+        $clientname = $row['name'];
         $users = doProcess($result, 'user_id', 'user_name');
 		$flag = true;
 		$class = "edit";
@@ -385,8 +308,8 @@ if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
 	{
 		$sql .= " AND user.id = $key";
 	}
-    if($priv === 'Admin' && isset($client)){
-        $manage = "Manage members of $client";
+    if($priv === 'Admin' && isset($clientname)){
+        $manage = "Manage members of $clientname";
     }
     else if($priv === 'Admin'){
         $sql .= " AND user.id = $key";

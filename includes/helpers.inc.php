@@ -149,7 +149,16 @@ function goFetch($result, $mode = MYSQLI_BOTH) {
 function doProcess($r, $k, $v, $mode = MYSQLI_BOTH){
     while ($row = mysqli_fetch_array($r, $mode))
 		{
+        //$key = isset($k) ? 
 			$gang[$row[$k]] = $row[$v];
+		}
+    return $gang;
+}
+
+function doBuild($r, $v, $mode = MYSQLI_BOTH){
+    while ($row = mysqli_fetch_array($r, $mode))
+		{
+			$gang[] = $row[$v];
 		}
     return $gang;
 }
