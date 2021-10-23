@@ -151,3 +151,38 @@ table.up td:last-child {
     display: inline-block;
     padding: 1em;
 }
+
+.clientlist li {
+    display: inline-block;
+    vertical-align: bottom;
+    padding: 0;
+}
+.clientlist li * {
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+.clientlist .name {
+    display: block;
+    font-size: 110%;
+    border-bottom: dotted 1px;
+}
+.clientlist input[type=submit], .editclient input[type=submit] {
+     background:hsl(80, 60%, 50%);
+     border:1px solid #333;
+     border-radius:20px;
+     box-shadow:1px 1px 1px #333;
+}
+.clientlist input[type=submit]:hover, .editclient input[type=submit]:hover {
+     background:#99cc33;
+     background:hsl(80, 100%, 40%);
+     color: white;
+     border:1px solid #333;
+     border-radius:20px;
+}
+.clientlist ul, .editclient {
+    display: inline-block;
+}
+.clientlist {
+    margin: 0 0 1em;
+}

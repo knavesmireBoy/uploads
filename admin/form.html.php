@@ -7,7 +7,7 @@
 	</head>
 	<body><div>
 		<h1><?php htmlout($pagetitle); ?></h1>
-		<form action="?<?php htmlout($action); ?>" method="post" name="usersform">
+		<form action="?<?php htmlout($action); ?>" method="post" name="usersform" class="editclient">
 			<ul><li><label for="name">Name:</label><input id="name" type="text" name="name" value="<?php htmlout($name); ?>" size="32"/></li>
 			<li><label for="email">Email:</label><input id="email"  name="email" value="<?php htmlout($email); ?>" size="32"/></li><li><label for="password">Set password:</label><input id="password" type="password" name="password"/><input type="hidden" name="employer" value="<?php if(isset($cid)) {htmlout($cid);} ?>" size="32"/></li></ul>
 				

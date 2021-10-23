@@ -37,22 +37,14 @@
 <?php  elseif($priv =='Client' or (isset($_POST['act']) and $_POST['act']=='Choose')):
 foreach ($users as $k =>$user):?>
 
-<!--
-<form action="" method="post" name="edituserform">
-<label><?php htmlout($user); ?></label>
-<input type="hidden" name="id" value="<?php echo $k ;?>"/>
-<input type="submit" name="action" value="Edit"/>&nbsp;<input type="submit" name="action" value="Delete"/>
-</form>-->
 
-<form action="" method="post" name="edituserform">
-<ul class="list"><li><label><?php htmlout($user); ?></label></li>
-<li><label>Edit<input type="radio" name="action" value="Edit"/></label>
-<label>Delete<input type="radio" name="action" value="Delete"/></label></li>
+<form action="" method="post" name="edituserform" class="clientlist">
+<ul><li class="name"><label><?php htmlout($user); ?></label></li>
+<li><label>edit<input type="radio" name="action" value="Edit"/></label>
+<label>delete<input type="radio" name="action" value="Delete"/></label></li>
 <input type="hidden" name="id" value="<?php echo $k ;?>"/>
-<li><input type="submit" value = "Submit"/></li>
+<li><input type="submit" value = "submit"/></li>
 </ul></form>
-
-
 <?php
 endforeach;
 endif;
