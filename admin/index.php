@@ -188,12 +188,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 	// Get list of roles assigned to this user
 	$res = doQuery($link, "SELECT roleid FROM userrole WHERE userid='$id'", 'Error fetching list of assigned roles.');
     $selectedRoles = doBuild($res, 'roleid');
-    
 	// Build the list of all roles
-    $res = doQuery($link, "SELECT id, description FROM role", 'Error fetching list of roles.');
-    
-    dump($selectedRoles);
-    
+    $res = doQuery($link, "SELECT id, description FROM role", 'Error fetching list of roles.');    
 	while ($row = mysqli_fetch_array($res))
 	{
 		$roles[] = array(
