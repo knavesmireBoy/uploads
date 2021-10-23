@@ -167,18 +167,25 @@ table.up td:last-child {
     font-size: 110%;
     border-bottom: dotted 1px;
 }
+input[type=submit]{
+     border:1px solid #444;
+    color: #222;
+     border-radius:20px;
+     box-shadow:1px 1px 1px #444;
+     background-color: silver;
+}
+
+input[type=submit]:hover {
+    background-color: gainsboro;
+    color: black;
+}
 .clientlist input[type=submit], .editclient input[type=submit] {
      background:hsl(80, 60%, 50%);
-     border:1px solid #333;
-     border-radius:20px;
-     box-shadow:1px 1px 1px #333;
 }
 .clientlist input[type=submit]:hover, .editclient input[type=submit]:hover {
      background:#99cc33;
      background:hsl(80, 100%, 40%);
      color: white;
-     border:1px solid #333;
-     border-radius:20px;
 }
 .clientlist ul, .editclient {
     display: inline-block;

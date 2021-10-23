@@ -11,7 +11,7 @@ exit();
 
 if (!$roleplay=userHasWhatRole()){
 $error = 'Only Account Administrators may access this page!!';
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/accessdenied.html.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/accessdenied.html.php';
 exit();
 }
 else {
@@ -19,7 +19,7 @@ foreach ($roleplay as $key => $priv){// $roleplay is an array, use foreach to ob
 }
 if($priv!='Admin'){
 $error = 'Only Account Administrators may access this page!!';
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/accessdenied.html.php';
+include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/accessdenied.html.php';
 exit();
 }
 }

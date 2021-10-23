@@ -141,6 +141,19 @@ function doSafeFetch($lnk, $sql, $mode = MYSQLI_BOTH)
     //assumes query works!!
     return mysqli_fetch_array(mysqli_query($lnk, $sql), $mode);
 }
+
+function goFetch($result, $mode = MYSQLI_BOTH) {
+    return mysqli_fetch_array($result, $mode);
+}
+
+function doProcess($r, $k, $v, $mode = MYSQLI_BOTH){
+    while ($row = mysqli_fetch_array($r, $mode))
+		{
+			$gang[$row[$k]] = $row[$v];
+		}
+    return $gang;
+}
+
 function doFetch($lnk, $sql, $msg)
 {
     $result = mysqli_query($lnk, $sql);
@@ -152,6 +165,18 @@ function doFetch($lnk, $sql, $msg)
     }
     return $result;
 }
+function doQuery($lnk, $sql, $msg)
+{
+    $result = mysqli_query($lnk, $sql);
+    if (!$result)
+    {
+        $error = $msg;
+        include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+        exit();
+    }
+    return $result;
+}
+
 
 function formatFileSize($size)
 {
