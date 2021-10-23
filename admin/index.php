@@ -59,7 +59,10 @@ if (isset($_GET['add']))
 	$action = 'addform';
 	$name = '';
 	$email = '';
+    $cid;
 	$button = 'Add User';
+    $roles = array();
+    $clientlist = array();
 
 	//Build the list of roles
 	$sql = "SELECT id, description FROM role";
@@ -90,23 +93,14 @@ if (isset($_GET['add']))
 		$error = "Error retrieving clients from database!";
 		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 		exit();
-	}
+	}    
+    
 	$row = mysqli_fetch_array($result);
 	$cid = $row['id'];
 	$email = $row['domain'];
-
-	$sql = "SELECT id, name FROM client ORDER BY name";
-	$result = mysqli_query($link, $sql);
-	if (!$result)
-	{
-		$error = "Error retrieving clients from database!";
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-	while ($row = mysqli_fetch_array($result))
-	{
-		$clientlist[$row['id']] = $row['name'];
-	}
+    
+    $res = doQuery($link, "SELECT id, name FROM client ORDER BY name", "Error retrieving clients from database!");
+    $clientlist = doProcess($res, 'id', 'name');//for assigning to client
 	include 'form.html.php';
 	exit();
 } //////////////END OF ASSIGN
@@ -208,49 +202,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 } //edit
 if (isset($_GET['editform']))
 {
-	include $db;
-    $id = doSanitize($link, $_POST['id']);
-	$name = doSanitize($link, $_POST['name']);
-	$email = doSanitize($link, $_POST['email']);    
-	$sql = "UPDATE user SET name='$name', email='$email' WHERE id='$id'";
-    //dump($email);
-    doQuery($link, $sql, 'Error setting user details.');
-	if (isset($_POST['password']) && !empty($_POST['password']))
-	{
-		$password = md5($_POST['password'] . 'uploads');
-		$password = doSanitize($link, $password);
-		$sql = "UPDATE user SET password = '$password' WHERE id = '$id'";
-        doQuery($link, $sql, 'Error setting user password.');
-	}
-
-	if ($priv == 'Admin')
-	{
-		$sql = "DELETE FROM userrole WHERE userid='$id'";
-        //clear existing before - optionally - re-assigning
-        doQuery($link, $sql, 'Error setting user password.', 'Error removing obsolete user role entries.');
-	}
-	if (isset($_POST['roles']))
-	{
-		foreach ($_POST['roles'] as $role)
-		{
-			$roleid = doSanitize($link, $role);
-			$sql = "INSERT INTO userrole SET userid='$id', roleid='$roleid'";
-            doQuery($link, $sql, 'Error setting user password.', 'Error assigning selected role to user.');
-		} //end foreach
-	}
-
-	if (isset($_POST['employer']) && !empty($_POST['employer']))
-	{
-		$client = $_POST['employer'];
-		$cid = doSanitize($link, $client);
-        $sql = "SELECT domain FROM client WHERE id = $cid";
-        $res = doQuery($link, $sql, "Error getting client domain");
-        $email = fixDomain($email, goFetch($res)[0]);
-		$sql = "UPDATE user SET user.client_id = $cid, user.email = '$email' WHERE id = $id";
-        doQuery($link, $sql, "Error setting user details");        
-	}
-	header('Location: . ');
-	exit();
+	updateUser($db, $priv);
 } ///END OF EDIT
 
 
