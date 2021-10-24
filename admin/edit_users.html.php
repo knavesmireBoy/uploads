@@ -20,7 +20,7 @@
 			</ul>
 		</form>
         <?php endforeach; ?>
-        <p><a href=".">Return to list</a></p>
+        <p><a href="<?php echo $ret; ?>">Return to list</a></p>
 		<?php
 		if (isset($prompt)) {
             //exit('nnn');

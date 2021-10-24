@@ -8,7 +8,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/admin_helpers.inc.ph
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 $id = '';
 $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-$manage = "Manage Users";
+$manage = "Manage User";
 
 if (!userIsLoggedIn())
 {
@@ -30,8 +30,7 @@ $single;
 if(!isset($priv)){
     exit();
 }
-// THE DEFAULT QUERY___________________________________
-$sql = $priv === 'Client' ? "SELECT id, name FROM user where id ='$key' ORDER BY name" : "SELECT id, name FROM user ";
+//if Client is a client, not a single user, a different query is used;
 $users = [];//required for edit.html.php after delete is invoked
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
 if(isset($_GET['pwdlen'])) {
@@ -45,10 +44,7 @@ if (isset($_GET['addform']))
 
 if (isset($_GET['editform']))
 {
-	if($priv === 'Client'){
-        $row = getClientCount($db, "{$_SESSION['email']}", $domain);
-    }
-    updateUser($db, $priv, $row['total']);
+    updateUser($db, $priv);
 }
 
 if (isset($_POST['confirm']))
@@ -56,45 +52,37 @@ if (isset($_POST['confirm']))
 	doConfirm($db, $_POST['confirm']);
 }
 
-//if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
-    if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'Choose' && isset($_REQUEST['user']))
+//Admin uses $_POST Non-Admin $_GET
+if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'Choose' && isset($_REQUEST['user']))
 {
 	include $db;
     $return = "Return to users";
-   
 	$key = doSanitize($link, $_REQUEST['user']);
-    
 	$result = doQuery($link, "SELECT domain, name FROM client WHERE domain = '$key' ", 'Database error fetching clients.');
 	$row = goFetch($result);
 	// some clients need full domain for identification, in which case the query is simplified to a straight match to a users email address which corresponds to the client domain. ???
     $domain = strrpos($key, "@") ? " user.email" : $domain;
-     if($priv === 'Client' && !isset($row)) {
-        $key = domainFromUserID($link, $key);
-    }
+    $ret = $priv === 'Admin' ? '.' : '..';
     
-	if (isset($key))
+	if (isset($row))
 	{
-        $sqlc = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
-		$result = doQuery($link, $sqlc, 'Database error fetching users.');
+        $sql = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
+		$result = doQuery($link, $sql, 'Database error fetching users.');
         $clientname = $row['name'];
         $users = doProcess($result, 'user_id', 'user_name');
 		$flag = true;
 		$class = "edit";
 	}
-	else
-	{
-		$sql .= " AND user.id = $key";
-	}
     if($priv === 'Admin' && isset($clientname)){
         $manage = "Manage members of $clientname";
     }
-    else if($priv === 'Admin' && !isset($clientname)){
+    if(!isset($clientname)){
+        $sql = "SELECT id, name FROM user where id ='$key' ORDER BY name";
         $manage = "Edit details";
         $result = doQuery($link, $sql, "Error retrieving users from the database!");
         $users = doProcess($result, 'id', 'name');
     }
-    
-     include 'edit_users.html.php';
+    include 'edit_users.html.php';
     exit();
     
 } ///CHOOSE________________________________________________________________________
@@ -198,32 +186,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 } //DELETE
 
 include $db;
-////\\\\\/////\\\\\////\\\\\/////\\\\\////\\\\\ WILD /////\\\\\////\\\\\/////\\\\\////\\\\\/////\\\\\////\\\\\/////\\\\\
 
-if ($priv != "Admin")
-{
-    $email = "{$_SESSION['email']}";
-    $row = getClientCount($db, $email, $domain);
-    $count = $row['total'];
-    $domain = $count == 0 ? "user.email" : $domain;
-    
-    if($count == 1) {//not strict equality as $count is string
-        include $db;
-        $res = doQuery($link, "SELECT id from user WHERE email = '$email'", 'Error getting id from email');
-        $row = goFetch($res);
-        $id = $row['id'];
-        doExit("?act=Choose&user=$id");
-        //redirect to bypass superfluous drop down
-    }
-	if ($count > 0)
-	{
-		$sqlc = "SELECT employer.id, employer.name FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain WHERE user.email='$email'";
-        $result = doQuery($link, $sqlc, 'Database error fetching client list.');
-        $users = doProcess($result, 'id', 'name');
-		include 'select_users.html.php';
-        exit();
-	}
-} //NOT ADMIN
 if ($priv == "Admin")
 {
     $res = doQuery($link,  "SELECT client.domain, client.name FROM client ORDER BY name", 'Database error fetching client list.');
@@ -231,5 +194,12 @@ if ($priv == "Admin")
     $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id WHERE client.domain IS NULL ORDER BY name"; 
     $res = doQuery($link, $sql, 'Database error fetching user list.');
     $users = doProcess($res, 'id', 'name');
-    include 'select_users.html.php';//used for drop down and edit
+    include 'select_users.html.php';
+}
+else {
+    $email = "{$_SESSION['email']}";
+    $res = doQuery($link, "SELECT id from user WHERE email = '$email'", 'Error getting id from email');
+    $row = goFetch($res);
+    $id = $row['id'];
+    doExit("?act=Choose&user=$id");//bypass drop down for non-admin users
 }

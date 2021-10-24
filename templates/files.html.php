@@ -157,7 +157,7 @@ echo date("g:i a F j ", strtotime($stamp)) ;?></td>
 endif; 
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/logout.inc.html.php'; 
-if ($priv =='Admin' or $priv =='Client') : ?>
+if ($priv =='Admin' or $priv == 'Client') : ?>
 <p><a href="admin/">Admin Pages</a></p>
 
 <?php 

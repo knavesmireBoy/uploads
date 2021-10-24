@@ -71,7 +71,7 @@ function updateUser($db, $priv, $count){
 	{
         assignClient($link, doSanitize($link, $_POST['employer']), $id, $email);
 	}
-    $location = (isset($pwd)) ? "?pwdlen&id=$id" : ($count == 1 ? '..' : '.');
+    $location = (isset($pwd)) ? "?pwdlen&id=$id" : ($priv == 'Client' ? '..' : '.');
 	doExit($location);
 }
 

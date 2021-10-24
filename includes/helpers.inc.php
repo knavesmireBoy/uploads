@@ -565,5 +565,3 @@ function doUpdate($db){
     header('Location: . ');
     exit();
 }
-
-?>
