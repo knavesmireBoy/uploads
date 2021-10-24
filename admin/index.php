@@ -25,6 +25,7 @@ if (!$roleplay = userHasWhatRole())
 
 $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
+$single;
 
 if(!isset($priv)){
     exit();
@@ -44,7 +45,10 @@ if (isset($_GET['addform']))
 
 if (isset($_GET['editform']))
 {
-	updateUser($db, $priv);
+	if($priv === 'Client'){
+        $row = getClientCount($db, "{$_SESSION['email']}", $domain);
+    }
+    updateUser($db, $priv, $row['total']);
 }
 
 if (isset($_POST['confirm']))
@@ -52,12 +56,13 @@ if (isset($_POST['confirm']))
 	doConfirm($db, $_POST['confirm']);
 }
 
-if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
+//if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
+    if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'Choose' && isset($_REQUEST['user']))
 {
 	include $db;
     $return = "Return to users";
    
-	$key = doSanitize($link, $_POST['user']);
+	$key = doSanitize($link, $_REQUEST['user']);
     
 	$result = doQuery($link, "SELECT domain, name FROM client WHERE domain = '$key' ", 'Database error fetching clients.');
 	$row = goFetch($result);
@@ -197,17 +202,15 @@ include $db;
 
 if ($priv != "Admin")
 {
-	$email = "{$_SESSION['email']}";
-	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-    $result = doQuery($link, "SELECT $domain FROM user WHERE user.email='$email'", 'Database error fetching users.');
-	$row = goFetch($result);
-	$dom = $row[0];
-	$sqlc = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain = client.domain WHERE $domain='$dom' AND client.domain='$dom'";
-    
-    $result = doQuery($link, $sqlc, 'Database error getting count.');
-	$row = goFetch($result);
-    $count = $row['dom'];
+    $row = getClientCount($db, "{$_SESSION['email']}", $domain);
+    $count = $row['total'];
     $domain = $count == 0 ? "user.email" : $domain;
+    
+    if($count == 1) {//not strict equality as $count is string
+        $id = $row['id'];
+        doExit("?act=Choose&user=$id");
+        //redirect to bypass superfluous drop down
+    }
 	if ($count > 0)
 	{
 		$sqlc = "SELECT employer.id, employer.name FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain WHERE user.email='$email'";

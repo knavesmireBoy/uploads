@@ -33,7 +33,8 @@ function setPassword($link, $pwd, $id){
     doQuery($link,  "UPDATE user SET password = '$password'  WHERE id = '$id'", 'Error setting user password.');
 }
 
-function updateUser($db, $priv){
+function updateUser($db, $priv, $count){
+    
     include $db;
     $id = doSanitize($link, $_POST['id']);
 	$name = doSanitize($link, $_POST['name']);
@@ -42,7 +43,7 @@ function updateUser($db, $priv){
 	$sql = "UPDATE user SET name='$name', email='$email' WHERE id='$id'";
     
     doQuery($link, $sql, 'Error setting user details.');
-	if (isset($_POST['password']))
+	if (isset($_POST['password']) && !empty($_POST['password']))
 	{
 		if(strlen($_POST['password']) >= 5) {
             setPassword($link, $_POST['password'], $id);
@@ -70,7 +71,7 @@ function updateUser($db, $priv){
 	{
         assignClient($link, doSanitize($link, $_POST['employer']), $id, $email);
 	}
-    $location = $pwd ? "?pwdlen&id=$id" : '.';
+    $location = (isset($pwd)) ? "?pwdlen&id=$id" : ($count == 1 ? '..' : '.');
 	doExit($location);
 }
 
@@ -96,4 +97,16 @@ function addUser($db){
 		}
 	}
 	doExit();
+}
+
+
+function getClientCount($db, $email, $domain){
+	include $db;
+    $result = doQuery($link, "SELECT $domain FROM user WHERE user.email='$email'", 'Database error fetching users.');
+	$row = goFetch($result);
+	$dom = $row[0];
+    $sql = "SELECT user.id, COUNT(*) AS total FROM user INNER JOIN client ON $domain = client.domain WHERE $domain = '$dom' GROUP BY id";
+    
+    $result = doQuery($link, $sql, 'Database error getting count.');
+	return goFetch($result);
 }

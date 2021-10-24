@@ -11,7 +11,7 @@
 	<div>
 		<h1><?php echo $manage; ?></h1>
 		<?php foreach ($users as $k => $v): ?>
-		<form action="" class="clientlist" id="edituserform" method="post" name="edituserform">
+		<form action="?" class="clientlist" id="edituserform" method="post" name="edituserform">
 			<ul>
 				<li class="name"><label><?php htmlout($v); ?></label></li>
 				<li><label>edit<input name="action" type="radio" value="Edit"></label><label>delete<input name="action" type="radio" value="Delete"></label></li>
