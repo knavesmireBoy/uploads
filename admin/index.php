@@ -32,20 +32,6 @@ if(!isset($priv)){
 // THE DEFAULT QUERY___________________________________
 $sql = $priv === 'Client' ? "SELECT id, name FROM user where id ='$key' ORDER BY name" : "SELECT id, name FROM user "; 
 
-if (isset($_POST['action']) and $_POST['action'] == 'Delete')
-{
-	$id = $_POST['id'];
-	$title = "Prompt";
-	$prompt = "Are you sure you want to delete this user? ";
-	$call = "confirm";
-	$pos = "Yes";
-	$neg = "No";
-	$action = '';
-	include 'edit_users.html.php';
-    exit();
-} //DELETE
-
-
 if (isset($_GET['addform']))
 {
 	addUser($db);
@@ -88,7 +74,7 @@ if (isset($_GET['add']))
 	if (isset($_POST['employer']) && !empty($_POST['employer']))
 	{
 		$id = doSanitize($link, $_POST['employer']);
-        $res = doQuery($link, "SELECT id, domain FROM client WHERE id=$id", "Error retrieving clients from database!");
+        $res = doQuery($link, "SELECT id, domain FROM client WHERE id = $id", "Error retrieving clients from database!");
 	}
     
 	$row = goFetch($res);
@@ -121,7 +107,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 	$id = $row['id'];
 	
 	// Get list of roles assigned to this user
-	$res = doQuery($link, "SELECT roleid FROM userrole WHERE userid='$id'", 'Error fetching list of assigned roles.');
+	$res = doQuery($link, "SELECT roleid FROM userrole WHERE userid = '$id'", 'Error fetching list of assigned roles.');
     $selectedRoles = doBuild($res, 'roleid');
 	// Build the list of all roles
     $res = doQuery($link, "SELECT id, description FROM role", 'Error fetching list of roles.');    
@@ -135,12 +121,26 @@ if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 	}
 	$res = doQuery($link, "SELECT id, name FROM client ORDER BY name", "Error retrieving clients from database!");
     $clientlist = doProcess($res, 'id', 'name');//for assigning to client
-    $res = doQuery($link, "SELECT client_id FROM user WHERE id=$id", "Error retrieving client id from user!");
+    $res = doQuery($link, "SELECT client_id FROM user WHERE id = $id", "Error retrieving client id from user!");
 	$row = goFetch($res);
 	$job = $row['client_id']; //selects client in drop down menu
 	include 'form.html.php';
 	exit();
 } //edit
+
+
+if (isset($_POST['action']) and $_POST['action'] == 'Delete')
+{
+	$id = $_POST['id'];
+	$title = "Prompt";
+	$prompt = "Are you sure you want to delete this user? ";
+	$call = "confirm";
+	$pos = "Yes";
+	$neg = "No";
+	$action = '';
+	include 'edit_users.html.php';
+    exit();
+} //DELETE
 
 //display users___________________________________________________________________
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
