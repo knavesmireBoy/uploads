@@ -105,8 +105,7 @@ function getClientCount($db, $email, $domain){
     $result = doQuery($link, "SELECT $domain FROM user WHERE user.email='$email'", 'Database error fetching users.');
 	$row = goFetch($result);
 	$dom = $row[0];
-    $sql = "SELECT user.id, COUNT(*) AS total FROM user INNER JOIN client ON $domain = client.domain WHERE $domain = '$dom' GROUP BY id";
-    
+    $sql = "SELECT COUNT(*) AS total FROM user INNER JOIN client ON $domain = client.domain WHERE $domain = '$dom'";
     $result = doQuery($link, $sql, 'Database error getting count.');
 	return goFetch($result);
 }

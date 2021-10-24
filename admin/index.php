@@ -202,11 +202,15 @@ include $db;
 
 if ($priv != "Admin")
 {
-    $row = getClientCount($db, "{$_SESSION['email']}", $domain);
+    $email = "{$_SESSION['email']}";
+    $row = getClientCount($db, $email, $domain);
     $count = $row['total'];
     $domain = $count == 0 ? "user.email" : $domain;
     
     if($count == 1) {//not strict equality as $count is string
+        include $db;
+        $res = doQuery($link, "SELECT id from user WHERE email = '$email'", 'Error getting id from email');
+        $row = goFetch($res);
         $id = $row['id'];
         doExit("?act=Choose&user=$id");
         //redirect to bypass superfluous drop down
