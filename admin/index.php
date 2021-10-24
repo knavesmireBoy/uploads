@@ -30,7 +30,12 @@ if(!isset($priv)){
     exit();
 }
 // THE DEFAULT QUERY___________________________________
-$sql = $priv === 'Client' ? "SELECT id, name FROM user where id ='$key' ORDER BY name" : "SELECT id, name FROM user "; 
+$sql = $priv === 'Client' ? "SELECT id, name FROM user where id ='$key' ORDER BY name" : "SELECT id, name FROM user ";
+$users = [];//required for edit.html.php after delete is invoked
+$domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
+if(isset($_GET['pwdlen'])) {
+$pwderror = 'Password must contain at least 5 characters';
+}
 
 if (isset($_GET['addform']))
 {
@@ -46,6 +51,48 @@ if (isset($_POST['confirm']))
 {
 	doConfirm($db, $_POST['confirm']);
 }
+
+if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
+{
+	include $db;
+    $return = "Return to users";
+   
+	$key = doSanitize($link, $_POST['user']);
+    
+	$result = doQuery($link, "SELECT domain, name FROM client WHERE domain = '$key' ", 'Database error fetching clients.');
+	$row = goFetch($result);
+	// some clients need full domain for identification, in which case the query is simplified to a straight match to a users email address which corresponds to the client domain. ???
+    $domain = strrpos($key, "@") ? " user.email" : $domain;
+     if($priv === 'Client' && !isset($row)) {
+        $key = domainFromUserID($link, $key);
+    }
+    
+	if (isset($key))
+	{
+        $sqlc = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
+		$result = doQuery($link, $sqlc, 'Database error fetching users.');
+        $clientname = $row['name'];
+        $users = doProcess($result, 'user_id', 'user_name');
+		$flag = true;
+		$class = "edit";
+	}
+	else
+	{
+		$sql .= " AND user.id = $key";
+	}
+    if($priv === 'Admin' && isset($clientname)){
+        $manage = "Manage members of $clientname";
+    }
+    else if($priv === 'Admin' && !isset($clientname)){
+        $manage = "Edit details";
+        $result = doQuery($link, $sql, "Error retrieving users from the database!");
+        $users = doProcess($result, 'id', 'name');
+    }
+    
+     include 'edit_users.html.php';
+    exit();
+    
+} ///CHOOSE________________________________________________________________________
 
 if (isset($_GET['add']))
 {
@@ -87,7 +134,8 @@ if (isset($_GET['add']))
 	exit();
 }
 
-if (isset($_POST['action']) and $_POST['action'] == 'Edit')
+
+if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || isset($pwderror))
 {
     $pagetitle = 'Edit User';
 	$action = 'editform';
@@ -97,9 +145,10 @@ if (isset($_POST['action']) and $_POST['action'] == 'Edit')
     $clientlist;
     $job;
     $roles = array();
-    
+    $id = isset($_GET['id']) ? $_GET['id'] : $_POST['id'];
+   
     include $db;
-	$id = doSanitize($link, $_POST['id']);
+	$id = doSanitize($link, $id);
     $res = doQuery($link, "SELECT id, name, email FROM user WHERE id = $id", 'Error fetching user details.');
 	$row = goFetch($res);
 	$name = $row['name'];
@@ -131,7 +180,8 @@ if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 
 if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 {
-	$id = $_POST['id'];
+	include $db;
+    $id = $_POST['id'];
 	$title = "Prompt";
 	$prompt = "Are you sure you want to delete this user? ";
 	$call = "confirm";
@@ -142,48 +192,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
     exit();
 } //DELETE
 
-//display users___________________________________________________________________
-$domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
-$sql = "SELECT user.id, user.name FROM user LEFT JOIN (SELECT user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain WHERE employer.domain IS NULL"; //this overwrites above query to filter out users as employees
-$sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id WHERE client.domain IS NULL"; //USING ID NOT DOMAIN
-
 include $db;
-//_______________________________________________________________________________
-if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
-{
-	$return = "Return to users";
-	$key = doSanitize($link, $_POST['user']);
-	$result = doQuery($link, "SELECT domain, name FROM client WHERE domain = '$key' ", 'Database error fetching clients.');
-	$row = goFetch($result);
-	// some clients need full domain for identification, in which case the query is simplified to a straight match to a users email address which corresponds to the client domain. ???
-    $domain = strrpos($key, "@") ? " user.email" : $domain;
-    
-	if (isset($row[0]))
-	{
-        $sqlc = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
-		$result = doQuery($link, $sqlc, 'Database error fetching users.');
-        $clientname = $row['name'];
-        $users = doProcess($result, 'user_id', 'user_name');
-		$flag = true;
-		$class = "edit";
-	}
-	else
-	{
-		$sql .= " AND user.id = $key";
-	}
-    if($priv === 'Admin' && isset($clientname)){
-        $manage = "Manage members of $clientname";
-    }
-    else if($priv === 'Admin' && !isset($clientname)){
-        $manage = "Edit details";
-        dump($sql);
-        $result = doQuery($link, $sql, "Error retrieving users from the database!");
-        $users = doProcess($result, 'id', 'name');
-    }
-     include 'edit_users.html.php';
-    exit();
-    
-} ///CHOOSE________________________________________________________________________
 ////\\\\\/////\\\\\////\\\\\/////\\\\\////\\\\\ WILD /////\\\\\////\\\\\/////\\\\\////\\\\\/////\\\\\////\\\\\/////\\\\\
 
 if ($priv != "Admin")
@@ -212,7 +221,7 @@ if ($priv == "Admin")
 {
     $res = doQuery($link,  "SELECT client.domain, client.name FROM client ORDER BY name", 'Database error fetching client list.');
 	$client = doProcess($res, 'domain', 'name');
-    $sql .= " ORDER BY name";
+    $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id WHERE client.domain IS NULL ORDER BY name"; 
     $res = doQuery($link, $sql, 'Database error fetching user list.');
     $users = doProcess($res, 'id', 'name');
     include 'select_users.html.php';//used for drop down and edit

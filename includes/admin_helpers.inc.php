@@ -3,8 +3,8 @@ function dump($arg){
  exit(var_dump($arg));
 }
 
-function doExit(){
-    header('Location: . ');
+function doExit($location = '.'){
+    header('Location: ' . $location);
 	exit();
 }
 
@@ -30,20 +30,26 @@ function assignRole($link, $roleid, $id){
 
 function setPassword($link, $pwd, $id){
     $password = doSanitize($link, md5($pwd . 'uploads'));
-    doQuery($link,  "UPDATE user SET password = '$pwd'  WHERE id = '$id'", 'Error setting user password.');
+    doQuery($link,  "UPDATE user SET password = '$password'  WHERE id = '$id'", 'Error setting user password.');
 }
 
 function updateUser($db, $priv){
     include $db;
     $id = doSanitize($link, $_POST['id']);
 	$name = doSanitize($link, $_POST['name']);
-	$email = doSanitize($link, $_POST['email']);    
+	$email = doSanitize($link, $_POST['email']);
+    $pwd;
 	$sql = "UPDATE user SET name='$name', email='$email' WHERE id='$id'";
     
     doQuery($link, $sql, 'Error setting user details.');
-	if (isset($_POST['password']) && !empty($_POST['password']))
+	if (isset($_POST['password']))
 	{
-		setPassword($link, $_POST['password'], $id);
+		if(strlen($_POST['password']) >= 5) {
+            setPassword($link, $_POST['password'], $id);
+        }
+        else {
+            $pwd = 'fail';
+        }
 	}
 
 	if ($priv == 'Admin')
@@ -64,7 +70,8 @@ function updateUser($db, $priv){
 	{
         assignClient($link, doSanitize($link, $_POST['employer']), $id, $email);
 	}
-	doExit();
+    $location = $pwd ? "?pwdlen&id=$id" : '.';
+	doExit($location);
 }
 
 function addUser($db){

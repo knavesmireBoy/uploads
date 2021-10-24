@@ -17,18 +17,22 @@
 					<option value="">
 						Select one
 					</option>
+                    <?php if(isset($client)): ?>
 					<optgroup label="clients">
-						<?php foreach ($client as $k => $v): ?>
+                        <?php foreach ($client as $k => $v): ?>
 						<option value="<?php htmlout($k); ?>">
 							<?php htmlout($v); ?>
-						</option><?php endforeach; ?>
+						</option>
+                    <?php endforeach; ?>
 					</optgroup>
-					<optgroup label="users">
+                    <optgroup label="users">
+                        <?php endif;?>
 						<?php  foreach ($users as $k => $v): ?>
 						<option value="<?php htmlout($k); ?>">
 							<?php htmlout($v); ?>
-						</option><?php endforeach; ?>
+						</option><?php endforeach; if(isset($client)) : ?>
 					</optgroup>
+                    <?php endif; ?>
 				</select><input name="act" type="submit" value="Choose"></li>
 			</ul>
 		</form>

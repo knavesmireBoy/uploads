@@ -186,6 +186,11 @@ function doQuery($lnk, $sql, $msg)
     return $result;
 }
 
+function domainFromUserID($link, $id){
+    $sql = "SELECT domain from client INNER JOIN user ON user.client_id = client.id WHERE user.id = $id";
+    $res = doQuery($link, $sql, 'Database getting client domain.');
+    return goFetch($res)[0];
+}
 
 function formatFileSize($size)
 {
@@ -259,7 +264,8 @@ function doEmail($link, $id){
     }
 }
 
-function getInitialKey($conn, $privilege, $user, $domn){
+function getInitialKey($conn, $privilege, $user, $dom){
+    
     function assignInitialUser($id, $dom){
         return "SELECT employer.name, employer.id FROM (SELECT user.name, user.id, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer WHERE employer.domain='$id' LIMIT 1"; 
     }
@@ -271,7 +277,7 @@ function getInitialKey($conn, $privilege, $user, $domn){
         $row = doSafeFetch($link, "SELECT domain FROM client WHERE domain='$key'");
         if (isset($row[0])) {
             //RETURNS one user, as relationship between file and user is one to one.
-            $row = doSafeFetch($link, assignInitialUser($key, $domn));
+            $row = doSafeFetch($link, assignInitialUser($key, $dom));
             $key = $row['id'];
             if (!$key) {
                 $key = $user; //$key will be empty if above query returned empty set, reset
