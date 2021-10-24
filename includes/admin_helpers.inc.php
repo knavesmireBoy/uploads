@@ -59,3 +59,34 @@ function updateUser($db, $priv){
 	header('Location: . ');
 	exit();
 }
+
+function addUser($db){
+    include $db;
+	$name = doSanitize($link, $_POST['name']);
+	$email = doSanitize($link, $_POST['email']);
+	doQuery($link, "INSERT INTO user SET name='$name', email='$email' ", 'Error adding user.');
+	$id = mysqli_insert_id($link);
+	if (isset($_POST['password']) && !empty($_POST['password']))
+	{
+		$password = md5($_POST['password'] . 'uploads');
+		$password = doSanitize($link, $password);
+        doQuery($link,  "UPDATE user SET password = '$password'  WHERE id = '$id'", 'Error setting user password.');
+	}
+	if (isset($_POST['employer']) && $_POST['employer'] != '')
+	{
+		$client = $_POST['employer'];
+		$cid = doSanitize($link, $client);
+		$sql = "UPDATE user SET client_id = $cid WHERE id = $id";
+        doQuery($link,  "UPDATE user SET client_id = $cid WHERE id = $id", 'Error setting client id.');
+	}
+	if (isset($_POST['roles']))
+	{
+		foreach ($_POST['roles'] as $role)
+		{
+			$roleid = doSanitize($link, $role);
+            doQuery($link, "INSERT INTO userrole SET userid='$id', roleid='$roleid'", 'Error assigning selected role to user.');
+		}
+	}
+	header('Location: . ');
+	exit();
+}

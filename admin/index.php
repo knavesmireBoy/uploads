@@ -6,11 +6,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/admin_helpers.inc.php';
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-$users = [];
 $id = '';
 $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 $manage = "Manage Users";
-
 
 if (!userIsLoggedIn())
 {
@@ -52,6 +50,11 @@ if (isset($_POST['confirm']))
 	doConfirm($db, $_POST['confirm']);
 }
 
+if (isset($_GET['addform']))
+{
+	addUser($db);
+}
+
 if (isset($_GET['add']))
 {
 	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
@@ -65,15 +68,9 @@ if (isset($_GET['add']))
     $clientlist = array();
 
 	//Build the list of roles
-	$sql = "SELECT id, description FROM role";
-	$result = mysqli_query($link, $sql);
-	if (!$result)
-	{
-		$error = 'Error fetching list of roles.';
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-	while ($row = mysqli_fetch_array($result))
+    $res = doQuery($link, "SELECT id, description FROM role", 'Error fetching list of roles.');
+	
+	while ($row = mysqli_fetch_array($res))
 	{
 		$roles[] = array(
 			'id' => $row['id'],
@@ -85,17 +82,10 @@ if (isset($_GET['add']))
 	if (isset($_POST['employer']) && !empty($_POST['employer']))
 	{
 		$id = doSanitize($link, $_POST['employer']);
-		$sql = "SELECT id, domain FROM client WHERE id=$id";
-		$result = mysqli_query($link, $sql);
+        $res = doQuery($link, "SELECT id, domain FROM client WHERE id=$id", "Error retrieving clients from database!");
 	}
-	if (!$result)
-	{
-		$error = "Error retrieving clients from database!";
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}    
     
-	$row = mysqli_fetch_array($result);
+	$row = goFetch($res);
 	$cid = $row['id'];
 	$email = $row['domain'];
     
@@ -106,60 +96,7 @@ if (isset($_GET['add']))
 } //////////////END OF ASSIGN
 
 
-if (isset($_GET['addform']))
-{
-	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-	$name = doSanitize($link, $_POST['name']);
-	$email = doSanitize($link, $_POST['email']);
-	$sql = "INSERT INTO user SET name='$name', email='$email' ";
-	if (!mysqli_query($link, $sql))
-	{
-		$error = 'Error adding user.';
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-		exit();
-	}
-	$aid = mysqli_insert_id($link);
-	if (isset($_POST['password']) && $_POST['password'] != '')
-	{
-		$password = md5($_POST['password'] . 'uploads');
-		$password = doSanitize($link, $password);
-		$sql = "UPDATE user SET password = '$password'  WHERE id = '$aid'";
-		if (!mysqli_query($link, $sql))
-		{
-			$error = 'Error setting user password.';
-			include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-			exit();
-		}
-	}
-	if (isset($_POST['employer']) && $_POST['employer'] != '')
-	{
-		$client = $_POST['employer'];
-		$cid = doSanitize($link, $client);
-		$sql = "UPDATE user SET client_id=$cid WHERE id=$aid";
-		if (!mysqli_query($link, $sql))
-		{
-			$error = 'Error setting client id 152.';
-			include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-			exit();
-		}
-	}
-	if (isset($_POST['roles']))
-	{
-		foreach ($_POST['roles'] as $role)
-		{
-			$roleid = doSanitize($link, $role);
-			$sql = "INSERT INTO userrole SET userid='$aid', roleid='$roleid'";
-			if (!mysqli_query($link, $sql))
-			{
-				$error = 'Error assigning selected role to user.';
-				include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-				exit();
-			}
-		}
-	}
-	header('Location: . ');
-	exit();
-} //end of addform
+
 if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 {
     $pagetitle = 'Edit User';
@@ -208,8 +145,8 @@ if (isset($_GET['editform']))
 
 //display users___________________________________________________________________
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
-$sql = "SELECT user.id, user.name FROM user LEFT JOIN (SELECT user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain=employer.domain WHERE employer.domain IS NULL"; //this overwrites above query to filter out users as employees
-$sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id=client.id WHERE client.domain IS NULL"; //USING ID NOT DOMAIN
+$sql = "SELECT user.id, user.name FROM user LEFT JOIN (SELECT user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain WHERE employer.domain IS NULL"; //this overwrites above query to filter out users as employees
+$sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id WHERE client.domain IS NULL"; //USING ID NOT DOMAIN
 include $db;
 //_______________________________________________________________________________
 if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
@@ -223,8 +160,8 @@ if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
     
 	if (isset($row[0]))
 	{
-		$sql = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
-		$result = doQuery($link, $sql, 'Database error fetching users.');
+		$sqlc = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
+		$result = doQuery($link, $sqlc, 'Database error fetching users.');
         $clientname = $row['name'];
         $users = doProcess($result, 'user_id', 'user_name');
 		$flag = true;
@@ -238,7 +175,6 @@ if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
         $manage = "Manage members of $clientname";
     }
     else if($priv === 'Admin'){
-        $sql .= " AND user.id = $key";
         $sql .= " ORDER BY name";//
         $manage = "Edit details";
         $result = doQuery($link, $sql, "Error retrieving users from the database!");
@@ -257,7 +193,7 @@ if ($priv != "Admin")
     $result = doQuery($link, "SELECT $domain FROM user WHERE user.email='$email'", 'Database error fetching users.');
 	$row = goFetch($result);
 	$dom = $row[0];
-	$sqlc = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain=client.domain WHERE $domain='$dom' AND client.domain='$dom'";
+	$sqlc = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain = client.domain WHERE $domain='$dom' AND client.domain='$dom'";
     
     $result = doQuery($link, $sqlc, 'Database error getting count.');
 	$row = goFetch($result);
@@ -265,8 +201,8 @@ if ($priv != "Admin")
     $domain = $count == 0 ? "user.email" : $domain;
 	if ($count > 0)
 	{
-		$sql = "SELECT employer.id, employer.name FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain=client.domain) AS employer ON $domain=employer.domain WHERE user.email='$email'";
-        $result = doQuery($link, $sql, 'Database error fetching client list.');
+		$sqlc = "SELECT employer.id, employer.name FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain WHERE user.email='$email'";
+        $result = doQuery($link, $sqlc, 'Database error fetching client list.');
         $users = doProcess($result, 'id', 'name');
 		include 'select_users.html.php';
         exit();
@@ -274,7 +210,10 @@ if ($priv != "Admin")
 } //NOT ADMIN
 if ($priv == "Admin")
 {
-    $result = doQuery($link, "SELECT client.domain, client.name FROM client ORDER BY name", 'Database error fetching client list.' . $sql);
-	$client = doProcess($result, 'domain', 'name');
+    $sqlc = "SELECT client.domain, client.name FROM client ORDER BY name";
+    $res = doQuery($link,  $sqlc, 'Database error fetching client list.' . $sqlc);
+	$client = doProcess($res, 'domain', 'name');
+    dump($sql);
+    $users = doQuery($link, $sql, 'Database error fetching user list.');
     include 'select_users.html.php';//used for drop down and edit
 }
