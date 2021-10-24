@@ -45,14 +45,20 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
     exit();
 } //DELETE
 
-if (isset($_POST['confirm']))
-{
-	doConfirm($db, $_POST['confirm']);
-}
 
 if (isset($_GET['addform']))
 {
 	addUser($db);
+}
+
+if (isset($_GET['editform']))
+{
+	updateUser($db, $priv);
+}
+
+if (isset($_POST['confirm']))
+{
+	doConfirm($db, $_POST['confirm']);
 }
 
 if (isset($_GET['add']))
@@ -93,9 +99,7 @@ if (isset($_GET['add']))
     $clientlist = doProcess($res, 'id', 'name');//for assigning to client
 	include 'form.html.php';
 	exit();
-} //////////////END OF ASSIGN
-
-
+}
 
 if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 {
@@ -137,16 +141,12 @@ if (isset($_POST['action']) and $_POST['action'] == 'Edit')
 	include 'form.html.php';
 	exit();
 } //edit
-if (isset($_GET['editform']))
-{
-	updateUser($db, $priv);
-} ///END OF EDIT
-
 
 //display users___________________________________________________________________
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
 $sql = "SELECT user.id, user.name FROM user LEFT JOIN (SELECT user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain WHERE employer.domain IS NULL"; //this overwrites above query to filter out users as employees
 $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id WHERE client.domain IS NULL"; //USING ID NOT DOMAIN
+
 include $db;
 //_______________________________________________________________________________
 if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
@@ -160,7 +160,7 @@ if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
     
 	if (isset($row[0]))
 	{
-		$sqlc = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
+        $sqlc = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
 		$result = doQuery($link, $sqlc, 'Database error fetching users.');
         $clientname = $row['name'];
         $users = doProcess($result, 'user_id', 'user_name');
@@ -174,9 +174,9 @@ if (isset($_POST['act']) and $_POST['act'] == 'Choose' && isset($_POST['user']))
     if($priv === 'Admin' && isset($clientname)){
         $manage = "Manage members of $clientname";
     }
-    else if($priv === 'Admin'){
-        $sql .= " ORDER BY name";//
+    else if($priv === 'Admin' && !isset($clientname)){
         $manage = "Edit details";
+        dump($sql);
         $result = doQuery($link, $sql, "Error retrieving users from the database!");
         $users = doProcess($result, 'id', 'name');
     }
@@ -210,10 +210,10 @@ if ($priv != "Admin")
 } //NOT ADMIN
 if ($priv == "Admin")
 {
-    $sqlc = "SELECT client.domain, client.name FROM client ORDER BY name";
-    $res = doQuery($link,  $sqlc, 'Database error fetching client list.' . $sqlc);
+    $res = doQuery($link,  "SELECT client.domain, client.name FROM client ORDER BY name", 'Database error fetching client list.');
 	$client = doProcess($res, 'domain', 'name');
-    dump($sql);
-    $users = doQuery($link, $sql, 'Database error fetching user list.');
+    $sql .= " ORDER BY name";
+    $res = doQuery($link, $sql, 'Database error fetching user list.');
+    $users = doProcess($res, 'id', 'name');
     include 'select_users.html.php';//used for drop down and edit
 }
