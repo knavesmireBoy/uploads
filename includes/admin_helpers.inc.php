@@ -109,3 +109,58 @@ function getClientCount($db, $email, $domain){
     $result = doQuery($link, $sql, 'Database error getting count.');
 	return goFetch($result);
 }
+
+function fromDomain($db, $key, $domain){
+    include $db;
+    $sql = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
+    $res = doQuery($link, $sql, 'Database error fetching users.');
+    return doProcess($res, 'user_id', 'user_name');
+}
+
+function getClientName($db, $domain){
+     include $db;
+	$key = doSanitize($link, $domain);
+    $res = doQuery($link, "SELECT name from client WHERE domain = '$key'", 'Db error retrieving client name');
+    return goFetch($res)[0];
+}
+
+function testDomain($db, $key){
+    include $db;
+	$key = doSanitize($link, $key);
+	$res = doQuery($link, "SELECT domain, name FROM client WHERE domain = '$key' ", 'Database error fetching clients.');
+	return goFetch($res);
+}
+
+function getUsers($db, $key){
+        include $db;
+        $res = doQuery($link, "SELECT id, name FROM user where id ='$key' ORDER BY name", "Error retrieving users from the database!");
+        return doProcess($res, 'id', 'name');
+}
+
+function chooseAdmin($db, $key, $user, $domain){
+	$row = testDomain($db,  $user);
+    include $db;
+	if (isset($row))
+	{
+        $c = getClientName($db, $user);
+        $manage = "Manage users of $c";
+        $users = fromDomain($db, $user, $domain);
+	}
+    else {
+        $manage = "Edit details";
+        $users = getUsers($db, $user);
+    }
+    return array('users' => $users, 'manage' => $manage, 'ret' => '.');
+}
+
+function chooseClient($db, $key, $user, $domain){
+    include $db;
+    $user = domainFromUserID($link, $key);//list of members
+    if($user){
+        $users = fromDomain($user, $domain);
+    }
+    else {
+        $users = getUsers($db, $key);
+    }
+    return array('users' => $users, 'manage' => 'Edit Details', 'ret' => '..');
+}

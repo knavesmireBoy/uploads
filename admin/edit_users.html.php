@@ -9,8 +9,8 @@
 </head>
 <body>
 	<div>
-		<h1><?php echo $manage; ?></h1>
-		<?php foreach ($users as $k => $v): ?>
+		<h1><?php echo $data['manage']; ?></h1>
+		<?php foreach ($data['users'] as $k => $v): ?>
 		<form action="?" class="clientlist" id="edituserform" method="post" name="edituserform">
 			<ul>
 				<li class="name"><label><?php htmlout($v); ?></label></li>
@@ -20,12 +20,11 @@
 			</ul>
 		</form>
         <?php endforeach; ?>
-        <p><a href="<?php echo $ret; ?>">Return to list</a></p>
+        <p><a href="<?php echo $data['ret']; ?>">Return to list</a></p>
 		<?php
 		if (isset($prompt)) {
-            //exit('nnn');
-		include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
-		}
+            include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
+        }
 		?>
 	</div>
 </body>

@@ -55,33 +55,8 @@ if (isset($_POST['confirm']))
 //Admin uses $_POST Non-Admin $_GET
 if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'Choose' && isset($_REQUEST['user']))
 {
-	include $db;
-    $return = "Return to users";
-	$key = doSanitize($link, $_REQUEST['user']);
-	$result = doQuery($link, "SELECT domain, name FROM client WHERE domain = '$key' ", 'Database error fetching clients.');
-	$row = goFetch($result);
-	// some clients need full domain for identification, in which case the query is simplified to a straight match to a users email address which corresponds to the client domain. ???
     $domain = strrpos($key, "@") ? " user.email" : $domain;
-    $ret = $priv === 'Admin' ? '.' : '..';
-    
-	if (isset($row))
-	{
-        $sql = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
-		$result = doQuery($link, $sql, 'Database error fetching users.');
-        $clientname = $row['name'];
-        $users = doProcess($result, 'user_id', 'user_name');
-		$flag = true;
-		$class = "edit";
-	}
-    if($priv === 'Admin' && isset($clientname)){
-        $manage = "Manage members of $clientname";
-    }
-    if(!isset($clientname)){
-        $sql = "SELECT id, name FROM user where id ='$key' ORDER BY name";
-        $manage = "Edit details";
-        $result = doQuery($link, $sql, "Error retrieving users from the database!");
-        $users = doProcess($result, 'id', 'name');
-    }
+    $data = chooseAdmin($db, $key, $_REQUEST['user'], $domain);
     include 'edit_users.html.php';
     exit();
     
