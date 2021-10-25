@@ -25,14 +25,19 @@ if (!$roleplay = userHasWhatRole())
 
 $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
+
 $single;
 
 if(!isset($priv)){
     exit();
 }
 //if Client is a client, not a single user, a different query is used;
-$users = [];//required for edit.html.php after delete is invoked
+$data = ['manage' => ''];//required for edit.html.php after delete is invoked
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
+$isPriv = partial('equals', $priv, 'Admin');
+$testPriv = getBestArgs($isPriv)('chooseAdmin', 'chooseClient');
+
+
 if(isset($_GET['pwdlen'])) {
 $pwderror = 'Password must contain at least 5 characters';
 }
@@ -56,7 +61,8 @@ if (isset($_POST['confirm']))
 if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'Choose' && isset($_REQUEST['user']))
 {
     $domain = strrpos($key, "@") ? " user.email" : $domain;
-    $data = chooseAdmin($db, $key, $_REQUEST['user'], $domain);
+    //$data = chooseClient($db, $key, $_REQUEST['user'], $domain);
+    $data = $testPriv($db, $key, $_REQUEST['user'], $domain);
     include 'edit_users.html.php';
     exit();
     

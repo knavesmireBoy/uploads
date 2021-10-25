@@ -179,10 +179,10 @@ input[type=submit]:hover {
     background-color: gainsboro;
     color: black;
 }
-.clientlist input[type=submit], .editclient input[type=submit] {
+.editclient input[type=submit], .predicate input[type=submit] {
      background:hsl(80, 60%, 50%);
 }
-.clientlist input[type=submit]:hover, .editclient input[type=submit]:hover {
+.editclient input[type=submit]:hover, .predicate input[type=submit]:hover {
      background:#99cc33;
      background:hsl(80, 100%, 40%);
      color: white;

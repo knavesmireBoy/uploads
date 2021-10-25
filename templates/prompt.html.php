@@ -24,7 +24,7 @@ if(isset($clientlist)): ?>
 
 <?php elseif(!isset($clientlist) and !$confirmed):?>
 
-<form action="." method="post" name="choice">
+<form action="." method="post" name="choice" class="predicate">
 <input type="hidden" name="id" value="<?php echo $id; ?>"/>
     <?php if($prompt === 'continue'): ?>
     <p><label>Edit<input type="radio" name="<?php echo $call; ?>" value="No"/></label></p>

@@ -10,7 +10,7 @@
 <body>
 	<div>
 		<h1><?php echo $data['manage']; ?></h1>
-		<?php foreach ($data['users'] as $k => $v): ?>
+		<?php if(isset($data['users'])): foreach ($data['users'] as $k => $v): ?>
 		<form action="?" class="clientlist" id="edituserform" method="post" name="edituserform">
 			<ul>
 				<li class="name"><label><?php htmlout($v); ?></label></li>
@@ -19,9 +19,10 @@
 				<li><input type="submit" value="submit"></li>
 			</ul>
 		</form>
-        <?php endforeach; ?>
-        <p><a href="<?php echo $data['ret']; ?>">Return to list</a></p>
+        <?php endforeach;?>
+        <p><a href="<?php echo $data['ret']; ?>">Return to <?php echo $data['page']; ?></a></p>
 		<?php
+        endif;
 		if (isset($prompt)) {
             include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
         }

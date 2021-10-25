@@ -33,7 +33,7 @@ function setPassword($link, $pwd, $id){
     doQuery($link,  "UPDATE user SET password = '$password'  WHERE id = '$id'", 'Error setting user password.');
 }
 
-function updateUser($db, $priv, $count){
+function updateUser($db, $priv){
     
     include $db;
     $id = doSanitize($link, $_POST['id']);
@@ -150,17 +150,17 @@ function chooseAdmin($db, $key, $user, $domain){
         $manage = "Edit details";
         $users = getUsers($db, $user);
     }
-    return array('users' => $users, 'manage' => $manage, 'ret' => '.');
+    return array('users' => $users, 'manage' => $manage, 'ret' => '.', 'page' => 'list');
 }
 
 function chooseClient($db, $key, $user, $domain){
     include $db;
     $user = domainFromUserID($link, $key);//list of members
     if($user){
-        $users = fromDomain($user, $domain);
+        $users = fromDomain($db, $user, $domain);
     }
     else {
         $users = getUsers($db, $key);
     }
-    return array('users' => $users, 'manage' => 'Edit Details', 'ret' => '..');
+    return array('users' => $users, 'manage' => 'Edit Details', 'ret' => '..', 'page' => 'uploads');
 }
