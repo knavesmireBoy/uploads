@@ -1,12 +1,4 @@
 <?php
-function dump($arg){
- exit(var_dump($arg));
-}
-
-function doExit($location = '.'){
-    header('Location: ' . $location);
-	exit();
-}
 
 function doConfirm($db, $action){
     if($action === 'Yes'){
@@ -53,7 +45,6 @@ function updateUser($db, $priv){
         }
 	}
 
-	
 		$sql = "DELETE FROM userrole WHERE userid='$id'";
         //clear existing before - optionally - re-assigning
         doQuery($link, $sql, 'Error setting user password.', 'Error removing obsolete user role entries.');

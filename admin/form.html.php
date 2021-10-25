@@ -30,10 +30,7 @@
 <?php endforeach; ?>
 </select></div>
 <div><input type="hidden" name="id" value="<?php htmlout($id); ?>"/><input type="submit" value="<?php htmlout($button); ?>"/></div></form>
-          <!--<p><a href="<?php //$_SERVER['DOCUMENT_ROOT'] . '/admin/index.php';?>">Return to User List</a></p>-->
-		<?php if ($priv == 'Admin') : ?>
 		<p><a href="../clients/">Edit Clients</a></p>
-        <?php endif;  ?>
 
 </div></body>
 

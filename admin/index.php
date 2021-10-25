@@ -16,15 +16,7 @@ if (!userIsLoggedIn())
 	exit();
 }
 
-$access = array('Admin', 'Client');
-$roleplay = userHasWhatRole();
-//admin page
-if (!in_array($roleplay['roleid'], $access))
-{
-	$error = 'Only Account Administrators may access this page!!';
-	include '../templates/accessdenied.html.php';
-	exit();
-}
+$roleplay = validateAccess('Admin', 'Client');
 
 $key = $roleplay['id'];
 $priv = $roleplay['roleid'];

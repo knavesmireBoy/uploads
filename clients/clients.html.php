@@ -14,9 +14,9 @@
 <form action="" method="post" name="clientsform">
 <label for="the_client">Client: </label>
 <select name="client" id="the_client"><option value="">Select one</option>
-<?php foreach ($clients as $client): ?>
-<option value="<?php echo $client['id']; ?>">
-<?php htmlout($client['name']) ?></option>
+<?php foreach ($clients as $k => $v): ?>
+<option value="<?php echo $k; ?>">
+<?php htmlout($v) ?></option>
 <?php endforeach; ?>
 </select>
 <input type="submit" name="act" value="Choose"/>
@@ -25,13 +25,13 @@
 
 <?php  elseif(isset($_POST['act']) and $_POST['act'] == 'Choose'):
 
-foreach ($clients as $client):?>
+foreach ($clients as $k => $v):?>
 <form action="" method="post" name="editclientform" class="clientlist">
-<ul><li class="name"><label><?php htmlout($client['name']); ?></label></li>
+<ul><li class="name"><label><?php htmlout($v); ?></label></li>
 <li><label>edit<input type="radio" name="action" value="Edit"/></label>
 <label>delete<input type="radio" name="action" value="Delete"/></label></li>
 <li>
-<input type="hidden" name="id" value="<?php echo $client['id']; ?>"/>
+<input type="hidden" name="id" value="<?php htmlout($k); ?>"/>
 <input type="submit" value = "Submit"/>
 </li>
 </ul></form>

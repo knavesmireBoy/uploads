@@ -10,7 +10,7 @@
 <body>
 	<div>
 		<h1><?php echo $data['manage']; ?></h1>
-        <?php if(isset($data['client'])): ?>
+        <?php if(isset($data['client'])): ?><!-- A flag, clients forego select page which includes an "add user link" so we put that here for them-->
         <p><a href="?add">Add New User</a></p>
         <?php endif; ?>
 		<?php if(isset($data['users'])): foreach ($data['users'] as $k => $v): ?>
