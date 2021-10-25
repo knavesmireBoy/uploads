@@ -8,9 +8,12 @@ $base = 'Log In';
 $error = '';
 $tmpl_error = '/uploads/includes/error.html.php';
 $myip = '86.133.121.115.';
-$display = 10;
+$display = 5;
 $findmode = false;
 $lookup = array( 'tu' => 'ut');
+$textme = null;
+$ext = null;
+$useroo = null;
 $doError = function () {};
 
 if (!userIsLoggedIn()) {
@@ -25,10 +28,17 @@ doWhen($always(!$roleplay), $doError)(null);
 
 $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
+
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!!?!! V. USEFUL VARIABLE IN GLOBAL SPACE
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 
-if (isset($_POST['action']) and $_POST['action'] == 'upload') {
+$doDelete = doWhen(partial('goPost', 'extent'), partial('doDelete', $db, $compose));
+$doUpdate = doWhen(partial('goPost', 'update'), partial('doUpdate', $db));
+
+$doDelete(null);
+$doUpdate(null);
+
+if (isset($_POST['action']) && $_POST['action'] == 'upload' && $priv !== 'Browser') {
     doUpload($db, $priv, $key, $domain);
 }
 
@@ -36,7 +46,7 @@ if (isset($_GET['action']) and isset($_GET['id'])) {
    doView($db);
 } // end of download/view
 if (isset($_POST['action']) and $_POST['action'] == 'delete') {
-     $id = $_POST['id'];
+    $id = $_POST['id'];
     $call = "confirm";
 }
 if (isset($_POST['confirm']) and $_POST['confirm'] == 'Yes') {
@@ -54,21 +64,17 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'Yes') {
         $extent+= 1;
     }
 }
-if (isset($_POST['extent'])) {
-    doDelete($db, $compose);
-}
+
 if (isset($_POST['confirm']) and $_POST['confirm'] == 'No') { //swap
     include $db;
     $extent = 0;
     $id = doSanitize($link, $_POST['id']);
-    $result = mysqli_query($link, getColleagues($id, $domain));
-    $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
-    doWhen($always(!$result), $doError) (null);
+    $result = doQuery($link, getColleagues($id, $domain), 'Database error fetching colleagues.');
     
     $prompt1 = "Choose <b>yes</b> to select assign a new owner to all ";
     $prompt2 = " files. Choose <b>no</b> to edit a single file";
     $prompt = "$prompt1 client $prompt2";
-    doWhen($always(!$result), $doError) (null);
+        
     while ($row = mysqli_fetch_array($result)) {
         $colleagues[$row['id']] = $row['name'];
         $extent++;
@@ -90,9 +96,7 @@ if (isset($_POST['swap'])) { //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (
     $filename = $row['filename'];
     $diz = $row['description'];
     $userid = $row['userid'];
-    $result = mysqli_query($link, getColleagues($row['id'], $domain));
-    $doError = partialDefer('errorHandler', 'Database error fetching colleagues.', $terror);
-    doWhen(partial('doAlways',!$result), $doError) (null);
+    $result = doQuery($link, getColleagues($row['id'], $domain), 'Database error fetching colleagues.');
     
     while ($row = mysqli_fetch_array($result)) {
         $colleagues[$row['id']] = $row['name'];
@@ -102,9 +106,7 @@ if (isset($_POST['swap'])) { //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (
         $colleagues = prepUpdateUser($db, $priv);
     }
 } ///
-if (isset($_POST['update'])) { // 'update' is common to both options of file amend block
-    doUpdate($db);
-}
+
 //a default block___________________________________________________________________
 
 if (isset($_GET['p']) and is_numeric($_GET['p'])) {
@@ -166,7 +168,6 @@ while ($row = mysqli_fetch_array($result)) {
 }
 //end of default_______________________________________________________________________
 if (isset($_GET['find'])) {
-    
     $isAdmin = partial('equals', $priv, 'Admin');
     $prepFind = partial('prepFind', $users, $client);
     $punter = $compose(partial('doFind', $db, $key, $domain), $prepFind);
@@ -193,7 +194,7 @@ if ($priv == 'Admin') {
     //pagination stuff for users??
     if (isset($useroo) && is_numeric($useroo)) { //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
         if($useroo = doSanitize($link, $_GET['u'])){
-            $where.= " AND user.id=$useroo";
+            $where.= " AND user.id = $useroo";
         }
     } else if (isset($_GET['u'])) {
         if($useroo = doSanitize($link, $_GET['u'])){
@@ -222,7 +223,7 @@ $from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to 
 $order = getBaseOrder($order_by, $start, $display);
 $sql .= $select_tel . $from . $where . $order;
 
-$result = doFetch($link, $sql, 'Database error fetching files. ' . $sql);
+$result = doQuery($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();
 while ($row = mysqli_fetch_array($result)) {
     $files[] = array('id' => $row['id'], 'user' => (isset($row['user'])) ? $row['user'] : '', 'email' => $row['email'], 'filename' => $row['filename'], 'mimetype' => $row['mimetype'], 'description' => $row['description'], 'filepath' => $row['filepath'], 'file' => $row['file'], 'origin' => $row['origin'], 'time' => $row['time'], 'tel' => $row['tel'], // ONLY REQUIRED FOR TELEPHONE BLOCK

@@ -209,7 +209,8 @@ function getBaseFrom(){
     return " FROM upload INNER JOIN user ON upload.userid=user.id";
 }
 function getBaseOrder($o, $s, $d){
-    return " ORDER BY $o LIMIT $s, $d";
+   return " ORDER BY $o LIMIT $s, $d";
+    //return " ORDER BY $o LIMIT $s";
 }
 
 function concatString($str, $opt = ''){
@@ -383,8 +384,10 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     if ($priv == 'Admin') {
         //will either return empty set(no error) or produce count. Test to see if a client has been selected.
         $sql = "SELECT domain FROM client WHERE domain = '" . $user_id . "'"; 
-        $result = mysqli_query($link, $sql);
-        $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+        
+        $result = doQuery($link, $sql, 'Error retrieving records for user');
+        $row = goFetch($result, MYSQLI_ASSOC);
+        
         $where = ' WHERE TRUE';
         if (isset($row['domain']) && !is_numeric($user_id)) { //user_id is text(domain) for Clients
             $from .= " INNER JOIN client ON $domain = client.domain ";
@@ -414,22 +417,19 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     $where = $cb($where);
     $order = getBaseOrder($order_by, $start, $display);
     $sql = $select . $from . $where . $order;
-    $result = mysqli_query($link, $sql);
-    $doError = partialDefer('errorHandler', 'Error fetching file details.' . $sql, $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php');
-    doWhen(partial('doAlways',!$result), $doError) (null);
+    
+    
+    $result = doQuery($link, $sql, 'Error fetching file details.');
     $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;   
-    $result = mysqli_query($link, $sqlcount);
-    
-    $doError = partialDefer('errorHandler', 'Error getting file count.', $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php');
-    doWhen(partial('doAlways', !$result), $doError) (null);
+    $result = doQuery($link, $sqlcount, 'Error getting file count.');
 
-    
     $files = array();
     while ($row = mysqli_fetch_array($result)) {
         $files[] = array('id' => $row['id'], 'user' => $row['user'], 'email' => $row['email'], 'filename' => $row['filename'], 'mimetype' => $row['mimetype'], 'description' => $row['description'], 'filepath' => $row['filepath'], 'file' => $row['file'], 'origin' => $row['origin'], 'time' => $row['time'], 'size' => $row['size']);
     }
     $records = $row['total'];
     $pages = ($records > $display) ? ceil($records / $display) : 1;
+    
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
     exit();

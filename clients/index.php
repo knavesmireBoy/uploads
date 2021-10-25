@@ -46,7 +46,6 @@ if (isset($_POST['action']) and $_POST['action'] == 'Edit')
     $result = doQuery($link, "SELECT id, name, domain, tel FROM client WHERE id = $id", 'Error fetching user details.');
 
     $row = goFetch($result);
-    
     $pagetitle = 'Edit Client';
     $action = 'editform';
     $button = 'Update Client';
