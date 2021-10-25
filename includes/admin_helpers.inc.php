@@ -53,12 +53,11 @@ function updateUser($db, $priv){
         }
 	}
 
-	if ($priv == 'Admin')
-	{
+	
 		$sql = "DELETE FROM userrole WHERE userid='$id'";
         //clear existing before - optionally - re-assigning
         doQuery($link, $sql, 'Error setting user password.', 'Error removing obsolete user role entries.');
-	}
+	
 	if (isset($_POST['roles']))
 	{
 		foreach ($_POST['roles'] as $role)
@@ -99,7 +98,6 @@ function addUser($db){
 	doExit();
 }
 
-
 function getClientCount($db, $email, $domain){
 	include $db;
     $result = doQuery($link, "SELECT $domain FROM user WHERE user.email='$email'", 'Database error fetching users.');
@@ -139,6 +137,7 @@ function getUsers($db, $key){
 
 function chooseAdmin($db, $key, $user, $domain){
 	$row = testDomain($db,  $user);
+    $client = null;
     include $db;
 	if (isset($row))
 	{
@@ -150,17 +149,19 @@ function chooseAdmin($db, $key, $user, $domain){
         $manage = "Edit details";
         $users = getUsers($db, $user);
     }
-    return array('users' => $users, 'manage' => $manage, 'ret' => '.', 'page' => 'list');
+    return array('users' => $users, 'manage' => $manage, 'ret' => '.', 'page' => 'list', 'client' => $client);
 }
 
 function chooseClient($db, $key, $user, $domain){
     include $db;
+    $client = null;
     $user = domainFromUserID($link, $key);//list of members
     if($user){
         $users = fromDomain($db, $user, $domain);
+        $client = true;
     }
     else {
         $users = getUsers($db, $key);
     }
-    return array('users' => $users, 'manage' => 'Edit Details', 'ret' => '..', 'page' => 'uploads');
+    return array('users' => $users, 'manage' => 'Edit Details', 'ret' => '..', 'page' => 'uploads', 'client' => $client);
 }

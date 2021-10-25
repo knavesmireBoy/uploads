@@ -15,11 +15,14 @@ if (!userIsLoggedIn())
 	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/login.html.php';
 	exit();
 }
+
+$access = array('Admin', 'Client');
+$roleplay = userHasWhatRole();
 //admin page
-if (!$roleplay = userHasWhatRole())
+if (!in_array($roleplay['roleid'], $access))
 {
 	$error = 'Only Account Administrators may access this page!!';
-	include 'accessdenied.html.php';
+	include '../templates/accessdenied.html.php';
 	exit();
 }
 
@@ -31,12 +34,12 @@ $single;
 if(!isset($priv)){
     exit();
 }
-//if Client is a client, not a single user, a different query is used;
-$data = ['manage' => ''];//required for edit.html.php after delete is invoked
-$domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
-$isPriv = partial('equals', $priv, 'Admin');
-$testPriv = getBestArgs($isPriv)('chooseAdmin', 'chooseClient');
 
+$domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
+$isAdmin = partial('equals', $priv, 'Admin');
+$testPriv = getBestArgs($isAdmin)('chooseAdmin', 'chooseClient');
+$manage = $isAdmin() ? 'Manage User' : 'Edit Details';
+$data = ['manage' => $manage];//required for edit.html.php after delete is invoked
 
 if(isset($_GET['pwdlen'])) {
 $pwderror = 'Password must contain at least 5 characters';
@@ -61,7 +64,6 @@ if (isset($_POST['confirm']))
 if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'Choose' && isset($_REQUEST['user']))
 {
     $domain = strrpos($key, "@") ? " user.email" : $domain;
-    //$data = chooseClient($db, $key, $_REQUEST['user'], $domain);
     $data = $testPriv($db, $key, $_REQUEST['user'], $domain);
     include 'edit_users.html.php';
     exit();
@@ -91,6 +93,10 @@ if (isset($_GET['add']))
 			'selected' => false
 		);
 	}
+    
+    if(!$isAdmin()){
+        array_shift($roles);
+    }
 
 	if (isset($_POST['employer']) && !empty($_POST['employer']))
 	{
@@ -142,6 +148,10 @@ if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || isset($pwderro
 			'selected' => in_array($row['id'], $selectedRoles)
 		);
 	}
+     if(!$isAdmin()){
+        array_shift($roles);
+    }
+
 	$res = doQuery($link, "SELECT id, name FROM client ORDER BY name", "Error retrieving clients from database!");
     $clientlist = doProcess($res, 'id', 'name');//for assigning to client
     $res = doQuery($link, "SELECT client_id FROM user WHERE id = $id", "Error retrieving client id from user!");

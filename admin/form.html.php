@@ -14,7 +14,6 @@
                 <li><?php echo $pwderror; endif; ?></li>
                 <li><label for="password">Set password:</label><input id="password" type="password" name="password"/><input type="hidden" name="employer" value="<?php if(isset($cid)) { htmlout($cid); } ?>" size="32"/></li></ul>
 				
-<?php if ($priv =='Admin') : ?>
 			<fieldset>
 				<legend>Roles:</legend> <?php for ($i = 0; $i < count($roles); $i++): ?>
 				<div>
@@ -30,7 +29,6 @@
 <?php htmlout($client);?></option>
 <?php endforeach; ?>
 </select></div>
-<?php endif; ?>
 <div><input type="hidden" name="id" value="<?php htmlout($id); ?>"/><input type="submit" value="<?php htmlout($button); ?>"/></div></form>
           <!--<p><a href="<?php //$_SERVER['DOCUMENT_ROOT'] . '/admin/index.php';?>">Return to User List</a></p>-->
 		<?php if ($priv == 'Admin') : ?>

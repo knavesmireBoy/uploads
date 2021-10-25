@@ -155,13 +155,9 @@ echo date("g:i a F j ", strtotime($stamp)) ;?></td>
 </a></h2>
 <?php 
 endif; 
-
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/logout.inc.html.php'; 
-if ($priv =='Admin' or $priv == 'Client') : ?>
+include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/logout.inc.html.php'; ?>
 <p><a href="admin/">Admin Pages</a></p>
-
-<?php 
-endif;
+<?php
 $wither = seek();
 $link = ( $wither == '.'  ? 'Clear search results' : 'Search files');
 ?>

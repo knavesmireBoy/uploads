@@ -10,6 +10,9 @@
 <body>
 	<div>
 		<h1><?php echo $data['manage']; ?></h1>
+        <?php if(isset($data['client'])): ?>
+        <p><a href="?add">Add New User</a></p>
+        <?php endif; ?>
 		<?php if(isset($data['users'])): foreach ($data['users'] as $k => $v): ?>
 		<form action="?" class="clientlist" id="edituserform" method="post" name="edituserform">
 			<ul>

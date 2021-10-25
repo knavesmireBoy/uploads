@@ -22,6 +22,7 @@ $roleplay = userHasWhatRole();
 //public page
 $doError = partialDefer('errorHandler', 'Only valid clients may access this page.', $tmplt . 'accessdenied.html.php');
 doWhen($always(!$roleplay), $doError)(null);
+
 $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!!?!! V. USEFUL VARIABLE IN GLOBAL SPACE
