@@ -12,14 +12,22 @@ function updateClient($db){
     doExit();
 }
 
-
 function createClient($db){
     include $db;    
     $vars = array_map(partial('doSanitize', $link), $_POST);
     foreach($vars as $k => $v) {
         ${$k} = $v;
     }
-    $sql= "INSERT INTO client SET name='$name', domain='$domain', tel='$tel'";
+    
+    $sql = "SELECT domain FROM client";
+    $res = doQuery($link, $sql, 'Error retrieving domain from clients.');
+    while($row = mysqli_fetch_array($res, MYSQLI_ASSOC)){
+        $gang [] = $row['domain'];
+    }
+    if(in_array($domain, $gang)){
+        doExit("?add=true&name=$name&domain=true&tel=$tel");
+    }
+    $sql = "INSERT INTO client SET name='$name', domain='$domain', tel='$tel'";
     //$sql = "INSERT INTO client VALUES ('?', '$name', '$domain', '$tel')";
     //alert required for non unique domains. I attempted to enter uni.com
     doQuery($link, $sql, 'Error adding client.');

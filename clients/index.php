@@ -27,9 +27,9 @@ if (isset($_GET['add']))
     $id = '';
     $pagetitle = 'New Client';
     $action = 'addform';
-    $name = '';
-    $domain = '';
-    $tel = '';
+    $name = isset($_GET['name']) ? $_GET['name'] : '';
+    $domain = isset($_GET['domain']) ? 'domain already in DB' : '';
+    $tel = isset($_GET['name']) ? $_GET['tel'] : '';
     $button = 'Add Client';
     include 'form.html.php';
     exit();
