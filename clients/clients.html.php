@@ -26,10 +26,10 @@
 <?php  elseif(isset($_POST['act']) and $_POST['act'] == 'Choose'):
 
 foreach ($clients as $client):?>
-<form action="" method="post" name="editclientform">
-<ul><li><label><?php htmlout($client['name']); ?></label></li>
-<li><label>Edit<input type="radio" name="action" value="Edit"/></label>
-<label>Delete<input type="radio" name="action" value="Delete"/></label></li>
+<form action="" method="post" name="editclientform" class="clientlist">
+<ul><li class="name"><label><?php htmlout($client['name']); ?></label></li>
+<li><label>edit<input type="radio" name="action" value="Edit"/></label>
+<label>delete<input type="radio" name="action" value="Delete"/></label></li>
 <li>
 <input type="hidden" name="id" value="<?php echo $client['id']; ?>"/>
 <input type="submit" value = "Submit"/>

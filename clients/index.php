@@ -1,27 +1,21 @@
 <?php
-/*mysql_real_escape_string\(([^,]+),([^)]+\);)
-mysqli_real_escape_string($2, $1);*/
+include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] .    '/uploads/includes/magicquotes.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
 if (!userIsLoggedIn()){
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/login.html.php';
 exit();
 }
-//clients page
+$roleplay = userHasWhatRole();
+$key = $roleplay['id'];
+$priv = $roleplay['roleid'];
+$isAdmin = partial('equals', $priv, 'Admin');
+$db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 
-if (!$roleplay=userHasWhatRole()){
+if (!$isAdmin()){
 $error = 'Only Account Administrators may access this page!!';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/accessdenied.html.php';
 exit();
-}
-else {
-foreach ($roleplay as $key => $priv){// $roleplay is an array, use foreach to obtain value and index
-}
-if($priv!='Admin'){
-$error = 'Only Account Administrators may access this page!!';
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/accessdenied.html.php';
-exit();
-}
 }
 
 
@@ -132,28 +126,22 @@ exit();
 header('Location: . ');
 exit();
 }//end of addform
+/////\|||||\\\\\\\\\/////\|||||\\\\\\\\\/////\|||||\\\\\\\\\/////\|||||\\\\\\\\\/////\|||||\\\\\\\\\/////\|||||\\\\\\\\\\
 
-
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
+include $db;
 $sql = "SELECT id, name, domain from client"; // THE DEFAULT QUERY
 
 if (isset($_POST['act']) and $_POST['act'] == 'Choose'  and $_POST['client'] !=''){
-$id =  mysqli_real_escape_string($link, $_POST['client']);
-$sql .=" WHERE id=$id";
+$id =  doSanitize($link, $_POST['client']);
+$sql .= " WHERE id = $id";
 }
 
 $sql .= " ORDER BY name";
 
 //display clients
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-$result = mysqli_query($link, $sql);
-if (!$result ) {
-echo mysqli_errno($link) . ": " . mysqli_error($link). "\n";
-$error = "Error retrieving clients from database!";
-include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-  exit();
-  }
-//$clients = array();
+$result = doQuery($link, $sql, "Error retrieving clients from database!");
+//echo mysqli_errno($link) . ": " . mysqli_error($link). "\n";
+
 while ($row = mysqli_fetch_array($result))
 {
 $clients[] = array(
