@@ -179,8 +179,6 @@ if(isset($_GET['t'])) {
     $text = $_GET['t'];
 }
     
-    //exit( $_GET['u']);
-
 if ($pages > 1) {
 $current_page = ($start/$display) + 1;
 if ($current_page != 1) { ?>

@@ -14,6 +14,8 @@ $lookup = array( 'tu' => 'ut');
 $text = null;
 $suffix = null;
 $user = null;
+$order_by = 'time DESC';
+$start = 1;
 $doError = function () {};
 
 if (!userIsLoggedIn()) {
@@ -107,49 +109,8 @@ if (isset($_POST['swap'])) { //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (
     }
 } ///
 
-//a default block___________________________________________________________________
-
-if (isset($_GET['p']) and is_numeric($_GET['p'])) {
-    $pages = $_GET['p'];
-} else { // counts all files
-    include $db;
-    $sql = "SELECT COUNT(upload.id) from upload ";
-    if ($priv == 'Client') {
-        $email = $_SESSION['email'];
-        $sql.= " INNER JOIN user on upload.userid = user.id WHERE user.email='$email'";
-    }
-    $r = mysqli_query($link, $sql);
-    $doError = partialDefer('errorHandler', 'Database error fetching requesting the list of files', $terror);
-    doWhen($always(!$r), $doError) (null);
-
-    $row = mysqli_fetch_array($r, MYSQLI_NUM);
-    $records = $row[0];
-    
-    $pages = ($records > $display) ? ceil($records / $display) : 1;
-} //end of IF NOT PAGES SET
-$start = (isset($_GET['s']) and is_numeric($_GET['s'])) ? $_GET['s'] : 0;
-$sort = (isset($_GET['sort']) ? $_GET['sort'] : '1');
-
-$sort = isset($lookup[$sort]) ? $lookup[$sort] : $sort;
-$meswitch = array('f' => 'filename ASC', 'ff' => 'filename DESC', 'u' => 'user ASC', 'uu' => 'user DESC', 'uf' => 'user ASC, filename ASC', 'uuf' => 'user DESC, filename ASC', 'uff' => 'user ASC, filename DESC', 'uuff' => 'user DESC, filename DESC', 'ut' => 'user ASC, time ASC', 'utt' => 'user ASC, time DESC', 'uut' => 'user DESC, time ASC', 'uutt' => 'user DESC, time DESC', 't' => 'time ASC', 'tt' => 'time DESC');
-
-foreach ($meswitch as $k => $v) {
-    if ($k == $sort) break;
-}
-switch ($sort) {
-    case $k:
-        $order_by = $meswitch[$k];
-    break;
-    default:
-        $order_by = 'time DESC';
-        $sort = 'tt';
-    break;
-}
 //D I S P L A Y_______________________________________________________________
 include $db; ///Present list of users for administrators
-$user_id = null;
-$text = null;
-$suffix = null;
 $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id=client.id WHERE client.domain IS NULL ORDER BY name";
 $result = doQuery($link, $sql, 'Database error fetching users.');
 $users = doProcess($result, 'id', 'name');
@@ -176,6 +137,51 @@ if (isset($_GET['action']) and $_GET['action'] == 'search') {
         ${$k} = $v;
     }
 }
+
+//a default block___________________________________________________________________
+
+if (isset($_GET['p']) and is_numeric($_GET['p'])) {
+    $pages = $_GET['p'];
+} else { // counts all files
+    //exit('jj');
+    include $db;
+    $sqlc = "SELECT COUNT(upload.id) from upload ";
+    if ($priv == 'Client') {
+        $email = $_SESSION['email'];
+        $sqlc .= " INNER JOIN user on upload.userid = user.id WHERE user.email='$email' ";
+    }
+   elseif(isset($user)){
+        if(is_numeric($user)){
+            $sqlc = " INNER JOIN user on upload.userid = user.id WHERE user.email='$user' ";
+        }
+        else {
+            $sqlc = " SELECT COUNT(upload.id) from upload INNER JOIN user ON user.id = upload.userid INNER JOIN client ON $domain = client.domain AND client.domain='$user'";
+        }
+    }
+    $r = doQuery($link, $sqlc, 'Database error fetching requesting the list of files');
+    $row = goFetch($r, MYSQLI_NUM);
+   
+    $records = intval($row[0]);
+    $pages = ($records > $display) ? ceil($records / $display) : 1;
+} //end of IF NOT PAGES SET
+$start = (isset($_GET['s']) and is_numeric($_GET['s'])) ? $_GET['s'] : 0;
+$sort = (isset($_GET['sort']) ? $_GET['sort'] : '1');
+
+$sort = isset($lookup[$sort]) ? $lookup[$sort] : $sort;
+$meswitch = array('f' => 'filename ASC', 'ff' => 'filename DESC', 'u' => 'user ASC', 'uu' => 'user DESC', 'uf' => 'user ASC, filename ASC', 'uuf' => 'user DESC, filename ASC', 'uff' => 'user ASC, filename DESC', 'uuff' => 'user DESC, filename DESC', 'ut' => 'user ASC, time ASC', 'utt' => 'user ASC, time DESC', 'uut' => 'user DESC, time ASC', 'uutt' => 'user DESC, time DESC', 't' => 'time ASC', 'tt' => 'time DESC');
+
+foreach ($meswitch as $k => $v) {
+    if ($k == $sort) break;
+}
+switch ($sort) {
+    case $k:
+        $order_by = $meswitch[$k];
+    break;
+    default:
+        $order_by = 'time DESC';
+        $sort = 'tt';
+    break;
+}
 //INITIAL FILE SELECTION
 if ($priv == 'Admin') {
     $select = getBaseSelect();
@@ -187,13 +193,8 @@ if ($priv == 'Admin') {
     if(isset($ext)){
          $where = getFileTypeQuery($where, $suffix);
     }
-      //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
-      if (isset($user)) {
-        $where .= " AND $domain = '$user'";
-    }
-    if (isset($user) && is_numeric($user)) { 
-        $where.= " AND user.id = $user";
-    }
+    //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
+    $where = getIdTypeQuery($where, $user, $domain);
     if (isset($text)){
         $where.= " AND upload.filename LIKE '%$text%'"; 
     }
@@ -213,6 +214,7 @@ $from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to 
 $order = getBaseOrder($order_by, $start, $display);
 $sql .= $select_tel . $from . $where . $order;
 
+    //dump($sql);
 
 $result = doQuery($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();

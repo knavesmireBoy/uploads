@@ -244,6 +244,16 @@ function getFileTypeQuery($where, $ext)
     return $where;
 }
 
+function getIdTypeQuery($where, $user, $domain){
+    if (isset($user)) {
+        return $where .= " AND $domain = '$user'";
+    }
+    if (isset($user) && is_numeric($user)) { 
+        return $where .= " AND user.id = $user";
+    }
+    return $where;
+}
+
 function getColleagues($id, $dom)
 {
     return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id= $id ORDER BY name";
