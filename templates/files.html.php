@@ -158,8 +158,8 @@ endif;
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/logout.inc.html.php'; ?>
 <p><a href="admin/">Admin Pages</a></p>
 <?php
-$wither = seek();
-$link = ( $wither == '.'  ? 'Clear search results' : 'Search files');
+$wither = isset($_GET['find']) ? '?' : '?find';
+$link = ( isset($_GET['find']) ? 'Search files' : 'Clear search results');
 ?>
 <p><a href="<?php echo $wither; ?>"><?php echo $link; ?></a></p>
 
@@ -167,13 +167,13 @@ $link = ( $wither == '.'  ? 'Clear search results' : 'Search files');
 
 <?php
 if(isset($_GET['ext'])) {
-    $suffix = $ext;
+    $suffix = $_GET['ext'];
 }
-if(isset($_GET['u'])) {
-    $user_id = $useroo;
+if(isset($_GET['user'])) {
+    $user_id = $_GET['user'];
 }
-if(isset($_GET['t'])) {
-    $text = $textme;
+if(isset($_GET['text'])) {
+    $text = $_GET['text'];
 }
     
 if ($pages > 1) {

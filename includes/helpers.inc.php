@@ -442,14 +442,14 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
 
     $andUser = curry2('concatString') (" AND user.id = $user_id");
     $queryUser = getBestPred(partial('doAlways', $res)) ($andUser, partial('doAlways'));
-    $likeText = curry2('concatString') (" AND upload.filename LIKE '%$text%'");
-    $tmp = getBestPred(partial(negate('isEmpty') , $text));
+    $likeText = curry2('concatString') (" AND upload.filename LIKE '%$text%' ");
+    $tmp = getBestPred(partial(negate('isEmpty'), $text));
     $queryText = $tmp($likeText, partial('doAlways'));
-    $cb = $compose($queryUser, $queryText, partial('getFileTypeQuery', $where, $suffix));
+    $cb = $compose($queryUser, partial('getFileTypeQuery', $where, $suffix), $likeText);
     $where = $cb($where);
     $order = getBaseOrder($order_by, $start, $display);
     $sql = $select . $from . $where . $order;
-
+    
     $result = doQuery($link, $sql, 'Error fetching file details.');
     $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;
     $result = doQuery($link, $sqlcount, 'Error getting file count.');
