@@ -244,11 +244,18 @@ function getFileTypeQuery($where, $ext)
     return $where;
 }
 
+function fileCountByUser($user, $domain) {
+    if(is_numeric($user)){
+        return  " INNER JOIN user on upload.userid = user.id WHERE user.id = '$user' ";
+    }
+    return " INNER JOIN user ON user.id = upload.userid INNER JOIN client ON $domain = client.domain AND client.domain='$user'";
+}
+
 function getIdTypeQuery($where, $user, $domain){
-    if (isset($user)) {
+    if (isset($user) && !is_numeric($user)) {
         return $where .= " AND $domain = '$user'";
     }
-    if (isset($user) && is_numeric($user)) { 
+    elseif (isset($user) && is_numeric($user)) { 
         return $where .= " AND user.id = $user";
     }
     return $where;

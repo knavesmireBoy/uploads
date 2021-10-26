@@ -18,6 +18,7 @@ $order_by = 'time DESC';
 $start = 1;
 $doError = function () {};
 
+
 if (!userIsLoggedIn()) {
     include $tmplt . 'base.html.php';
     include $tmplt . 'login.html.php';
@@ -32,6 +33,7 @@ $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
 
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!!?!! V. USEFUL VARIABLE IN GLOBAL SPACE
+$fileCount = curry2('fileCountByUser')($domain);
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 
 $doDelete = doWhen(partial('goPost', 'extent'), partial('doDelete', $db, $compose));
@@ -136,6 +138,7 @@ if (isset($_GET['action']) and $_GET['action'] == 'search') {
     foreach($vars as $k => $v){
         ${$k} = $v;
     }
+    //dump(isset($user));
 }
 
 //a default block___________________________________________________________________
@@ -144,6 +147,7 @@ if (isset($_GET['p']) and is_numeric($_GET['p'])) {
     $pages = $_GET['p'];
 } else { // counts all files
     //exit('jj');
+     //dump(isset($user));
     include $db;
     $sqlc = "SELECT COUNT(upload.id) from upload ";
     if ($priv == 'Client') {
@@ -151,15 +155,13 @@ if (isset($_GET['p']) and is_numeric($_GET['p'])) {
         $sqlc .= " INNER JOIN user on upload.userid = user.id WHERE user.email='$email' ";
     }
    elseif(isset($user)){
-        if(is_numeric($user)){
-            $sqlc = " INNER JOIN user on upload.userid = user.id WHERE user.email='$user' ";
-        }
-        else {
-            $sqlc = " SELECT COUNT(upload.id) from upload INNER JOIN user ON user.id = upload.userid INNER JOIN client ON $domain = client.domain AND client.domain='$user'";
-        }
+        //dump($user);
+        $sqlc .= $fileCount($user);
     }
-    $r = doQuery($link, $sqlc, 'Database error fetching requesting the list of files');
-    $row = goFetch($r, MYSQLI_NUM);
+    //dump($sqlc);
+    
+    $res = doQuery($link, $sqlc, 'Database error fetching requesting the list of files');
+    $row = goFetch($res, MYSQLI_NUM);
    
     $records = intval($row[0]);
     $pages = ($records > $display) ? ceil($records / $display) : 1;
@@ -188,7 +190,7 @@ if ($priv == 'Admin') {
     
     $select .= ", user.name as user"; 
     $from = getBaseFrom();
-    $from.= " INNER JOIN userrole ON user.id = userrole.userid";
+    //$from.= " INNER JOIN userrole ON user.id = userrole.userid";
     $where = ' WHERE TRUE';
     if(isset($ext)){
          $where = getFileTypeQuery($where, $suffix);
@@ -204,7 +206,7 @@ else {
     $select = getBaseSelect();
     $from = getBaseFrom();
     $email = $_SESSION['email'];
-    $from.= " INNER JOIN userrole ON user.id = userrole.userid";
+    //$from.= " INNER JOIN userrole ON user.id = userrole.userid";
     $where = " WHERE user.email='$email' ";
 }
 //$sql= $select . $from . $where . $order; //DEFAULT; TELEPHONE BLOCK REQUIRED TO OBTAIN CLIENT PHONE NUMBER
@@ -213,8 +215,6 @@ $select_tel = ", client.tel";
 $from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to include just 'users' also
 $order = getBaseOrder($order_by, $start, $display);
 $sql .= $select_tel . $from . $where . $order;
-
-    //dump($sql);
 
 $result = doQuery($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();
