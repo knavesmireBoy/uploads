@@ -158,33 +158,38 @@ endif;
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/logout.inc.html.php'; ?>
 <p><a href="admin/">Admin Pages</a></p>
 <?php
-$wither = isset($_GET['find']) ? '?' : '?find';
-$link = ( isset($_GET['find']) ? 'Search files' : 'Clear search results');
+$wither = seek();
+$link = ($wither == '.'  ? 'Clear search results' : 'Search files');
+//$wither = isset($_GET['find']) ? '?' : '?find';
+//$link = ( isset($_GET['find']) ? 'Search files' : 'Clear search results');
 ?>
 <p><a href="<?php echo $wither; ?>"><?php echo $link; ?></a></p>
 
 <p class="footer">
 
 <?php
+    
 if(isset($_GET['ext'])) {
     $suffix = $_GET['ext'];
 }
-if(isset($_GET['user'])) {
-    $user_id = $_GET['user'];
+if(isset($_GET['u'])) {
+    $user = $_GET['u'];
 }
-if(isset($_GET['text'])) {
-    $text = $_GET['text'];
+if(isset($_GET['t'])) {
+    $text = $_GET['t'];
 }
     
+    //exit( $_GET['u']);
+
 if ($pages > 1) {
 $current_page = ($start/$display) + 1;
 if ($current_page != 1) { ?>
-<a href="?s=<?php echo $start-$display; ?>&p=<?php echo ($pages); ?>&u=<?php echo $user_id; ?>&t=<?php echo $text; ?>&ext=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>">Previous</a>
+<a href="?s=<?php echo $start-$display; ?>&p=<?php echo ($pages); ?>&u=<?php echo $user; ?>&t=<?php echo $text; ?>&ext=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>">Previous</a>
 <?php 
 }
 for ($i=1; $i<=$pages; $i++){
 if ($i != $current_page) { ?>
-<a href="?s=<?php echo ($display * ($i-1)); ?>&p=<?php echo ($pages);?>&u=<?php echo $user_id; ?>&t=<?php echo $text; ?>&ext=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>"><?php echo $i ?></a>
+<a href="?s=<?php echo ($display * ($i-1)); ?>&p=<?php echo ($pages);?>&u=<?php echo $user; ?>&t=<?php echo $text; ?>&ext=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>"><?php echo $i ?></a>
 <?php
 }
 else {  ?>
@@ -193,7 +198,7 @@ else {  ?>
 }
 }
 if ($current_page <> $pages) { ?>
-<a href="?s=<?php echo $start+$display; ?>&p=<?php echo ($pages); ?>&u=<?php echo $user_id; ?>&t=<?php echo $text; ?>&ext=<?php echo $suffix;?>&sort=<?php echo $sort; ?>">Next</a></p>
+<a href="?s=<?php echo $start+$display; ?>&p=<?php echo ($pages); ?>&u=<?php echo $user; ?>&t=<?php echo $text; ?>&ext=<?php echo $suffix;?>&sort=<?php echo $sort; ?>">Next</a></p>
 <?php
 }
 }//If Pages > 1

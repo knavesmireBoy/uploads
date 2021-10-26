@@ -5,16 +5,15 @@ function seek()
 {
     $arr = array(
         'suffix',
-        'user_id',
-        'text',
-        'ext',
-        'textme',
-        'useroo'
+        'user',
+        'text'
     );
     $i = count($arr);
     while ($i--)
     {
-        if (isset($GLOBALS[$arr[$i]]))
+        //https://stackoverflow.com/questions/29636880/compile-error-cannot-use-isset-on-the-result-of-an-expression
+
+        if (goGet($arr[$i]))
         {
             return '.';
         }
@@ -223,7 +222,7 @@ function getBaseFrom()
 function getBaseOrder($o, $s, $d)
 {
     return " ORDER BY $o LIMIT $s, $d";
-    //return " ORDER BY $o LIMIT $s";
+    //return " ORDER BY $o ";
     
 }
 
@@ -473,10 +472,11 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     }
     $records = $row['total'];
     $pages = ($records > $display) ? ceil($records / $display) : 1;
-
+/*
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
     exit();
+    */
 }
 
 function doUpload($db, $priv, $key, $domain)

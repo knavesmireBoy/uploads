@@ -11,9 +11,9 @@ $myip = '86.133.121.115.';
 $display = 5;
 $findmode = false;
 $lookup = array( 'tu' => 'ut');
-$textme = null;
-$ext = null;
-$useroo = null;
+$text = null;
+$suffix = null;
+$user = null;
 $doError = function () {};
 
 if (!userIsLoggedIn()) {
@@ -124,6 +124,7 @@ if (isset($_GET['p']) and is_numeric($_GET['p'])) {
 
     $row = mysqli_fetch_array($r, MYSQLI_NUM);
     $records = $row[0];
+    
     $pages = ($records > $display) ? ceil($records / $display) : 1;
 } //end of IF NOT PAGES SET
 $start = (isset($_GET['s']) and is_numeric($_GET['s'])) ? $_GET['s'] : 0;
@@ -150,22 +151,13 @@ $user_id = null;
 $text = null;
 $suffix = null;
 $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id=client.id WHERE client.domain IS NULL ORDER BY name";
-$result = mysqli_query($link, $sql);
-$doError = partialDefer('errorHandler', 'Database error fetching users.', $terror);
-doWhen(partial('doAlways', !$result), $doError) (null);
+$result = doQuery($link, $sql, 'Database error fetching users.');
+$users = doProcess($result, 'id', 'name');
 
-while ($row = mysqli_fetch_array($result)) {
-    $users[$row['id']] = $row['name'];
-}
 $sql = "SELECT name, domain, tel FROM client ORDER BY name";
-$result = mysqli_query($link, $sql);
-$doError = partialDefer('errorHandler', 'Database error fetching clients.', $terror);
-doWhen(partial('doAlways', !$result), $doError) (null);
+$result = doQuery($link, $sql, 'Database error fetching clients.');
+$client = doProcess($result, 'domain', 'name');
 
-
-while ($row = mysqli_fetch_array($result)) {
-    $client[$row['domain']] = $row['name'];
-}
 //end of default_______________________________________________________________________
 if (isset($_GET['find'])) {
     $isAdmin = partial('equals', $priv, 'Admin');
@@ -179,6 +171,10 @@ if (isset($_GET['find'])) {
 
 if (isset($_GET['action']) and $_GET['action'] == 'search') {
     doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip);
+    $vars = array_map(partial('doSanitize', $link), $_GET);
+    foreach($vars as $k => $v){
+        ${$k} = $v;
+    }
 }
 //INITIAL FILE SELECTION
 if ($priv == 'Admin') {
@@ -188,24 +184,18 @@ if ($priv == 'Admin') {
     $from = getBaseFrom();
     $from.= " INNER JOIN userrole ON user.id = userrole.userid";
     $where = ' WHERE TRUE';
-    $ext = isset($_GET['ext']) ? doSanitize($link, $_GET['ext']) : null;
-    $where = getFileTypeQuery($where, $ext);
-    
-    //pagination stuff for users??
-    if (isset($useroo) && is_numeric($useroo)) { //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
-        if($useroo = doSanitize($link, $_GET['u'])){
-            $where.= " AND user.id = $useroo";
-        }
-    } else if (isset($_GET['u'])) {
-        if($useroo = doSanitize($link, $_GET['u'])){
-            $where .= " AND $domain = '$useroo'";
-        }
+    if(isset($ext)){
+         $where = getFileTypeQuery($where, $suffix);
     }
-    
-    if (isset($_GET['t'])){
-        if($textme = doSanitize($link, $_GET['t'])){
-           $where.= " AND upload.filename LIKE '%$textme%'"; 
-        }
+      //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
+      if (isset($user)) {
+        $where .= " AND $domain = '$user'";
+    }
+    if (isset($user) && is_numeric($user)) { 
+        $where.= " AND user.id = $user";
+    }
+    if (isset($text)){
+        $where.= " AND upload.filename LIKE '%$text%'"; 
     }
     
 }//admin
@@ -222,6 +212,7 @@ $select_tel = ", client.tel";
 $from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to include just 'users' also
 $order = getBaseOrder($order_by, $start, $display);
 $sql .= $select_tel . $from . $where . $order;
+
 
 $result = doQuery($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();
