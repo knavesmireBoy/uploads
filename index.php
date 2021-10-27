@@ -134,20 +134,17 @@ if (isset($_GET['find'])) {
 
 if (isset($_GET['action']) and $_GET['action'] == 'search') {
     doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip);
-    $vars = array_map(partial('doSanitize', $link), $_GET);
+}
+//a default block___________________________________________________________________
+ $vars = array_map(partial('doSanitize', $link), $_GET);
     foreach($vars as $k => $v){
         ${$k} = $v;
     }
-    //dump(isset($user));
-}
 
-//a default block___________________________________________________________________
-
-if (isset($_GET['p']) and is_numeric($_GET['p'])) {
-    $pages = $_GET['p'];
+if (isset($_GET['page']) and is_numeric($_GET['page'])) {
+    $pages = $_GET['page'];
+    //exit($pages);
 } else { // counts all files
-    //exit('jj');
-     //dump(isset($user));
     include $db;
     $sqlc = "SELECT COUNT(upload.id) from upload ";
     if ($priv == 'Client') {
@@ -155,18 +152,16 @@ if (isset($_GET['p']) and is_numeric($_GET['p'])) {
         $sqlc .= " INNER JOIN user on upload.userid = user.id WHERE user.email='$email' ";
     }
    elseif(isset($user)){
-        //dump($user);
-        $sqlc .= $fileCount($user);
-    }
-    //dump($sqlc);
-    
+        $sqlc .= $fileCount($user);//user or client
+    }    
     $res = doQuery($link, $sqlc, 'Database error fetching requesting the list of files');
     $row = goFetch($res, MYSQLI_NUM);
    
     $records = intval($row[0]);
     $pages = ($records > $display) ? ceil($records / $display) : 1;
 } //end of IF NOT PAGES SET
-$start = (isset($_GET['s']) and is_numeric($_GET['s'])) ? $_GET['s'] : 0;
+
+$start = (isset($_GET['start']) && is_numeric($_GET['start'])) ? $_GET['start'] : 0;
 $sort = (isset($_GET['sort']) ? $_GET['sort'] : '1');
 
 $sort = isset($lookup[$sort]) ? $lookup[$sort] : $sort;
@@ -184,17 +179,15 @@ switch ($sort) {
         $sort = 'tt';
     break;
 }
+
+$select = getBaseSelect();
+$from = getBaseFrom();
 //INITIAL FILE SELECTION
 if ($priv == 'Admin') {
-    $select = getBaseSelect();
-    
     $select .= ", user.name as user"; 
-    $from = getBaseFrom();
     //$from.= " INNER JOIN userrole ON user.id = userrole.userid";
     $where = ' WHERE TRUE';
-    if(isset($ext)){
-         $where = getFileTypeQuery($where, $suffix);
-    }
+    $where = getFileTypeQuery($where, $suffix);
     //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
     $where = getIdTypeQuery($where, $user, $domain);
     if (isset($text)){
@@ -203,8 +196,6 @@ if ($priv == 'Admin') {
     
 }//admin
 else {
-    $select = getBaseSelect();
-    $from = getBaseFrom();
     $email = $_SESSION['email'];
     //$from.= " INNER JOIN userrole ON user.id = userrole.userid";
     $where = " WHERE user.email='$email' ";
@@ -215,6 +206,7 @@ $select_tel = ", client.tel";
 $from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to include just 'users' also
 $order = getBaseOrder($order_by, $start, $display);
 $sql .= $select_tel . $from . $where . $order;
+//dump([$start, $display]);
 
 $result = doQuery($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();

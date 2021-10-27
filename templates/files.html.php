@@ -168,26 +168,16 @@ $link = ($wither == '.'  ? 'Clear search results' : 'Search files');
 <p class="footer">
 
 <?php
-    
-if(isset($_GET['ext'])) {
-    $suffix = $_GET['ext'];
-}
-if(isset($_GET['u'])) {
-    $user = $_GET['u'];
-}
-if(isset($_GET['t'])) {
-    $text = $_GET['t'];
-}
-    
+
 if ($pages > 1) {
 $current_page = ($start/$display) + 1;
 if ($current_page != 1) { ?>
-<a href="?s=<?php echo $start-$display; ?>&p=<?php echo ($pages); ?>&u=<?php echo $user; ?>&t=<?php echo $text; ?>&ext=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>">Previous</a>
+<a href="?start=<?php echo $start-$display; ?>&page=<?php echo ($pages); ?>&user=<?php echo $user; ?>&text=<?php echo $text; ?>&suffix=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>">Previous</a>
 <?php 
 }
 for ($i=1; $i<=$pages; $i++){
 if ($i != $current_page) { ?>
-<a href="?s=<?php echo ($display * ($i-1)); ?>&p=<?php echo ($pages);?>&u=<?php echo $user; ?>&t=<?php echo $text; ?>&ext=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>"><?php echo $i ?></a>
+<a href="?start=<?php echo ($display * ($i-1)); ?>&page=<?php echo ($pages);?>&user=<?php echo $user; ?>&text=<?php echo $text; ?>&suffix=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>"><?php echo $i ?></a>
 <?php
 }
 else {  ?>
@@ -196,7 +186,7 @@ else {  ?>
 }
 }
 if ($current_page <> $pages) { ?>
-<a href="?s=<?php echo $start+$display; ?>&p=<?php echo ($pages); ?>&u=<?php echo $user; ?>&t=<?php echo $text; ?>&ext=<?php echo $suffix;?>&sort=<?php echo $sort; ?>">Next</a></p>
+<a href="?start=<?php echo $start+$display; ?>&page=<?php echo ($pages); ?>&user=<?php echo $user; ?>&text=<?php echo $text; ?>&suffix=<?php echo $suffix;?>&sort=<?php echo $sort; ?>">Next</a></p>
 <?php
 }
 }//If Pages > 1
