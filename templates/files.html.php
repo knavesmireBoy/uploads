@@ -38,7 +38,7 @@ $q = $_SERVER['QUERY_STRING'];
 $q = preg_replace('/(\?[a-z0-9=&]*)(&sort|&flag)(=?[a-z]*)/','$1','?' .$q );
                                         
 if($q == '?') {//first run
-    $sort = 'sort='; 
+    $sort = 'sort'; 
 }
                     
 elseif (isDouble($q)) {//double
@@ -158,8 +158,8 @@ endif;
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/logout.inc.html.php'; ?>
 <p><a href="admin/">Admin Pages</a></p>
 <?php
-$wither = seek();
-$link = ($wither == '.'  ? 'Clear search results' : 'Search files');
+$wither = seek(true);
+$link = $wither == '.'  ? 'Clear search results' : 'Search files';
 //$wither = isset($_GET['find']) ? '?' : '?find';
 //$link = ( isset($_GET['find']) ? 'Search files' : 'Clear search results');
 ?>

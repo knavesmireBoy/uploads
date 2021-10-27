@@ -1,7 +1,7 @@
 <?php
 include_once $_SERVER['DOCUMENT_ROOT'] . '/includes/helpers.inc.php';
 
-function seek()
+function seek($flag =  false)
 {
     $arr = array(
         'suffix',
@@ -13,7 +13,7 @@ function seek()
     {
         //https://stackoverflow.com/questions/29636880/compile-error-cannot-use-isset-on-the-result-of-an-expression
 
-        if (goGet($arr[$i]))
+        if (goGet($arr[$i], $flag))
         {
             return '.';
         }
@@ -233,11 +233,11 @@ function concatString($str, $opt = '')
 
 function getFileTypeQuery($where, $ext)
 {
-    if (isset($ext) && $ext === 'owt')
+    if (isset($ext) && !empty($ext) && $ext === 'owt')
     {
         return $where .= " AND (upload.filename NOT LIKE '%pdf' AND upload.filename NOT LIKE '%zip')";
     }
-    elseif (isset($ext))
+    elseif (isset($ext) && !empty($ext))
     {
         return $where .= " AND upload.filename LIKE '%$ext'";
     }
@@ -252,10 +252,10 @@ function fileCountByUser($user, $domain) {
 }
 
 function getIdTypeQuery($where, $user, $domain){
-    if (isset($user) && !is_numeric($user)) {
+    if (isset($user) && !empty($user) && !is_numeric($user)) {
         return $where .= " AND $domain = '$user'";
     }
-    elseif (isset($user) && is_numeric($user)) { 
+    elseif (isset($user) && !empty($user) && is_numeric($user)) { 
         return $where .= " AND user.id = $user";
     }
     return $where;

@@ -206,7 +206,7 @@ $select_tel = ", client.tel";
 $from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to include just 'users' also
 $order = getBaseOrder($order_by, $start, $display);
 $sql .= $select_tel . $from . $where . $order;
-//dump([$start, $display]);
+//dump($sql);
 
 $result = doQuery($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();
