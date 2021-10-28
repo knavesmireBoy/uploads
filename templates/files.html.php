@@ -64,12 +64,12 @@ echo date("g:i a F j ", strtotime($stamp)) ;?></td>
 <td><form action="<?php $_SERVER['PHP_SELF']?>" method="get" name="downloads">
 <div><input type="hidden" name="action" value="download"/>
 <input type="hidden" name="id" value="<?php htmlout($f['id']); ?>"/>
-<input type="submit" value="Download"/></div></form></td>
+<input type="submit" value="download"/></div></form></td>
 <?php if ($priv !='Browser') : ?>
 <td><form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="<?php htmlout($f['id']); ?>">
 <div><input type="hidden" name="action" value="delete"/>
 <input type="hidden" name="id" value="<?php htmlout($f['id']); ?>"/>
-<input type="submit" value="Edit"/></div>
+<input type="submit" value="edit"/></div>
 </form>
 </td>
 <?php endif; ?></tr><?php endforeach; ?>

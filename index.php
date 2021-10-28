@@ -333,7 +333,7 @@ if (!empty($vars))
     }
 }
 
-$base = 'North Wolds Printers | The File Uploads';
+$base = 'File Uploads';
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';

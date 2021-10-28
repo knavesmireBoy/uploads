@@ -1,5 +1,5 @@
 body {
-	font-size: 76%;
+	font-size: .75em;
 	font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif;
 }
 ul {
@@ -171,8 +171,9 @@ input[type=submit]{
      border:1px solid #444;
     color: #222;
      border-radius:20px;
-     box-shadow:1px 1px 1px #444;
+     box-shadow: 1px 1px 1px #444;
      background-color: silver;
+    font: 1em Arial;
 }
 
 input[type=submit]:hover {
