@@ -45,63 +45,30 @@ $presort = preg_match('/sort/', $q);
 if($q === '?') {//first run
     $sort = 'sort='; 
 }
-                    
-   if(!empty(strpos($q, 'uu'))){
+
+                    if(!empty(strpos($q, 'uu'))){
        $myu = 'tt';
        $two = substr($q, -2);
        $x = explode('uu', $q);
        $x = isset($x[1]) ? $x[1] : '';
        $x = strlen($x) === 2 ? true : false;
        if($x){
-           $vars = resetQuery('uu');
+           $vars = resetQuery('q', 'uu');
            foreach($vars as $k => $v){
             ${$k} = $v;
         }
        }
-    
-   }              
+   }//User mode              
                     
 else {
     if(isDouble($q)) {//double
-        $vars = resetQuery();
+        $vars = resetQuery('q');
         foreach($vars as $k => $v){
             ${$k} = $v;
         }
-       
 }
-}
-                      /*
-if (isSingle($q)){
-    
- 
-    $sort = substr($q,-1);
-    $i = array_search($sort, $toggle);
-    //https://stackoverflow.com/questions/1532618/is-there-a-function-to-make-a-copy-of-a-php-array-to-another
-    $t = $toggle;
-    $t[$i] = $sort . $sort;
-    exit($t[$i]);
-    $getToggle = getToggle($t);
-    $q='?sort='; 
 }
 
-else {
-    //$sort='&sort='; 
-}
-}//NOT 'UU';
-/*
-if ((substr($sort,0,2)=='uu' and strlen($sort)<=3)) {
-    $toggle=array($sort.'f',  'u', $sort. 't' );
-}
-elseif ((substr($sort, 0,1)=='u' and strlen($sort)<=2)) {
-    $toggle=array($sort.'f', $sort. 'u', $sort. 't' );
-}
-elseif (!$sort or strlen($sort)>1 ){
-    $toggle=array('f','u','t');
-}
-else {
-    $toggle = array($sort .'f', $sort . 'u', $sort . 't' );//append to existing sort
-}
-*/
 ?>
 
 <th><a href="<?php echo $q . $sort . 'f'; ?>">File name</a></th>
