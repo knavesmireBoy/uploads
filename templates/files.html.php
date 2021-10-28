@@ -9,12 +9,12 @@
 		<tr><td><label for="desc">File Description: </label></td><td><input id="desc" type="text" name="desc" maxlength="255"/></td></tr>
 			<?php if ($priv =='Admin') : ?>
 <tr><td><label for="user">User:</label></td><td><select id="user" name="user"><option value="">Select one</option>
-<optgroup label="clients"><?php  foreach ($client as $x => $c): ?>
-<option value="<?php htmlout($x); ?>"><?php htmlout($c); ?>
+<optgroup label="clients"><?php  foreach ($client as $k => $v): ?>
+<option value="<?php htmlout($k); ?>"><?php htmlout($v); ?>
 </option><?php endforeach; ?></optgroup>
 <optgroup label="users">
-<?php  foreach ($users as $ix => $u): ?>
-<option value="<?php htmlout($ix); ?>"><?php htmlout($u); ?>
+<?php  foreach ($users as $k => $v): ?>
+<option value="<?php htmlout($k); ?>"><?php htmlout($v); ?>
 </option><?php endforeach; ?></optgroup></select>
 </td></tr>
 <?php endif; ?>
@@ -30,9 +30,9 @@
 $tel = '';
 $sort = '';
                     $myu = 'u';
-                    
-                    
-                    
+                    $reset = [];
+                    $doReset = null;
+                                        
 // TABLE ORDERING...
 $q = $_SERVER['QUERY_STRING'];
                
@@ -48,24 +48,22 @@ if($q === '?') {//first run
                     if(!empty(strpos($q, 'uu'))){
        $myu = 'tt';
        $two = substr($q, -2);
-       $x = explode('uu', $q);
-       $x = isset($x[1]) ? $x[1] : '';
-       $x = strlen($x) === 2 ? true : false;
-       if($x){
-           $vars = resetQuery('uu');
-           foreach($vars as $k => $v){
-            ${$k} = $v;
-        }
+       $reset = explode('uu', $q);
+       $reset = isset($reset[1]) ? $reset[1] : '';
+       $reset = strlen($reset) === 2 ? true : false;
+       if($reset){
+           $doReset = partial('resetQuery', 'uu');
        }
    }//User mode              
                     
 else {
     if(isDouble($q)) {//double
-        $vars = resetQuery();
-        foreach($vars as $k => $v){
-            ${$k} = $v;
-        }
+        $doReset = partial('resetQuery');
 }
+}
+$vars = isset($doReset) ? $doReset() : [];
+if(!empty($vars)){
+    foreach($vars as $k => $v){ ${$k} = $v; }
 }
 
 ?>
