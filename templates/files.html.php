@@ -30,7 +30,6 @@
 $tel = '';
 $sort = '';
                     $myu = 'u';
-                    $ustate = explode('uu', $q);
                     
                     
                     
@@ -53,7 +52,7 @@ if($q === '?') {//first run
        $x = isset($x[1]) ? $x[1] : '';
        $x = strlen($x) === 2 ? true : false;
        if($x){
-           $vars = resetQuery('q', 'uu');
+           $vars = resetQuery('uu');
            foreach($vars as $k => $v){
             ${$k} = $v;
         }
@@ -62,7 +61,7 @@ if($q === '?') {//first run
                     
 else {
     if(isDouble($q)) {//double
-        $vars = resetQuery('q');
+        $vars = resetQuery();
         foreach($vars as $k => $v){
             ${$k} = $v;
         }

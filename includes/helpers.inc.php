@@ -34,9 +34,9 @@ function notToggled($q){
     return substr($q,-2, 1) != substr($q,-1, 1);
 }
 
-function resetQuery($q, $str){
+function resetQuery($str = ''){
     $s = isset($str) ?  "sort=$str" : 'sort=';
-    return array('q' => $q, 'sort' =>  $s );
+    return array('q' => '?', 'sort' =>  $s );
 }
 
 function isDouble($q)
