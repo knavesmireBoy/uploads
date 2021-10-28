@@ -29,44 +29,51 @@
 <?php 
 $tel = '';
 $sort = '';
-$toggle = ['f', 'u', 't'];
-$getToggle = getToggle($toggle);
+                    $myu = 'u';
+                    $ustate = explode('uu', $q);
+                    
+                    
                     
 // TABLE ORDERING...
 $q = $_SERVER['QUERY_STRING'];
                
-$q = preg_replace('/(\?[a-z0-9=&]*)(&sort|&flag)(=?[a-z]*)/','$1','?' .$q );
+$q = preg_replace('/(\?[a-z0-9=&]*)(&sort|&flag)(=?[a-z]*)/','$1','?' . $q );
+                    
+$presort = preg_match('/sort/', $q);
+                    
                                         
-if($q == '?') {//first run
-    $sort = 'sort'; 
+if($q === '?') {//first run
+    $sort = 'sort='; 
 }
                     
-elseif (isDouble($q)) {//double
+   if(!empty(strpos($q, 'uu'))){
+       $myu = 'tt';
+       $two = substr($q, -2);
+       $x = explode('uu', $q);
+       $x = isset($x[1]) ? $x[1] : '';
+       $x = strlen($x) === 2 ? true : false;
+       if($x){
+           $vars = resetQuery('uu');
+           foreach($vars as $k => $v){
+            ${$k} = $v;
+        }
+       }
     
-$pos = strpos($q, 'u');
-   
-    if(!empty($pos) && $pos > 6) {
-        
-    }
-   if(substr($q,-2, 1) != substr($q,-1, 1)){//not toggled
-       $q='?sort='; 
-       
-       //$q = substr($q,-2, 1);//leading
-       //$sort = '&sort=' . substr($q,-1, 1); 
-   }
-    else {
-        
-        $sort = substr($q,-2);
-        $i = array_search($sort, $toggle);
-        $t[$i] = $sort;
-        $sort = '';
-        $q='?sort='; 
-    }
+   }              
+                    
+else {
+    if(isDouble($q)) {//double
+        $vars = resetQuery();
+        foreach($vars as $k => $v){
+            ${$k} = $v;
+        }
        
 }
-elseif (isSingle($q)){
+}
+                      /*
+if (isSingle($q)){
     
-   /*
+ 
     $sort = substr($q,-1);
     $i = array_search($sort, $toggle);
     //https://stackoverflow.com/questions/1532618/is-there-a-function-to-make-a-copy-of-a-php-array-to-another
@@ -75,12 +82,12 @@ elseif (isSingle($q)){
     exit($t[$i]);
     $getToggle = getToggle($t);
     $q='?sort='; 
-    */
 }
 
 else {
     //$sort='&sort='; 
 }
+}//NOT 'UU';
 /*
 if ((substr($sort,0,2)=='uu' and strlen($sort)<=3)) {
     $toggle=array($sort.'f',  'u', $sort. 't' );
@@ -97,10 +104,10 @@ else {
 */
 ?>
 
-<th><a href="<?php echo $q . $sort . $getToggle(0); ?>">File name</a></th>
+<th><a href="<?php echo $q . $sort . 'f'; ?>">File name</a></th>
 <?php $choice = ($priv =='Admin')  ? 'User' : 'Description'  ?>
-<th><a href="<?php echo $q . $sort . $getToggle(1); ?>"><?php echo $choice; ?></a></th>
-<th><a href="<?php echo $q . $sort . $getToggle(2); ?>">Time</a></th>
+<th><a href="<?php echo $q . $sort . $myu; ?>"><?php echo $choice; ?></a></th>
+<th><a href="<?php echo $q . $sort . 't'; ?>">Time</a></th>
 
 <?php $num = ($priv !='Browser'  ? '2' : '1')  ?>
 <th colspan="<?php echo($num) ?>" class="control">Control<?php ?></th>

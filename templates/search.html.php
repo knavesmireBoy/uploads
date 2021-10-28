@@ -31,7 +31,7 @@
 <option value="owt">other</option>
 </select></div>
 <input type="hidden" name="action" value="search"/>
-<input type="hidden" name="flag" />
+<!--<input type="hidden" name="flag" />-->
 <input type="submit" value="Search"/></div>
 		</form>
 		<p><a href=".">Return</a></p>

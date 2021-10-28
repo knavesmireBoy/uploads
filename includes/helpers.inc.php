@@ -25,6 +25,20 @@ function uploadedfile($arg)
 {
     return $_FILES['upload'][$arg];
 }
+function isTreble($q)
+{
+    return substr($q, -4, 1) === '=';
+}
+
+function notToggled($q){
+    return substr($q,-2, 1) != substr($q,-1, 1);
+}
+
+function resetQuery($str){
+    $s = isset($str) ?  "sort=$str" : 'sort=';
+    return array('q' => '?', 'sort' =>  $s );
+}
+
 function isDouble($q)
 {
     return substr($q, -3, 1) === '=';

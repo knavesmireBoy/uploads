@@ -10,7 +10,7 @@ $tmpl_error = '/uploads/includes/error.html.php';
 $myip = '86.133.121.115.';
 $display = 5;
 $findmode = false;
-$lookup = array( 'tu' => 'ut');
+$lookup = array( 'tu' => 'ut', 'fu' => 'uf');
 $text = null;
 $suffix = null;
 $user = null;
