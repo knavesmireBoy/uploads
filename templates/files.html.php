@@ -25,58 +25,11 @@
 		<p>The following files are stored in the database:</p>
 		<table>
 			<thead>
-				<tr> 
-<?php 
-$tel = '';
-$sort = '';
-                    $myu = 'u';
-                    $reset = [];
-                    $doReset = null;
-                                        
-// TABLE ORDERING...
-$q = $_SERVER['QUERY_STRING'];
-               
-$q = preg_replace('/(\?[a-z0-9=&]*)(&sort|&flag)(=?[a-z]*)/','$1','?' . $q );
-                    
-$presort = preg_match('/sort/', $q);
-                    
-                                        
-if($q === '?') {//first run
-    $sort = 'sort='; 
-}
-                    
- if(!empty(strpos($q, 'uuu'))){
-     $doReset = partial('resetQuery');
- }
-                    if(!empty(strpos($q, 'uu'))){
-       //$myu = '';//prevent dealing with a 'uuu' scenario
-       $two = substr($q, -2);
-       $reset = explode('uu', $q);
-       $reset = isset($reset[1]) ? $reset[1] : '';
-       $reset = strlen($reset) === 2 ? true : false;
-       if($reset){
-           $doReset = partial('resetQuery', 'uu');
-       }
-   }//User mode              
-                    
-else {
-    if(isDouble($q)) {//double
-        $doReset = partial('resetQuery');
-}
-}
-$vars = isset($doReset) ? $doReset() : [];
-if(!empty($vars)){
-    foreach($vars as $k => $v){ ${$k} = $v; }
-}
-                    echo $q;
-                    echo ' --- ';
-                    echo $sort;
-
-?>
+				<tr>
 
 <th><a href="<?php echo $q . $sort . 'f'; ?>">File name</a></th>
 <?php $choice = ($priv =='Admin')  ? 'User' : 'Description'  ?>
-<th><a href="<?php echo $q . $sort . $myu; ?>"><?php echo $choice; ?></a></th>
+<th><a href="<?php echo $q . $sort . 'u'; ?>"><?php echo $choice; ?></a></th>
 <th><a href="<?php echo $q . $sort . 't'; ?>">Time</a></th>
 
 <?php $num = ($priv !='Browser'  ? '2' : '1')  ?>
