@@ -326,12 +326,11 @@ if (!empty($vars))
 {
     foreach ($vars as $k => $v)
     {
-        $
-        {
-            $k
-        } = $v;
+        ${$k} = $v;
     }
 }
+
+echo $sort . '!';
 
 $base = 'North Wolds Printers | The File Uploads';
 

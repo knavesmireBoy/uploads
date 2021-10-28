@@ -26,7 +26,6 @@
 		<table>
 			<thead>
 				<tr>
-
 <th><a href="<?php echo $q . $sort . 'f'; ?>">File name</a></th>
 <?php $choice = ($priv =='Admin')  ? 'User' : 'Description'  ?>
 <th><a href="<?php echo $q . $sort . 'u'; ?>"><?php echo $choice; ?></a></th>
