@@ -285,26 +285,24 @@ $q = $_SERVER['QUERY_STRING'];
 $q = preg_replace('/(\?[a-z0-9=&]*)(&sort|&flag)(=?[a-z]*)/', '$1', '?' . $q);
 $amper = explode('&sort', $q);
 $presort = preg_match('/\?[^sort]/', $q);
+$myq = substr($q, 0);
 
 if (strlen($q) === 1){ 
     $sort = 'sort=';
 }
-    if($presort && !isset($amper[1])){
-        $sort = '&sort=';
-    }
-/*
-if($presort){
-    $q = $amper[0];
-    $sort = isset($amper[1]) ? '&sort=' : '';
+else if($presort && !isset($amper[1])){
+    $sort = '&sort=';
 }
-*/
-$myq = substr($q, 0);
+else if(isset($amper[1])){
+    $myq = '&sort' . $amper[1];
+}
 
+//we only want to query the 'sort' part of the query string eg: &text=vacuum&sort=uu (not good)
 if (!empty(strpos($myq, 'uuu')))
 {
-    $doReset = partial('resetQuery');
+    $doReset = partial('resetQuery', $q);//the actual query string which will contain sort UNTIL reset
 }
-if (!empty(strpos($myq, 'uu')))
+elseif (!empty(strpos($myq, 'uu')))
 {
     $two = substr($myq, -2);
     $reset = explode('uu', $myq);
@@ -312,14 +310,14 @@ if (!empty(strpos($myq, 'uu')))
     $reset = strlen($reset) === 2 ? true : false;
     if ($reset)
     {
-        $doReset = partial('resetQuery', 'uu');
+        $doReset = partial('resetQuery', $q, 'uu');
     }
 } //User mode
 else
 {
     if (isDouble($myq))
     { //double
-        $doReset = partial('resetQuery');
+        $doReset = partial('resetQuery', $q);
     }
 }
 $vars = isset($doReset) ? $doReset() : [];
@@ -335,9 +333,6 @@ if (!empty($vars))
     }
 }
 
-if($q === '?' && $presort){
-    $q .= $amper[0];
-}
 $base = 'North Wolds Printers | The File Uploads';
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
