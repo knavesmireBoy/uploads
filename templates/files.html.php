@@ -97,7 +97,15 @@ $link = $wither == '.'  ? 'Clear search results' : 'Search files';
 <p class="footer">
 
 <?php
-
+    
+    $check = explode('sort=', $_SERVER['QUERY_STRING']);
+    if(isset($check[1])){
+        $sort = $check[1];
+    }
+    else {
+        $sort = '';
+    }
+    
 if ($pages > 1) {
 $current_page = ($start/$display) + 1;
 if ($current_page != 1) { ?>

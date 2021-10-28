@@ -42,6 +42,7 @@ function resetQuery1($str = ''){
 function resetQuery($query_str, $str = ''){
     $query_str = explode('sort=', $query_str)[0];
     $s = isset($str) ?  "sort=$str" : 'sort=';
+    echo 'resetting';
     return array('q' => $query_str, 'sort' =>  $s );
 }
 

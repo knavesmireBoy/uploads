@@ -276,15 +276,14 @@ while ($row = mysqli_fetch_array($result))
 
 $tel = '';
 $sort = '';
-
 $reset = [];
 $doReset = null;
 $myq = null;
 // TABLE ORDERING...
 $q = $_SERVER['QUERY_STRING'];
-$q = preg_replace('/(\?[a-z0-9=&]*)(&sort|&flag)(=?[a-z]*)/', '$1', '?' . $q);
-$amper = explode('&sort', $q);
-$presort = preg_match('/\?[^sort]/', $q);
+$q = preg_replace('/(\?[a-z0-9=&]*)(&sort)([a-z]*)/', '$1$2', '?' . $q);
+$amper = explode('&sort=', $_SERVER['QUERY_STRING']);
+$presort = preg_match('/\?(?!sort)./', $q);//neg lookahead
 $myq = substr($q, 0);
 
 if (strlen($q) === 1){ 
@@ -293,10 +292,14 @@ if (strlen($q) === 1){
 else if($presort && !isset($amper[1])){
     $sort = '&sort=';
 }
-else if(isset($amper[1])){
-    $myq = '&sort' . $amper[1];
+else if($presort && isset($amper[1])){
+    $myq = '&sort=' . $amper[1];
 }
-
+/*
+var_dump($q);
+var_dump($myq);
+var_dump($sort);
+*/
 //we only want to query the 'sort' part of the query string eg: &text=vacuum&sort=uu (not good)
 if (!empty(strpos($myq, 'uuu')))
 {
@@ -329,8 +332,6 @@ if (!empty($vars))
         ${$k} = $v;
     }
 }
-
-echo $sort . '!';
 
 $base = 'North Wolds Printers | The File Uploads';
 
