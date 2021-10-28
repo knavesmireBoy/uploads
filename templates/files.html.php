@@ -44,9 +44,12 @@ $presort = preg_match('/sort/', $q);
 if($q === '?') {//first run
     $sort = 'sort='; 
 }
-
+                    
+ if(!empty(strpos($q, 'uuu'))){
+     $doReset = partial('resetQuery');
+ }
                     if(!empty(strpos($q, 'uu'))){
-       $myu = 'tt';
+       //$myu = '';//prevent dealing with a 'uuu' scenario
        $two = substr($q, -2);
        $reset = explode('uu', $q);
        $reset = isset($reset[1]) ? $reset[1] : '';
@@ -65,6 +68,9 @@ $vars = isset($doReset) ? $doReset() : [];
 if(!empty($vars)){
     foreach($vars as $k => $v){ ${$k} = $v; }
 }
+                    echo $q;
+                    echo ' --- ';
+                    echo $sort;
 
 ?>
 
