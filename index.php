@@ -274,6 +274,7 @@ while ($row = mysqli_fetch_array($result))
     );
 }
 
+//ORDERING
 $tel = '';
 $sort = '';
 $reset = [];
@@ -341,5 +342,4 @@ if ($findmode)
 {
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/search.html.php';
 }
-
 ?>
