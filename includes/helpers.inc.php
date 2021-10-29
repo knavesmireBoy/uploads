@@ -12,7 +12,6 @@ function seek($flag =  false)
     while ($i--)
     {
         //https://stackoverflow.com/questions/29636880/compile-error-cannot-use-isset-on-the-result-of-an-expression
-
         if (goGet($arr[$i], $flag))
         {
             return '.';
@@ -276,6 +275,11 @@ function getIdTypeQuery($where, $user, $domain){
     return $where;
 }
 
+function getClientType($user){
+    $user = (isset($user) && !empty($user)) ? true : false;
+    return is_numeric($user) ? 'USER' : 'CLIENT';
+}
+
 function getColleagues($id, $dom)
 {
     return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id= $id ORDER BY name";
@@ -504,11 +508,6 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     }
     $records = $row['total'];
     $pages = ($records > $display) ? ceil($records / $display) : 1;
-/*
-    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
-    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
-    exit();
-    */
 }
 
 function doUpload($db, $priv, $key, $domain)
@@ -658,4 +657,17 @@ function doUpdate($db)
 
     header('Location: . ');
     exit();
+}
+function getClientName($db, $email, $domain){
+     include $db;
+	$key = doSanitize($link, $email);
+    $res = doQuery($link, "SELECT client.name from client INNER JOIN user ON $domain = client.domain WHERE user.email='$email'", 'Db error retrieving client name');
+    return goFetch($res)[0];
+}
+
+function getUserName($db, $email){
+     include $db;
+	$key = doSanitize($link, $email);
+    $res = doQuery($link, "SELECT user.name from user WHERE user.email='$email'", 'Db error retrieving user name');
+    return goFetch($res)[0];
 }

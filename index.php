@@ -7,21 +7,7 @@ $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 $base = 'Log In';
 $error = '';
 $tmpl_error = '/uploads/includes/error.html.php';
-$myip = '86.133.121.115.';
-$display = 5;
-$findmode = false;
-$lookup = array(
-    'tu' => 'ut',
-    'fu' => 'uf'
-);
-$text = null;
-$suffix = null;
-$user = null;
-$order_by = 'time DESC';
-$start = 1;
-$doError = function ()
-{
-};
+$doError = function (){};
 
 if (!userIsLoggedIn())
 {
@@ -41,11 +27,31 @@ $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!
 $fileCount = curry2('fileCountByUser') ($domain);
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 
+$myip = '86.133.121.115.';
+$text = null;
+$suffix = null;
+$user = null;
+$tel = '';
+
+$doReset = function (){};
+$start = 1;
+$display = 5;
+$findmode = false;
+$order_by = 'time DESC';
+$lookup = array(
+    'tu' => 'ut',
+    'fu' => 'uf'
+);
+$base = 'File Uploads';
+
 $doDelete = doWhen(partial('goPost', 'extent') , partial('doDelete', $db, $compose));
 $doUpdate = doWhen(partial('goPost', 'update') , partial('doUpdate', $db));
-
+//doWhen expects an argument
 $doDelete(null);
 $doUpdate(null);
+$clientname = getClientName($db, "{$_SESSION['email']}", $domain);
+$username = getUserName($db, "{$_SESSION['email']}");
+$name = $username;
 
 if (isset($_POST['action']) && $_POST['action'] == 'upload' && $priv !== 'Browser')
 {
@@ -155,17 +161,12 @@ if (isset($_GET['action']) and $_GET['action'] == 'search')
 $vars = array_map(partial('doSanitize', $link) , $_GET);
 foreach ($vars as $k => $v)
 {
-    $
-    {
-        $k
-    } = $v;
+    ${$k} = $v;
 }
 
 if (isset($_GET['page']) and is_numeric($_GET['page']))
 {
-    $pages = $_GET['page'];
-    //exit($pages);
-    
+    $pages = $_GET['page'];    
 }
 else
 { // counts all files
@@ -174,6 +175,7 @@ else
     if ($priv == 'Client')
     {
         $email = $_SESSION['email'];
+        //" INNER JOIN userrole ON user.id=userrole.userid";
         $sqlc .= " INNER JOIN user on upload.userid = user.id WHERE user.email='$email' ";
     }
     elseif (isset($user))
@@ -275,53 +277,52 @@ while ($row = mysqli_fetch_array($result))
 }
 
 //ORDERING
-$tel = '';
 $sort = '';
 $reset = [];
 $doReset = null;
-$myq = null;
+$sort_string = null;
 // TABLE ORDERING...
-$q = $_SERVER['QUERY_STRING'];
-$q = preg_replace('/(\?[a-z0-9=&]*)(&sort)([a-z]*)/', '$1$2', '?' . $q);
+$query_string = $_SERVER['QUERY_STRING'];
+$query_string = preg_replace('/(\?[a-z0-9=&]*)(&sort)([a-z]*)/', '$1$2', '?' . $query_string);
 $amper = explode('&sort=', $_SERVER['QUERY_STRING']);
-$presort = preg_match('/\?(?!sort)./', $q);//neg lookahead
-$myq = substr($q, 0);
+//https://stackoverflow.com/questions/15626955/php-regexp-negative-lookahead
+$presort = preg_match('/\?(?!sort)./', $query_string);
+$sort_string = substr($query_string, 0);
 
-if (strlen($q) === 1){ 
+if (strlen($query_string) === 1){ 
     $sort = 'sort=';
 }
 else if($presort && !isset($amper[1])){
     $sort = '&sort=';
 }
 else if($presort && isset($amper[1])){
-    $myq = '&sort=' . $amper[1];
+    $sort_string = '&sort=' . $amper[1];
 }
 /*
-var_dump($q);
-var_dump($myq);
+var_dump($query_string);
+var_dump($sort_string);
 var_dump($sort);
+we only want to query the 'sort' part of the query string as the pattern could turn up in the text field of a filename search eg: &text=vacuum&sort=uu (not good)
 */
-//we only want to query the 'sort' part of the query string eg: &text=vacuum&sort=uu (not good)
-if (!empty(strpos($myq, 'uuu')))
+if (!empty(strpos($sort_string, 'uuu')))
 {
-    $doReset = partial('resetQuery', $q);//the actual query string which will contain sort UNTIL reset
+    $doReset = partial('resetQuery', $query_string);//the actual query string which will contain (?|&)sort= UNTIL reset
 }
-elseif (!empty(strpos($myq, 'uu')))
+elseif (!empty(strpos($sort_string, 'uu')))
 {
-    $two = substr($myq, -2);
-    $reset = explode('uu', $myq);
+    $reset = explode('uu', $sort_string);
     $reset = isset($reset[1]) ? $reset[1] : '';
     $reset = strlen($reset) === 2 ? true : false;
     if ($reset)
     {
-        $doReset = partial('resetQuery', $q, 'uu');
+        $doReset = partial('resetQuery', $query_string, 'uu');
     }
 } //User mode
 else
 {
-    if (isDouble($myq))
+    if (isDouble($sort_string))
     { //double
-        $doReset = partial('resetQuery', $q);
+        $doReset = partial('resetQuery', $query_string);
     }
 }
 $vars = isset($doReset) ? $doReset() : [];
@@ -333,8 +334,6 @@ if (!empty($vars))
         ${$k} = $v;
     }
 }
-
-$base = 'File Uploads';
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
