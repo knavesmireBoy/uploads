@@ -2,7 +2,7 @@
 //ob_start('ob_postprocess');
 //ob_start('ob_gzhandler');
 ?>
-		<h1><a href=""><?php echo "$base | $name"; ?></a></h1>
+		<h1><a href="?"><?php echo "$base | $name"; ?></a></h1>
 		<h2><?php echo date('l F j, Y'); ?></h2>
 		<form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="uploadform" enctype="multipart/form-data">
 		<table class="up"><tr><td><label for="uploadfiles">Upload File:</label></td><td><input id="uploadfiles" type="file" name="upload"/></td></tr>

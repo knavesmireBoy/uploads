@@ -34,9 +34,10 @@ function notToggled($q){
 }
 
 function resetQuery($query_str, $str = ''){
+    //var_dump($query_str, $str);
     $query_str = explode('sort=', $query_str)[0];
     $s = isset($str) ?  "sort=$str" : 'sort=';
-    return array('q' => $query_str, 'sort' =>  $s );
+    return array('query_string' => $query_str, 'sort' =>  $s );
 }
 
 function isDouble($q)

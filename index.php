@@ -33,14 +33,14 @@ $suffix = null;
 $user = null;
 $tel = '';
 
-$doReset = function (){};
 $start = 1;
 $display = 5;
 $findmode = false;
 $order_by = 'time DESC';
 $lookup = array(
     'tu' => 'ut',
-    'fu' => 'uf'
+    'fu' => 'uf',
+    'utu' => 'uut'
 );
 $base = 'File Uploads';
 
@@ -277,17 +277,22 @@ while ($row = mysqli_fetch_array($result))
 }
 
 //ORDERING
-$sort = '';
 $reset = [];
-$doReset = null;
-$sort_string = null;
+$doReset = function(){
+    return [];
+};
 // TABLE ORDERING...
 $query_string = $_SERVER['QUERY_STRING'];
 $query_string = preg_replace('/(\?[a-z0-9=&]*)(&sort)([a-z]*)/', '$1$2', '?' . $query_string);
 $amper = explode('&sort=', $_SERVER['QUERY_STRING']);
+$question = explode('?', $query_string);
 //https://stackoverflow.com/questions/15626955/php-regexp-negative-lookahead
 $presort = preg_match('/\?(?!sort)./', $query_string);
-$sort_string = substr($query_string, 0);
+
+
+/*Mostly $sort should be an empty string as it will be present in the query string:
+<th><a href="<?php echo $query_string . $sort . 'f'; ?>">File name</a></th>
+it is initialy set to one of two defaults depending on the status of the current query string*/
 
 if (strlen($query_string) === 1){ 
     $sort = 'sort=';
@@ -295,45 +300,69 @@ if (strlen($query_string) === 1){
 else if($presort && !isset($amper[1])){
     $sort = '&sort=';
 }
-else if($presort && isset($amper[1])){
-    $sort_string = '&sort=' . $amper[1];
+else {
+    $sort = '';
 }
+$sort_string = isset($question[1]) ? $question[1] : $sort;
 /*
-var_dump($query_string);
-var_dump($sort_string);
-var_dump($sort);
+$checkReset = function($needle, $haystack) {
+    $reset = explode($needle, $haystack);
+    $reset = isset($reset[1]) ? $reset[1] : '';
+    return strlen($reset) === 2 ? true : false;
+};
+$checkUserToggleStatus = $compose('notEmpty', partial('strpos', $sort_string));
+$doCheckReset = doWhen(curry2($checkReset, $sort_string), partial('resetQuery', $query_string));
+$deferReset = function($arg) use($query_string){
+    return resetQuery($query_string);
+};
+$checkTreble = partial(doWhen($checkUserToggleStatus, $deferReset), 'uuu');
+$checkDouble = partial(doWhen($checkUserToggleStatus, $doCheckReset), 'uu');
+$checkSingle = partial(doWhen($checkUserToggleStatus, $doCheckReset), 'u');
+$cbs = [$checkTreble, $checkSingle];
+
+$cb = function($champ, $contender){
+    return $champ ? $champ : $contender();
+};
+
+$vars = array_reduce($cbs, $cb, false);
+*/
+
+/*
 we only want to query the 'sort' part of the query string as the pattern could turn up in the text field of a filename search eg: &text=vacuum&sort=uu (not good)
 */
-if (!empty(strpos($sort_string, 'uuu')))
+if ($checkUserToggleStatus('uuu'))
 {
     $doReset = partial('resetQuery', $query_string);//the actual query string which will contain (?|&)sort= UNTIL reset
 }
-elseif (!empty(strpos($sort_string, 'uu')))
+elseif ($checkUserToggleStatus('uu'))
 {
-    $reset = explode('uu', $sort_string);
-    $reset = isset($reset[1]) ? $reset[1] : '';
-    $reset = strlen($reset) === 2 ? true : false;
-    if ($reset)
+    
+    if ($checkReset('uu', $sort_string))
     {
         $doReset = partial('resetQuery', $query_string, 'uu');
     }
 } //User mode
-else
+elseif ($checkUserToggleStatus('u'))
 {
-    if (isDouble($sort_string))
+    
+    if ($checkReset('u', $sort_string))
+    {
+        $doReset = partial('resetQuery', $query_string, 'u');
+    }
+} //User mode
+elseif (isDouble($sort_string))
     { //double
         $doReset = partial('resetQuery', $query_string);
-    }
-}
-$vars = isset($doReset) ? $doReset() : [];
+    } 
+$vars = $doReset();
+$vars = $vars ? $vars : [];
 
-if (!empty($vars))
-{
     foreach ($vars as $k => $v)
     {
         ${$k} = $v;
     }
-}
+
+//var_dump([$query_string, $sort]);
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
