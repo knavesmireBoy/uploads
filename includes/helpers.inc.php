@@ -34,9 +34,9 @@ function notToggled($q){
 }
 
 function resetQuery($query_str, $str = ''){
-    //var_dump($query_str, $str);
     $query_str = explode('sort=', $query_str)[0];
-    $s = isset($str) ?  "sort=$str" : 'sort=';
+    $s = !empty($str) ?  "sort=$str" : 'sort=';
+    //note not including & as in '&sort=', test elsewhere
     return array('query_string' => $query_str, 'sort' =>  $s );
 }
 

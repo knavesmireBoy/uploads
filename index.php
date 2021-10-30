@@ -34,7 +34,7 @@ $user = null;
 $tel = '';
 
 $start = 1;
-$display = 5;
+$display = 10;
 $findmode = false;
 $order_by = 'time DESC';
 $lookup = array(
@@ -287,34 +287,42 @@ $doReset = function(){
 $query_string = $_SERVER['QUERY_STRING'];
 $query_string = preg_replace('/(\?[a-z0-9=&]*)(&sort)([a-z]*)/', '$1$2', '?' . $query_string);
 $amper = explode('&sort=', $_SERVER['QUERY_STRING']);
-$question = explode('?', $query_string);
+$question = explode('sort=', $query_string);
 //https://stackoverflow.com/questions/15626955/php-regexp-negative-lookahead
 $presort = preg_match('/\?(?!sort)./', $query_string);
-
+$sort_string = '';
 
 /*Mostly $sort should be an empty string as it will be present in the query string:
 <th><a href="<?php echo $query_string . $sort . 'f'; ?>">File name</a></th>
 it is initialy set to one of two defaults depending on the status of the current query string*/
 
-if (strlen($query_string) === 1){ 
+if (strlen($query_string) === 1){ //initial
     $sort = 'sort=';
 }
-else if($presort && !isset($amper[1])){
+
+else if($presort && !isset($amper[1])){//earlier queries
     $sort = '&sort=';
 }
+
 else {
     $sort = '';
 }
 //query the 'sort' part of the query string as pattern may be in a field of a filename search eg: &text=vacuum&sort=uu
-$sort_string = isset($question[1]) ? $question[1] : $sort;
+if(isset($question[1])){
+    $sort_string = "sort=$question[1]";
+}
+
+$checksort = preg_match('/sort/', $sort_string);
 
 $checkReset = function($needle, $haystack) {
     $reset = explode($needle, $haystack);
     $reset = isset($reset[1]) ? $reset[1] : '';
-    return strlen($reset) === 2 ? true : false;
+    return strlen($reset) >= 2 ? true : false;
 };
 
+if($checksort) {
 $deferCheckReset = curry2($checkReset)($sort_string);
+    
 
 $checkTreble = partial(doWhen($always(true), curry22('resetQuery')('')($query_string)), '');
 $checkDouble = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'uu');
@@ -329,30 +337,24 @@ $checkUserToggleStatus = $compose('notEmpty', curry2('explode')($sort_string));
 $u = $checkUserToggleStatus('u');
 $uu = $checkUserToggleStatus('uu');
 $uuu = $checkUserToggleStatus('uuu');
-$options = [$uuu, $uu, $u];
-$filter = function(&$item, $i){//by reference, $i index is flag, true check isset AND empty, false just isset
+$options = array($uuu, $uu, $u);
+$cb = function(&$item, $i){//by reference, $i index is flag, true check isset AND empty, false just isset
     $item = isset($item[1]) && andNotEmpty($item[1], $i);
 };
-$result = array_walk($options, $filter);//changes array in-place
+$result = array_walk($options, $cb);//changes array in-place
 $int = array_search(true, $options);
-
 if (is_int($int)){
-    $vars = $cbs[$int]();
-    if(isset($vars)) {
-    foreach ($vars as $k => $v)
-    {
-        ${$k} = $v;
-    }
-}
+    $resetvars = $cbs[$int]();//may not run resetQuery
 }
 
 elseif($notUser() && isDouble($sort_string)){
-    $vars = resetQuery($query_string);
-     foreach ($vars as $k => $v)
-    {
-        ${$k} = $v;
-    }
+    $resetvars = resetQuery($query_string);
 }
+    if(isset($resetvars)){
+        foreach ($resetvars as $k => $v) { ${$k} = $v; }
+        $sort = isset($presort) ? "&$sort" : $sort; 
+    }//resetvars
+}//checksort
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
