@@ -305,7 +305,7 @@ else if($presort && !isset($amper[1])){//earlier queries
 }
 
 else {
-    $sort = '';
+    $sort = '';//because it will be part of query string
 }
 //query the 'sort' part of the query string as pattern may be in a field of a filename search eg: &text=vacuum&sort=uu
 if(isset($question[1])){
@@ -322,7 +322,6 @@ $checkReset = function($needle, $haystack) {
 
 if($checksort) {
 $deferCheckReset = curry2($checkReset)($sort_string);
-    
 
 $checkTreble = partial(doWhen($always(true), curry22('resetQuery')('')($query_string)), '');
 $checkDouble = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'uu');
