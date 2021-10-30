@@ -289,9 +289,8 @@ $query_string = preg_replace('/(\?[a-z0-9=&]*)(&sort)([a-z]*)/', '$1$2', '?' . $
 $amper = explode('&sort=', $_SERVER['QUERY_STRING']);
 $question = explode('sort=', $query_string);
 //https://stackoverflow.com/questions/15626955/php-regexp-negative-lookahead
-$presort = preg_match('/\?(?!sort)./', $query_string);
+$presort = preg_match('/\?(?!sort)./', $query_string);//returns false, 0, 1
 $sort_string = '';
-
 /*Mostly $sort should be an empty string as it will be present in the query string:
 <th><a href="<?php echo $query_string . $sort . 'f'; ?>">File name</a></th>
 it is initialy set to one of two defaults depending on the status of the current query string*/
@@ -329,13 +328,17 @@ $checkSingle = partial(doWhen($deferCheckReset, partial('resetQuery', $query_str
 $cbs = [$checkTreble, $checkDouble, $checkSingle];
 
 $notUser = negate(partial('preg_match', '/u/', $sort_string));
+    
+    var_dump(preg_split('/uu\w/', $sort_string));
 
-$checkUserToggleStatus = $compose('notEmpty', curry2('explode')($sort_string));
+//$checkUserToggleStatus = $compose('notEmpty', curry2('explode')($sort_string));
+$checkUserToggleStatus = $compose('notEmpty', curry2('preg_split')($sort_string));
 /*IF exploding produces a a two member array for 'uuu' scenario reset sort string, otherwise reset when second member has two characters*/
 // ie ?sort=uut : ['sort=', 't'], ?sort=uuu : ['sort=', ''], ?sort=uutt : ['sort=', 'tt']
-$u = $checkUserToggleStatus('u');
-$uu = $checkUserToggleStatus('uu');
-$uuu = $checkUserToggleStatus('uuu');
+$u = $checkUserToggleStatus('/u/');
+$uu = $checkUserToggleStatus('/uu/');
+//$uuu = $checkUserToggleStatus('/uuu/');
+$uuu = $checkUserToggleStatus('/uu(u|[^u]u)/');
 $options = array($uuu, $uu, $u);
 $cb = function(&$item, $i){//by reference, $i index is flag, true check isset AND empty, false just isset
     $item = isset($item[1]) && andNotEmpty($item[1], $i);
@@ -351,10 +354,10 @@ elseif($notUser() && isDouble($sort_string)){
 }
     if(isset($resetvars)){
         foreach ($resetvars as $k => $v) { ${$k} = $v; }
-        $sort = isset($presort) ? "&$sort" : $sort; 
+        $sort = !empty($presort) ? "&$sort" : $sort; 
     }//resetvars
 }//checksort
-
+var_dump($sort);
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
 if ($findmode)
