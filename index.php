@@ -333,7 +333,7 @@ $notUser = negate(partial('preg_match', '/u/', $sort_string));
 
 //$checkUserToggleStatus = $compose('notEmpty', curry2('explode')($sort_string));
 $checkUserToggleStatus = $compose('notEmpty', curry2('preg_split')($sort_string));
-/*IF exploding produces a a two member array for 'uuu' scenario reset sort string, otherwise reset when second member has two characters*/
+/*IF splitting produces a a two member array for 'uuu' scenario reset sort string, for 'u' and 'uu' reset when second member has two characters*/
 // ie ?sort=uut : ['sort=', 't'], ?sort=uuu : ['sort=', ''], ?sort=uutt : ['sort=', 'tt']
 $u = $checkUserToggleStatus('/u/');
 $uu = $checkUserToggleStatus('/uu/');
