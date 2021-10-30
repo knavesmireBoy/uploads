@@ -40,7 +40,9 @@ $order_by = 'time DESC';
 $lookup = array(
     'tu' => 'ut',
     'fu' => 'uf',
-    'utu' => 'uut'
+    'utu' => 'uut',
+    'uufu' => 'uf',
+    'uutu' => 'ut'
 );
 $base = 'File Uploads';
 
@@ -303,66 +305,54 @@ else if($presort && !isset($amper[1])){
 else {
     $sort = '';
 }
+//query the 'sort' part of the query string as pattern may be in a field of a filename search eg: &text=vacuum&sort=uu
 $sort_string = isset($question[1]) ? $question[1] : $sort;
-/*
+
 $checkReset = function($needle, $haystack) {
     $reset = explode($needle, $haystack);
     $reset = isset($reset[1]) ? $reset[1] : '';
     return strlen($reset) === 2 ? true : false;
 };
-$checkUserToggleStatus = $compose('notEmpty', partial('strpos', $sort_string));
-$doCheckReset = doWhen(curry2($checkReset, $sort_string), partial('resetQuery', $query_string));
-$deferReset = function($arg) use($query_string){
-    return resetQuery($query_string);
+
+$deferCheckReset = curry2($checkReset)($sort_string);
+
+$checkTreble = partial(doWhen($always(true), curry22('resetQuery')('')($query_string)), '');
+$checkDouble = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'uu');
+$checkSingle = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'u');
+$cbs = [$checkTreble, $checkDouble, $checkSingle];
+
+$notUser = negate(partial('preg_match', '/u/', $sort_string));
+
+$checkUserToggleStatus = $compose('notEmpty', curry2('explode')($sort_string));
+/*IF exploding produces a a two member array for 'uuu' scenario reset sort string, otherwise reset when second member has two characters*/
+// ie ?sort=uut : ['sort=', 't'], ?sort=uuu : ['sort=', ''], ?sort=uutt : ['sort=', 'tt']
+$u = $checkUserToggleStatus('u');
+$uu = $checkUserToggleStatus('uu');
+$uuu = $checkUserToggleStatus('uuu');
+$options = [$uuu, $uu, $u];
+$filter = function(&$item, $i){//by reference, $i index is flag, true check isset AND empty, false just isset
+    $item = isset($item[1]) && andNotEmpty($item[1], $i);
 };
-$checkTreble = partial(doWhen($checkUserToggleStatus, $deferReset), 'uuu');
-$checkDouble = partial(doWhen($checkUserToggleStatus, $doCheckReset), 'uu');
-$checkSingle = partial(doWhen($checkUserToggleStatus, $doCheckReset), 'u');
-$cbs = [$checkTreble, $checkSingle];
+$result = array_walk($options, $filter);//changes array in-place
+$int = array_search(true, $options);
 
-$cb = function($champ, $contender){
-    return $champ ? $champ : $contender();
-};
-
-$vars = array_reduce($cbs, $cb, false);
-*/
-
-/*
-we only want to query the 'sort' part of the query string as the pattern could turn up in the text field of a filename search eg: &text=vacuum&sort=uu (not good)
-*/
-if ($checkUserToggleStatus('uuu'))
-{
-    $doReset = partial('resetQuery', $query_string);//the actual query string which will contain (?|&)sort= UNTIL reset
-}
-elseif ($checkUserToggleStatus('uu'))
-{
-    
-    if ($checkReset('uu', $sort_string))
-    {
-        $doReset = partial('resetQuery', $query_string, 'uu');
-    }
-} //User mode
-elseif ($checkUserToggleStatus('u'))
-{
-    
-    if ($checkReset('u', $sort_string))
-    {
-        $doReset = partial('resetQuery', $query_string, 'u');
-    }
-} //User mode
-elseif (isDouble($sort_string))
-    { //double
-        $doReset = partial('resetQuery', $query_string);
-    } 
-$vars = $doReset();
-$vars = $vars ? $vars : [];
-
+if (is_int($int)){
+    $vars = $cbs[$int]();
+    if(isset($vars)) {
     foreach ($vars as $k => $v)
     {
         ${$k} = $v;
     }
+}
+}
 
-//var_dump([$query_string, $sort]);
+elseif($notUser() && isDouble($sort_string)){
+    $vars = resetQuery($query_string);
+     foreach ($vars as $k => $v)
+    {
+        ${$k} = $v;
+    }
+}
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
