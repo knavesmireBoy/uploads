@@ -306,7 +306,9 @@ $checksort = preg_match('/sort/', $sort_string);
 if($checksort) {
     $checkReset = function($needle, $haystack) {
         $reset = explode($needle, $haystack);
+        //$reset = preg_split($needle, $haystack);
         $reset = isset($reset[1]) ? $reset[1] : '';
+        var_dump($needle, $haystack);
         return strlen($reset) === 2 ? true : false;
     };
 $deferCheckReset = curry2($checkReset)($sort_string);
@@ -314,6 +316,7 @@ $deferCheckReset = curry2($checkReset)($sort_string);
 $checkTreble = partial(doWhen($always(true), curry22('resetQuery')('')($query_string)), '');
 $checkDouble = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'uu');
 $checkSingle = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'u');
+$checkNotUser = partial(doWhen($deferCheckReset, curry22('resetQuery')('')($query_string)), '');
 $cbs = [$checkTreble, $checkDouble, $checkSingle];
 
 $notUser = negate(partial('preg_match', '/u/', $sort_string));
@@ -322,6 +325,7 @@ $checkUserToggleStatus = $compose('notEmpty', curry2('preg_split')($sort_string)
 $u = $checkUserToggleStatus('/u/');
 $uu = $checkUserToggleStatus('/uu/');
 $uuu = $checkUserToggleStatus('/uu(u|[^u]u)/');
+$not = $checkUserToggleStatus('/tt/');
     //order is critical as potentially more than one scenario can return true, we 
 $options = array($uuu, $uu, $u);
 $cb = function(&$item, $i){//by reference, $i index is flag, true check isset AND empty, false just isset
@@ -333,17 +337,17 @@ $result = array_walk($options, $cb);//changes array in-place to a series of bool
     /* A case for classes here as we are either in USER MODE where we can refine the order by time or filename which is achieved by appending a t or f to the existing user: ie uf uuf uuff, reset occurs at uuff so we next get uuf*/
     
 $int = array_search(true, $options);
+    var_dump($int);
 if (is_int($int)){//get the first found boolean, if any
     $resetvars = $cbs[$int]();//may not run resetQuery
 }
+
 elseif($notUser() && isDouble($sort_string)){
-    $resetvars = resetQuery($query_string);
+    $resetvars = resetQuery($query_string, 'vo');
 }
+
     if(isset($resetvars)){
         foreach ($resetvars as $k => $v) { ${$k} = $v; }
-        $q = preg_match('/&/', $query_string);
-        $sort = (empty($q) && $presort) ? "&$sort" : $sort; 
-        $query_string = empty($q) ? $query_string : preg_replace('/&/', '', $query_string);
     }//resetvars
 }//checksort
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
