@@ -334,7 +334,7 @@ if (is_int($int)){//get the first found boolean, if any
     $resetvars = $cbs[$int]();//may not run resetQuery
 }
 elseif($notUser() && isDouble($sort_string)){
-    $resetvars = resetQuery($query_string, 'vo');
+    $resetvars = resetQuery($query_string);
 }
     if(isset($resetvars)){
         foreach ($resetvars as $k => $v) { ${$k} = $v; }
