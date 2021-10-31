@@ -322,14 +322,11 @@ $uu = $checkUserToggleStatus('/uu/');
 $uuu = $checkUserToggleStatus('/uu(u|[^u]u)/');
     //order is critical as potentially more than one scenario can return true, we 
 $options = array($uuu, $uu, $u);
-$cb = function($arr){
-    //by reference, $i index is flag, true check isset AND empty, false just isset
-    return function (&$item, $i) use($arr) {
+$cb = function (&$item, $i) use($arr) {
         //ensure first and last item receive no flag so that empty status is ignored
         $item = isset($item[1]) && andNotEmpty($item[1], $i);
 };
-};
-$result = array_walk($options, $cb($options));//changes array in-place to a series of booleans
+$result = array_walk($options, $cb);//changes array in-place to a series of booleans
 /* A case for classes here as we are either in USER MODE where we can refine the order by time or filename which is achieved by appending a t or f to the existing user: ie uf uuf uuff, reset occurs at uuff so we next get uuf*/
     
 $int = array_search(true, $options);
