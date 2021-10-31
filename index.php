@@ -305,7 +305,6 @@ $checksort = preg_match('/sort/', $sort_string);
 if($checksort) {
     $checkReset = function($needle, $haystack) {
         $reset = explode($needle, $haystack);
-        //$reset = preg_split($needle, $haystack);
         $reset = isset($reset[1]) ? $reset[1] : '';
         return strlen($reset) === 2 ? true : false;
     };
@@ -314,23 +313,19 @@ $deferCheckReset = curry2($checkReset)($sort_string);
 $checkTreble = partial(doWhen($always(true), curry22('resetQuery')('')($query_string)), '');
 $checkDouble = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'uu');
 $checkSingle = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'u');
-$checkNotUser = partial(doWhen($deferCheckReset, curry22('resetQuery')('')($query_string)), '=');
-$cbs = [$checkTreble, $checkDouble, $checkSingle/*, $checkNotUser*/];
-
+$cbs = [$checkTreble, $checkDouble, $checkSingle];
 $notUser = negate(partial('preg_match', '/u/', $sort_string));
 $checkUserToggleStatus = $compose('notEmpty', curry2('preg_split')($sort_string));
 /*IF splitting produces a a two member array for 'uuu' scenario reset sort string, for 'u' and 'uu' reset when second member has two characters ie ?sort=uut : ['sort=', 't'], ?sort=uuu : ['sort=', ''], ?sort=uutt : ['sort=', 'tt']*/
 $u = $checkUserToggleStatus('/u/');
 $uu = $checkUserToggleStatus('/uu/');
 $uuu = $checkUserToggleStatus('/uu(u|[^u]u)/');
-$not = $checkUserToggleStatus('/[^u][^u]/');
     //order is critical as potentially more than one scenario can return true, we 
-$options = array($uuu, $uu, $u/*, $not*/);
+$options = array($uuu, $uu, $u);
 $cb = function($arr){
     //by reference, $i index is flag, true check isset AND empty, false just isset
     return function (&$item, $i) use($arr) {
         //ensure first and last item receive no flag so that empty status is ignored
-        //$flag = isset($arr[$i+1]) ? $i : false;
         $item = isset($item[1]) && andNotEmpty($item[1], $i);
 };
 };
