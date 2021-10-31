@@ -288,7 +288,6 @@ $sort_string = '';
 /*Mostly $sort should be an empty string as it will be present in the query string:
 <th><a href="<?php echo $query_string . $sort . 'f'; ?>">File name</a></th>
 it is initialy set to one of two defaults depending on the status of the current query string */
-
 if (strlen($query_string) === 1){ //initial
     $sort = 'sort=';
 }
@@ -308,7 +307,6 @@ if($checksort) {
         $reset = explode($needle, $haystack);
         //$reset = preg_split($needle, $haystack);
         $reset = isset($reset[1]) ? $reset[1] : '';
-        var_dump($needle, $haystack);
         return strlen($reset) === 2 ? true : false;
     };
 $deferCheckReset = curry2($checkReset)($sort_string);
@@ -316,8 +314,8 @@ $deferCheckReset = curry2($checkReset)($sort_string);
 $checkTreble = partial(doWhen($always(true), curry22('resetQuery')('')($query_string)), '');
 $checkDouble = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'uu');
 $checkSingle = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'u');
-$checkNotUser = partial(doWhen($deferCheckReset, curry22('resetQuery')('')($query_string)), '');
-$cbs = [$checkTreble, $checkDouble, $checkSingle];
+$checkNotUser = partial(doWhen($deferCheckReset, curry22('resetQuery')('')($query_string)), '=');
+$cbs = [$checkTreble, $checkDouble, $checkSingle/*, $checkNotUser*/];
 
 $notUser = negate(partial('preg_match', '/u/', $sort_string));
 $checkUserToggleStatus = $compose('notEmpty', curry2('preg_split')($sort_string));
@@ -325,27 +323,27 @@ $checkUserToggleStatus = $compose('notEmpty', curry2('preg_split')($sort_string)
 $u = $checkUserToggleStatus('/u/');
 $uu = $checkUserToggleStatus('/uu/');
 $uuu = $checkUserToggleStatus('/uu(u|[^u]u)/');
-$not = $checkUserToggleStatus('/tt/');
+$not = $checkUserToggleStatus('/[^u][^u]/');
     //order is critical as potentially more than one scenario can return true, we 
-$options = array($uuu, $uu, $u);
-$cb = function(&$item, $i){//by reference, $i index is flag, true check isset AND empty, false just isset
-    $item = isset($item[1]) && andNotEmpty($item[1], $i);
+$options = array($uuu, $uu, $u/*, $not*/);
+$cb = function($arr){
+    //by reference, $i index is flag, true check isset AND empty, false just isset
+    return function (&$item, $i) use($arr) {
+        //ensure first and last item receive no flag so that empty status is ignored
+        //$flag = isset($arr[$i+1]) ? $i : false;
+        $item = isset($item[1]) && andNotEmpty($item[1], $i);
 };
-    
-$result = array_walk($options, $cb);//changes array in-place to a series of booleans
-    
-    /* A case for classes here as we are either in USER MODE where we can refine the order by time or filename which is achieved by appending a t or f to the existing user: ie uf uuf uuff, reset occurs at uuff so we next get uuf*/
+};
+$result = array_walk($options, $cb($options));//changes array in-place to a series of booleans
+/* A case for classes here as we are either in USER MODE where we can refine the order by time or filename which is achieved by appending a t or f to the existing user: ie uf uuf uuff, reset occurs at uuff so we next get uuf*/
     
 $int = array_search(true, $options);
-    var_dump($int);
 if (is_int($int)){//get the first found boolean, if any
     $resetvars = $cbs[$int]();//may not run resetQuery
 }
-
 elseif($notUser() && isDouble($sort_string)){
     $resetvars = resetQuery($query_string, 'vo');
 }
-
     if(isset($resetvars)){
         foreach ($resetvars as $k => $v) { ${$k} = $v; }
     }//resetvars
