@@ -45,8 +45,8 @@ $doUpdate = doWhen(partial('goPost', 'update') , partial('doUpdate', $db));
 //doWhen expects an argument
 $doDelete(null);
 $doUpdate(null);
-$clientname = getClientName($db, "{$_SESSION['email']}", $domain);
+$clientname = getClientName($db, $domain, "{$_SESSION['email']}");
 $username = getUserName($db, "{$_SESSION['email']}");
-$name = $username;
+$name = isset($clientname) ? $clientname : $username;
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/control.php';

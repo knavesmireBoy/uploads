@@ -89,8 +89,6 @@ include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/logout.inc.html.php'; ?>
 <?php
 $wither = seek(true);
 $link = $wither == '.'  ? 'Clear search results' : 'Search files';
-//$wither = isset($_GET['find']) ? '?' : '?find';
-//$link = ( isset($_GET['find']) ? 'Search files' : 'Clear search results');
 ?>
 <p><a href="<?php echo $wither; ?>"><?php echo $link; ?></a></p>
 
@@ -127,7 +125,7 @@ if ($current_page <> $pages) { ?>
 <?php
 }
 }//If Pages > 1
-
+    
 if (isset($call)) {
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
 if (!isset($filename)) { 
@@ -135,7 +133,11 @@ echo '</div></body></html>';
 exit();
 }
 }//prompt
+    
 if (isset($answer)) {
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/update.html.php';
 echo '</div></body></html>';
 }
+
+
+

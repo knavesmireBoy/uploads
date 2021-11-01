@@ -106,13 +106,6 @@ function fromDomain($db, $key, $domain){
     return doProcess($res, 'user_id', 'user_name');
 }
 
-function getClientName($db, $domain){
-     include $db;
-	$key = doSanitize($link, $domain);
-    $res = doQuery($link, "SELECT name from client WHERE domain = '$key'", 'Db error retrieving client name');
-    return goFetch($res)[0];
-}
-
 function testDomain($db, $key){
     include $db;
 	$key = doSanitize($link, $key);
@@ -132,7 +125,7 @@ function chooseAdmin($db, $key, $user, $domain){
     include $db;
 	if (isset($row))
 	{
-        $c = getClientName($db, $user);
+        $c = getClientName($db, $user, null);
         $manage = "Manage users of $c";
         $users = fromDomain($db, $user, $domain);
 	}

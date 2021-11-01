@@ -660,12 +660,19 @@ function doUpdate($db)
     header('Location: . ');
     exit();
 }
-function getClientName($db, $email, $domain){
+function getClientName($db, $domain, $email){
      include $db;
-	$key = doSanitize($link, $email);
-    $res = doQuery($link, "SELECT client.name from client INNER JOIN user ON $domain = client.domain WHERE user.email='$email'", 'Db error retrieving client name');
+    if(isset($email)){
+        $key = doSanitize($link, $email);
+       $res = doQuery($link, "SELECT client.name from client INNER JOIN user ON $domain = client.domain WHERE user.email='$email'", 'Db error retrieving client name'); 
+    }
+    else {
+        $key = doSanitize($link, $domain);
+        $res = doQuery($link, "SELECT name from client WHERE domain = '$key'", 'Db error retrieving client name');
+    }
     return goFetch($res)[0];
 }
+
 
 function getUserName($db, $email){
      include $db;

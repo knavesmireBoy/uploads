@@ -47,31 +47,38 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
         $colleagues[$row['id']] = $row['name'];
         $extent++;
     }
-    $prompt = !$extent ? "$prompt1 user $prompt2" : $extent === 1 ? "continue" : $prompt;
+    $prompt = !$extent ? "$prompt1 user $prompt2" : $prompt;
     $id = $_POST['id'];
     $call = "swap";
+    /*
+    if($priv === 'Admin' ||  $extent <= 1 ){
+        header("Location: ?swap=No&answer=No&id=$id");
+        exit();
+    }
+    */
 }
-if (isset($_POST['swap']))
+if (isset($_REQUEST['swap']))
 { //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (FILE AMEND BLOCK)
     //$colleagues = array();
     $button = "Update";
     $extent = 0;
     include $db;
-    $id = doSanitize($link, $_POST['id']);
-
-    $answer = $_POST['swap']; //$answer used as conditional to load update.html.php
+    $id = doSanitize($link, $_REQUEST['id']);
+    $answer = $_REQUEST['swap']; //$answer used as conditional to load update.html.php
     $email = "{$_SESSION['email']}";
     $row = prepUpdate($db, $priv, $id, $domain);
     $filename = $row['filename'];
     $diz = $row['description'];
     $userid = $row['userid'];
     $result = doQuery($link, getColleagues($row['id'], $domain) , 'Database error fetching colleagues.');
+    
 
     while ($row = mysqli_fetch_array($result))
     {
         $colleagues[$row['id']] = $row['name'];
         $extent++;
     }
+    //dump($colleagues);
     if (!$extent)
     {
         $colleagues = prepUpdateUser($db, $priv);
