@@ -320,10 +320,9 @@ $checkUserToggleStatus = $compose('notEmpty', curry2('preg_split')($sort_string)
 $u = $checkUserToggleStatus('/u/');
 $uu = $checkUserToggleStatus('/uu/');
 $uuu = $checkUserToggleStatus('/uu(u|[^u]u)/');
-    //order is critical as potentially more than one scenario can return true, we 
+//order is critical as potentially more than one scenario can return true, we 
 $options = array($uuu, $uu, $u);
-$cb = function (&$item, $i) use($arr) {
-        //ensure first and last item receive no flag so that empty status is ignored
+$cb = function (&$item, $i) {
         $item = isset($item[1]) && andNotEmpty($item[1], $i);
 };
 $result = array_walk($options, $cb);//changes array in-place to a series of booleans
@@ -331,15 +330,19 @@ $result = array_walk($options, $cb);//changes array in-place to a series of bool
     
 $int = array_search(true, $options);
 if (is_int($int)){//get the first found boolean, if any
-    $resetvars = $cbs[$int]();//may not run resetQuery
+    $resetvars = $cbs[$int]();
 }
 elseif($notUser() && isDouble($sort_string)){
     $resetvars = resetQuery($query_string);
 }
-    if(isset($resetvars)){
+    if(isset($resetvars)){//resetQuery may not run
         foreach ($resetvars as $k => $v) { ${$k} = $v; }
     }//resetvars
 }//checksort
+if (isset($_GET['sort']) && $_GET['sort'] == 'uuu')
+{
+    header("Location: .");
+}
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/files.html.php';
 if ($findmode)
