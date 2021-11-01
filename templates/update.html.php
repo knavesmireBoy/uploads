@@ -1,5 +1,5 @@
 <form action="." method="post" name="updateFileInfo">
-<?php if($_REQUEST['swap'] == 'No'): ?>
+<?php if($_POST['swap'] == 'No'): ?>
 	<div>
 		<label for="filename">Name: <input id="filename" type="text" name="filename" value="<?php htmlout($filename); ?>"/></label></div>
 	<div>

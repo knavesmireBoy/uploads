@@ -36,7 +36,6 @@
 </tr>
 </thead>
 <tbody>
-			
 <?php foreach($files as $f): ?>
 <tr valign="top" class="<?php if($f['origin'] == $myip) echo 'admin';?>">
 <?php 
@@ -54,13 +53,10 @@ $des = (empty($f['description'])  ? 'No description provided' : html($f['descrip
 <?php htmlout($f['user']); ?></td>
 <?php endif; 
 ?>
-
 <td title="<?php echo $tel ?>">
     <?php 
 $stamp = html($f["time"]);
 echo date("g:i a F j ", strtotime($stamp)) ;?></td>
-
-
 <td><form action="<?php $_SERVER['PHP_SELF']?>" method="get" name="downloads">
 <div><input type="hidden" name="action" value="download"/>
 <input type="hidden" name="id" value="<?php htmlout($f['id']); ?>"/>
@@ -75,12 +71,9 @@ echo date("g:i a F j ", strtotime($stamp)) ;?></td>
 <?php endif; ?></tr><?php endforeach; ?>
 </tbody>
 </table>
-
 <?php else :
  $greeting = ($_SERVER['QUERY_STRING']) ? 'There were no files that matched your criteria' : 'There are currently no files in the database' ?>
-
 <h2><a href="<?php $_SERVER['PHP_SELF']?>" title="Click to return"><?php echo $greeting; ?>
-
 </a></h2>
 <?php 
 endif; 
@@ -91,11 +84,8 @@ $wither = seek(true);
 $link = $wither == '.'  ? 'Clear search results' : 'Search files';
 ?>
 <p><a href="<?php echo $wither; ?>"><?php echo $link; ?></a></p>
-
 <p class="footer">
-
 <?php
-    
     $check = explode('sort=', $_SERVER['QUERY_STRING']);
     if(isset($check[1])){
         $sort = $check[1];
@@ -104,15 +94,17 @@ $link = $wither == '.'  ? 'Clear search results' : 'Search files';
         $sort = '';
     }
     
+$q = "&page=$pages&user=$user&text=$text&suffix=$suffix&sort=$sort";
+    
 if ($pages > 1) {
 $current_page = ($start/$display) + 1;
 if ($current_page != 1) { ?>
-<a href="?start=<?php echo $start-$display; ?>&page=<?php echo ($pages); ?>&user=<?php echo $user; ?>&text=<?php echo $text; ?>&suffix=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>">Previous</a>
+<a href="?start=<?php echo $start-$display; echo $q; ?>">Previous</a>
 <?php 
 }
 for ($i=1; $i<=$pages; $i++){
 if ($i != $current_page) { ?>
-<a href="?start=<?php echo ($display * ($i-1)); ?>&page=<?php echo ($pages);?>&user=<?php echo $user; ?>&text=<?php echo $text; ?>&suffix=<?php echo $suffix; ?>&sort=<?php echo $sort; ?>"><?php echo $i ?></a>
+<a href="?start=<?php echo ($display * ($i-1)); echo $q; ?>"><?php echo $i ?></a>
 <?php
 }
 else {  ?>
@@ -121,7 +113,7 @@ else {  ?>
 }
 }
 if ($current_page <> $pages) { ?>
-<a href="?start=<?php echo $start+$display; ?>&page=<?php echo ($pages); ?>&user=<?php echo $user; ?>&text=<?php echo $text; ?>&suffix=<?php echo $suffix;?>&sort=<?php echo $sort; ?>">Next</a></p>
+<a href="?start=<?php echo $start+$display; echo $q; ?>">Next</a></p>
 <?php
 }
 }//If Pages > 1
@@ -130,14 +122,10 @@ if (isset($call)) {
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
 if (!isset($filename)) { 
 echo '</div></body></html>';
-exit();
 }
 }//prompt
     
-if (isset($answer)) {
+elseif (isset($answer)) {
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/update.html.php';
 echo '</div></body></html>';
 }
-
-
-

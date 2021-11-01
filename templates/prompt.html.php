@@ -32,8 +32,6 @@ if(isset($clientlist)): ?>
 <input type="submit" value = "Submit"/>
 </form>
 <?php endif;  ?>
-
-
 <?php if($confirmed): ?>
 <p><?php echo $prompt; ?></p>
 <form action="." method="post" name="deletions" class="block">
