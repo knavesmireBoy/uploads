@@ -1,5 +1,6 @@
 <?php
 // TABLE ORDERING...
+$sorted = isset($_GET['sort']) ? true : false;
 $query_string = preg_replace('/(\?[a-z0-9=&]*)(&sort)([a-z]*)/', '$1$2', '?' . $_SERVER['QUERY_STRING']);
 $amper = explode('&sort=', $_SERVER['QUERY_STRING']);
 $question = explode('sort=', $query_string);
@@ -60,7 +61,7 @@ elseif($notUser() && isDouble($sort_string)){
         foreach ($resetvars as $k => $v) { ${$k} = $v; }
     }//resetvars
 }//checksort
-if (isset($_GET['sort']) && $_GET['sort'] == 'uuu')
+if ($sorted && $_GET['sort'] == 'uuu' || $sorted && $_GET['sort'] == 'uutu' || $sorted && $_GET['sort'] == 'uufu')
 {
     header("Location: .");
 }
