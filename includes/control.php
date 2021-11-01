@@ -1,4 +1,5 @@
 <?php
+
 if (isset($_POST['action']) && $_POST['action'] == 'upload' && $priv !== 'Browser')
 {
     doUpload($db, $priv, $key, $domain);
@@ -75,17 +76,25 @@ if (isset($_POST['swap']))
         $colleagues = prepUpdateUser($db, $priv);
     }
 } ///
-//D I S P L A Y_______________________________________________________________
+
 include $db; ///Present list of users for administrators
-$sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id=client.id WHERE client.domain IS NULL ORDER BY name";
-$result = doQuery($link, $sql, 'Database error fetching users.');
+$sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id";
+if($priv == 'Admin'){
+$where = " WHERE client.domain IS NULL ORDER BY name";
+$result = doQuery($link, $sql . $where, 'Database error fetching users.');
 $users = doProcess($result, 'id', 'name');
 
 $sql = "SELECT name, domain, tel FROM client ORDER BY name";
 $result = doQuery($link, $sql, 'Database error fetching clients.');
 $client = doProcess($result, 'domain', 'name');
+}
+elseif(isset($clientname)){/////Present list of users for specific client
+    $sql = getColleaguesFromName($domain, $clientname);
+    $result = doQuery($link, $sql, 'Database error fetching clients.');
+    $client = doProcess($result, 'id', 'name');
+}
 
-//end of default_______________________________________________________________________
+//$users and $client required at this point
 if (isset($_GET['find']))
 {
     $isAdmin = partial('equals', $priv, 'Admin');
@@ -101,7 +110,7 @@ if (isset($_GET['action']) and $_GET['action'] == 'search')
 {
     doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip);
 }
-//a default block___________________________________________________________________
+
 $vars = array_map(partial('doSanitize', $link) , $_GET);
 foreach ($vars as $k => $v)
 {
@@ -135,33 +144,8 @@ else
 } //end of IF NOT PAGES SET
 $start = (isset($_GET['start']) && is_numeric($_GET['start'])) ? $_GET['start'] : 0;
 
-$lookup = array(
-    'tu' => 'ut',
-    'fu' => 'uf',
-    'utu' => 'uut',
-    'uufu' => 'uf',
-    'uutu' => 'ut'
-);
 $sort = (isset($_GET['sort']) ? $_GET['sort'] : '');
-
 $sort = isset($lookup[$sort]) ? $lookup[$sort] : $sort;
-$ordering = array(
-    'f' => 'filename ASC',
-    'ff' => 'filename DESC',
-    'u' => 'user ASC',
-    'uu' => 'user DESC',
-    'uuu' => 'user ASC',
-    'uf' => 'user ASC, filename ASC',
-    'uuf' => 'user DESC, filename ASC',
-    'uff' => 'user ASC, filename DESC',
-    'uuff' => 'user DESC, filename DESC',
-    'ut' => 'user ASC, time ASC',
-    'utt' => 'user ASC, time DESC',
-    'uut' => 'user DESC, time ASC',
-    'uutt' => 'user DESC, time DESC',
-    't' => 'time ASC',
-    'tt' => 'time DESC'
-);
 
 foreach ($ordering as $k => $v)
 {
@@ -183,7 +167,7 @@ if ($priv == 'Admin')
 {
     $select .= ", user.name as user";
     //$from.= " INNER JOIN userrole ON user.id = userrole.userid";
-    $where = ' WHERE TRUE';
+    $where = " WHERE true";
     $where = getFileTypeQuery($where, $suffix);
     //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
     $where = getIdTypeQuery($where, $user, $domain);
@@ -195,9 +179,9 @@ if ($priv == 'Admin')
 } //admin
 else
 {
-    $email = $_SESSION['email'];
-    //$from.= " INNER JOIN userrole ON user.id = userrole.userid";
-    $where = " WHERE user.email='$email' ";
+   $email = $_SESSION['email'];
+    $from.= " INNER JOIN userrole ON user.id = userrole.userid";
+   $where = " WHERE user.email='$email' ";
 }
 //$sql= $select . $from . $where . $order; //DEFAULT; TELEPHONE BLOCK REQUIRED TO OBTAIN CLIENT PHONE NUMBER
 $sql = $select;

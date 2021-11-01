@@ -37,8 +37,8 @@ $start = 1;
 $display = 10;
 $findmode = false;
 $order_by = 'time DESC';
-
 $base = 'File Uploads';
+$users = array();
 
 $doDelete = doWhen(partial('goPost', 'extent') , partial('doDelete', $db, $compose));
 $doUpdate = doWhen(partial('goPost', 'update') , partial('doUpdate', $db));
@@ -48,5 +48,30 @@ $doUpdate(null);
 $clientname = getClientName($db, $domain, "{$_SESSION['email']}");
 $username = getUserName($db, "{$_SESSION['email']}");
 $name = isset($clientname) ? $clientname : $username;
+$where = ' WHERE TRUE';
+$ordering = array(
+    'f' => 'filename ASC',
+    'ff' => 'filename DESC',
+    'u' => 'user ASC',
+    'uu' => 'user DESC',
+    'uuu' => 'user ASC',
+    'uf' => 'user ASC, filename ASC',
+    'uuf' => 'user DESC, filename ASC',
+    'uff' => 'user ASC, filename DESC',
+    'uuff' => 'user DESC, filename DESC',
+    'ut' => 'user ASC, time ASC',
+    'utt' => 'user ASC, time DESC',
+    'uut' => 'user DESC, time ASC',
+    'uutt' => 'user DESC, time DESC',
+    't' => 'time ASC',
+    'tt' => 'time DESC'
+);
+$lookup = array(
+    'tu' => 'ut',
+    'fu' => 'uf',
+    'utu' => 'uut',
+    'uufu' => 'uf',
+    'uutu' => 'ut'
+);
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/control.php';

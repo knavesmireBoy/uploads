@@ -7,15 +7,23 @@
 		<form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="uploadform" enctype="multipart/form-data">
 		<table class="up"><tr><td><label for="uploadfiles">Upload File:</label></td><td><input id="uploadfiles" type="file" name="upload"/></td></tr>
 		<tr><td><label for="desc">File Description: </label></td><td><input id="desc" type="text" name="desc" maxlength="255"/></td></tr>
-			<?php if ($priv =='Admin') : ?>
-<tr><td><label for="user">User:</label></td><td><select id="user" name="user"><option value="">Select one</option>
-<optgroup label="clients"><?php  foreach ($client as $k => $v): ?>
+            <?php if ($priv =='Admin' || isset($clientname)) : ?>
+<tr><td><label for="user">User:</label></td><td>
+    <select id="user" name="user"><option value="">Select one</option>
+        <?php if(!empty($users)): ?>
+<optgroup label="clients"> <?php endif; ?>
+<?php  foreach ($client as $k => $v): ?>
 <option value="<?php htmlout($k); ?>"><?php htmlout($v); ?>
-</option><?php endforeach; ?></optgroup>
+</option><?php endforeach; 
+    if(!empty($users)) : ?>
+        </optgroup>
 <optgroup label="users">
-<?php  foreach ($users as $k => $v): ?>
+<?php  endif;
+    foreach ($users as $k => $v): ?>
 <option value="<?php htmlout($k); ?>"><?php htmlout($v); ?>
-</option><?php endforeach; ?></optgroup></select>
+</option><?php endforeach;
+if(!empty($users)) : ?></optgroup> <?php endif; ?>
+    </select>
 </td></tr>
 <?php endif; ?>
 <input type="hidden" name="action" value="upload"/>
@@ -44,7 +52,7 @@ $fsize = formatFileSize($f['size']);
 <td>
 <a title="<?php htmlout($fsize); ?>" href="?action=view&amp;id=<?php htmlout($f['id']); ?>">
 <?php htmlout($f['filename']); ?></a></td>
-<?php if ($priv =='Client') : ?>
+<?php if ($priv == 'Client') : ?>
 <td><?php htmlout($f['description']); ?></td>
 <?php endif;
 if ($priv =='Admin') : 
@@ -54,7 +62,7 @@ $des = (empty($f['description'])  ? 'No description provided' : html($f['descrip
 <?php endif; 
 ?>
 <td title="<?php echo $tel ?>">
-    <?php 
+<?php 
 $stamp = html($f["time"]);
 echo date("g:i a F j ", strtotime($stamp)) ;?></td>
 <td><form action="<?php $_SERVER['PHP_SELF']?>" method="get" name="downloads">

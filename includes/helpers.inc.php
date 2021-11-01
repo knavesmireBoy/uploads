@@ -286,7 +286,12 @@ function getColleagues($id, $dom)
 {
     return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id= $id ORDER BY name";
 }
-function getColleagues2($id)
+
+function getColleaguesFromName($domain, $name)
+{
+    return "SELECT user.id, user.name FROM user INNER JOIN client ON $domain = client.domain WHERE client.name = '$name' ORDER BY name";
+}
+function getColleagues3($id)
 {
     return "SELECT user.id, user.name FROM user INNER JOIN (SELECT tgt.client_id FROM user 
 INNER JOIN upload ON user.id = upload.userid 
@@ -335,7 +340,7 @@ function getInitialKey($conn, $privilege, $user, $dom)
         return "SELECT employer.name, employer.id FROM (SELECT user.name, user.id, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer WHERE employer.domain='$id' LIMIT 1";
     }
 
-    if ($privilege == 'Admin' and !empty($user))
+    if (/*$privilege == 'Admin' and*/ !empty($user))
     { //ie Admin selects user
         $key = $user;
         include $conn;
@@ -530,6 +535,7 @@ function doUpload($db, $priv, $key, $domain)
 
     $theKey = getInitialKey($db, $priv, $_POST['user'], $domain);
     $mykey = $theKey ? $theKey : $key;
+    //dump($mykey);
     // Prepare user-submitted values for safe database insert
     include $db;
     $uploaddesc = isset($_POST['desc']) ? $_POST['desc'] : '';
