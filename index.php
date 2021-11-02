@@ -34,7 +34,7 @@ $user = null;
 $tel = '';
 
 $start = 1;
-$display = 10;
+$display = 5;
 $findmode = false;
 $order_by = 'time DESC';
 $base = 'File Uploads';

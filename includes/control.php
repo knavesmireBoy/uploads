@@ -107,14 +107,17 @@ if (isset($_GET['find']))
 
 if (isset($_GET['action']) and $_GET['action'] == 'search')
 {
-    doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip);
+    $pages = doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip);
 }
 
 $vars = array_map(partial('doSanitize', $link) , $_GET);
+
+//obtain vars from $_GET array
 foreach ($vars as $k => $v)
 {
     ${$k} = $v;
 }
+
 
 if (isset($_GET['page']) and is_numeric($_GET['page']))
 {
@@ -166,10 +169,12 @@ $select .= ", user.name as user";
 //bear in mind, as we are including prompt and update forms BELOW the file list, as opposed to exiting and directing to a separate prompt.html.php or update.html.php ANY vars MAY get overwritten by these $vars in the wild
 if ($priv == 'Admin')
 {
-    $where = getFileTypeQuery($where, $suffix);
-    //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
-    $where = getIdTypeQuery($where, $user, $domain);
-
+    //possible constraints
+    dump($pages);
+    $where = getIdTypeQuery($where, $user, $domain);//by user
+    $where = getFileTypeQuery($where, $suffix);// by file type
+    $w = isset($text) ? " AND upload.filename LIKE '%$text%'" : '';
+    $where .= $w;
 } //admin
 else
 {

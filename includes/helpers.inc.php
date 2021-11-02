@@ -237,8 +237,8 @@ function getBaseFrom()
 }
 function getBaseOrder($o, $s, $d)
 {
-    return " ORDER BY $o LIMIT $s, $d";
-    //return " ORDER BY $o ";
+    //return " ORDER BY $o LIMIT $s, $d";
+    return " ORDER BY $o ";
     
 }
 
@@ -452,6 +452,7 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     $user_id = doSanitize($link, $_GET['user']);
     $check = null;
     $select = getBaseSelect();
+   // $select = "SELECT COUNT(upload.id) as total FROM upload INNER JOIN user ON upload.userid = user.id WHERE TRUE ";
     if ($priv == 'Admin')
     {
         //will either return empty set(no error) or produce count. Test to see if a client has been selected.
@@ -491,30 +492,14 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     $where = $cb($where);
     $order = getBaseOrder($order_by, $start, $display);
     $sql = $select . $from . $where . $order;
-    
     $result = doQuery($link, $sql, 'Error fetching file details.');
-    $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;
+    $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;    
+    
     $result = doQuery($link, $sqlcount, 'Error getting file count.');
-
-    $files = array();
-    while ($row = mysqli_fetch_array($result))
-    {
-        $files[] = array(
-            'id' => $row['id'],
-            'user' => $row['user'],
-            'email' => $row['email'],
-            'filename' => $row['filename'],
-            'mimetype' => $row['mimetype'],
-            'description' => $row['description'],
-            'filepath' => $row['filepath'],
-            'file' => $row['file'],
-            'origin' => $row['origin'],
-            'time' => $row['time'],
-            'size' => $row['size']
-        );
-    }
+    $row = goFetch($result, MYSQLI_ASSOC);
     $records = $row['total'];
     $pages = ($records > $display) ? ceil($records / $display) : 1;
+    return $pages;
 }
 
 function doUpload($db, $priv, $key, $domain)
