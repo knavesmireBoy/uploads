@@ -237,8 +237,8 @@ function getBaseFrom()
 }
 function getBaseOrder($o, $s, $d)
 {
-    //return " ORDER BY $o LIMIT $s, $d";
-    return " ORDER BY $o ";
+    return " ORDER BY $o LIMIT $s, $d";
+    //return " ORDER BY $o ";
     
 }
 
@@ -262,7 +262,7 @@ function getFileTypeQuery($where, $ext)
 
 function fileCountByUser($user, $domain) {
     if(is_numeric($user)){
-        return  " INNER JOIN user on upload.userid = user.id WHERE user.id = '$user' ";
+        return  " INNER JOIN user on upload.userid = user.id WHERE user.id = $user ";
     }
     return " INNER JOIN user ON user.id = upload.userid INNER JOIN client ON $domain = client.domain AND client.domain='$user'";
 }
@@ -448,11 +448,11 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     include $db;
     $tel = '';
     $from = getBaseFrom();
-    $from .= " INNER JOIN userrole ON user.id=userrole.userid";
+    //$from .= " INNER JOIN userrole ON user.id=userrole.userid";
     $user_id = doSanitize($link, $_GET['user']);
     $check = null;
     $select = getBaseSelect();
-   // $select = "SELECT COUNT(upload.id) as total FROM upload INNER JOIN user ON upload.userid = user.id WHERE TRUE ";
+    $select = "SELECT COUNT(upload.id) as total ";
     if ($priv == 'Admin')
     {
         //will either return empty set(no error) or produce count. Test to see if a client has been selected.
@@ -469,7 +469,7 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
             $check = count($row);
         }
         
-        $select .= ", user.name as user";
+        //$select .= ", user.name as user";
     } //admin
     else
     {
@@ -492,14 +492,15 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     $where = $cb($where);
     $order = getBaseOrder($order_by, $start, $display);
     $sql = $select . $from . $where . $order;
+    //dump($sql);
     $result = doQuery($link, $sql, 'Error fetching file details.');
-    $sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;    
-    
-    $result = doQuery($link, $sqlcount, 'Error getting file count.');
+    //$sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;    
+    //$sqlcount = 'SELECT COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;    
+    ///dump($sqlcount);
+    //$result = doQuery($link, $sqlcount, 'Error getting file count.');
     $row = goFetch($result, MYSQLI_ASSOC);
     $records = $row['total'];
-    $pages = ($records > $display) ? ceil($records / $display) : 1;
-    return $pages;
+    return ($records > $display) ? ceil($records / $display) : 1;
 }
 
 function doUpload($db, $priv, $key, $domain)
@@ -652,16 +653,17 @@ function doUpdate($db)
     exit();
 }
 function getClientName($db, $domain, $email){
+    //bit confusing as $domain can either be a mysql formula to extract a portion of an email OR that actual portion
      include $db;
     if(isset($email)){
         $key = doSanitize($link, $email);
-       $res = doQuery($link, "SELECT client.name from client INNER JOIN user ON $domain = client.domain WHERE user.email='$email'", 'Db error retrieving client name'); 
+       $res = doQuery($link, "SELECT client.name, client.id, client.domain FROM client INNER JOIN user ON $domain = client.domain WHERE user.email='$email'", 'Db error retrieving client name'); 
     }
     else {
         $key = doSanitize($link, $domain);
-        $res = doQuery($link, "SELECT name from client WHERE domain = '$key'", 'Db error retrieving client name');
+        $res = doQuery($link, "SELECT client.name, client.id, client.domain FROM client WHERE domain = '$key'", 'Db error retrieving client name');
     }
-    return goFetch($res)[0];
+    return goFetch($res, MYSQLI_ASSOC);
 }
 
 

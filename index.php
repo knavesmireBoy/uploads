@@ -33,19 +33,23 @@ $suffix = null;
 $user = null;
 $tel = '';
 
-$start = 1;
+$start = 0;
 $display = 5;
 $findmode = false;
 $order_by = 'time DESC';
 $base = 'File Uploads';
 $users = array();
+$client = array();
 
 $doDelete = doWhen(partial('goPost', 'extent') , partial('doDelete', $db, $compose));
 $doUpdate = doWhen(partial('goPost', 'update') , partial('doUpdate', $db));
 //doWhen expects an argument
 $doDelete(null);
 $doUpdate(null);
-$clientname = getClientName($db, $domain, "{$_SESSION['email']}");
+$clientdetails = getClientName($db, $domain, "{$_SESSION['email']}");
+$clientname = $clientdetails['name'];
+$client_id = $clientdetails['id'];
+$client_domain = $clientdetails['domain'];
 $username = getUserName($db, "{$_SESSION['email']}");
 $name = isset($clientname) ? $clientname : $username;
 $where = ' WHERE TRUE';

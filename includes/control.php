@@ -117,33 +117,22 @@ foreach ($vars as $k => $v)
 {
     ${$k} = $v;
 }
-
-
-if (isset($_GET['page']) and is_numeric($_GET['page']))
+if (isset($_GET['page']) && is_numeric($_GET['page']))
 {
     $pages = $_GET['page'];    
 }
-else
+elseif(!isset($pages))
 { // counts all files
     include $db;
     $sqlc = "SELECT COUNT(upload.id) from upload ";
-    if ($priv == 'Client')
-    {
-        $email = $_SESSION['email'];
-        //" INNER JOIN userrole ON user.id=userrole.userid";
-        $sqlc .= " INNER JOIN user on upload.userid = user.id WHERE user.email='$email' ";
-    }
-    elseif (isset($user))
-    {
-        $sqlc .= $fileCount($user); //user or client
-        
-    }
+    $tmpKey = isset($client_domain) ? $client_domain : $key;
+    $sqlc .= $fileCount($tmpKey);
     $res = doQuery($link, $sqlc, 'Database error fetching requesting the list of files');
     $row = goFetch($res, MYSQLI_NUM);
-
     $records = intval($row[0]);
     $pages = ($records > $display) ? ceil($records / $display) : 1;
 } //end of IF NOT PAGES SET
+
 $start = (isset($_GET['start']) && is_numeric($_GET['start'])) ? $_GET['start'] : 0;
 
 $sort = (isset($_GET['sort']) ? $_GET['sort'] : '');
@@ -170,7 +159,7 @@ $select .= ", user.name as user";
 if ($priv == 'Admin')
 {
     //possible constraints
-    dump($pages);
+    //dump($pages);
     $where = getIdTypeQuery($where, $user, $domain);//by user
     $where = getFileTypeQuery($where, $suffix);// by file type
     $w = isset($text) ? " AND upload.filename LIKE '%$text%'" : '';

@@ -125,7 +125,7 @@ function chooseAdmin($db, $key, $user, $domain){
     include $db;
 	if (isset($row))
 	{
-        $c = getClientName($db, $user, null);
+        $c = getClientName($db, $user, null)['name'];
         $manage = "Manage users of $c";
         $users = fromDomain($db, $user, $domain);
 	}
