@@ -74,4 +74,6 @@ $lookup = array(
     'uutu' => 'ut'
 );
 
+$admin_status = asAdmin($priv, $clientname);
+
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/control.php';

@@ -37,7 +37,7 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
     include $db;
     $extent = 0;
     $id = doSanitize($link, $_POST['id']);
-    $result = doQuery($link, getColleagues($id, $domain) , 'Database error fetching colleagues.');
+    $result = doQuery($link, getColleagues($id, $domain), 'Database error fetching colleagues.');
 
     $prompt1 = "Choose <b>yes</b> to select assign a new owner to all ";
     $prompt2 = " files. Choose <b>no</b> to edit a single file";
@@ -49,7 +49,6 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
         $extent++;
     }
     $prompt = !$extent ? "$prompt1 user $prompt2" : $prompt;
-    $id = $_POST['id'];
     $call = "swap";
 }
 if (isset($_POST['swap']))
@@ -79,9 +78,9 @@ if (isset($_POST['swap']))
 
 include $db; ///Present list of users for administrators
 $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id";
+
 if($priv == 'Admin'){
-$where = " WHERE client.domain IS NULL ORDER BY name";
-$result = doQuery($link, $sql . $where, 'Database error fetching users.');
+$result = doQuery($link, $sql . " WHERE client.domain IS NULL ORDER BY name", 'Database error fetching users.');
 $users = doProcess($result, 'id', 'name');
 
 $sql = "SELECT name, domain, tel FROM client ORDER BY name";
@@ -162,33 +161,33 @@ switch ($sort)
 
 $select = getBaseSelect();
 $from = getBaseFrom();
-//INITIAL FILE SELECTION
+$select .= ", user.name as user";
+//INITIAL FILE SELECTION/////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
+//bear in mind, as we are including prompt and update forms BELOW the file list, as opposed to exiting and directing to a separate prompt.html.php or update.html.php ANY vars MAY get overwritten by these $vars in the wild
 if ($priv == 'Admin')
 {
-    $select .= ", user.name as user";
-    //$from.= " INNER JOIN userrole ON user.id = userrole.userid";
-    $where = " WHERE true";
     $where = getFileTypeQuery($where, $suffix);
     //CLIENTS USE EMAIL DOMAIN AS ID THERFORE NOT A NUMBER
     $where = getIdTypeQuery($where, $user, $domain);
-    if (isset($text))
-    {
-        $where .= " AND upload.filename LIKE '%$text%'";
-    }
 
 } //admin
 else
 {
-   $email = $_SESSION['email'];
-    $from.= " INNER JOIN userrole ON user.id = userrole.userid";
-   $where = " WHERE user.email='$email' ";
+    if(isset($clientname)){
+    $res = doQuery($link, "SELECT client.id FROM client WHERE client.name = '$clientname'", 'Database error retrieving client id');
+    $cid = goFetch($res)[0];// ! not $id, as will overwrite for prompt and update forms
+    $where = " WHERE client.id = $cid";
 }
-//$sql= $select . $from . $where . $order; //DEFAULT; TELEPHONE BLOCK REQUIRED TO OBTAIN CLIENT PHONE NUMBER
+    else {
+        $email = $_SESSION['email'];
+        $where = " WHERE user.email='$email' ";
+    }
+}
 $sql = $select;
-$select_tel = ", client.tel";
+$sql .= ", client.tel";
 $from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to include just 'users' also
 $order = getBaseOrder($order_by, $start, $display);
-$sql .= $select_tel . $from . $where . $order;
+$sql .=  $from . $where . $order;
 //dump($sql);
 $result = doQuery($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();

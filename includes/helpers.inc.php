@@ -686,3 +686,7 @@ function getUserName($db, $email){
     $res = doQuery($link, "SELECT user.name from user WHERE user.email='$email'", 'Db error retrieving user name');
     return goFetch($res)[0];
 }
+
+function asAdmin($p, $clientname){
+    return $p === ('Admin') || $clientname;
+}

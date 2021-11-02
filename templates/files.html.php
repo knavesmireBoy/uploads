@@ -7,10 +7,10 @@
 		<form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="uploadform" enctype="multipart/form-data">
 		<table class="up"><tr><td><label for="uploadfiles">Upload File:</label></td><td><input id="uploadfiles" type="file" name="upload"/></td></tr>
 		<tr><td><label for="desc">File Description: </label></td><td><input id="desc" type="text" name="desc" maxlength="255"/></td></tr>
-            <?php if ($priv =='Admin' || isset($clientname)) : ?>
+            <?php if (isset($admin_status)) : ?>
 <tr><td><label for="user">User:</label></td><td>
     <select id="user" name="user"><option value="">Select one</option>
-        <?php if(!empty($users)): ?>
+<?php if(!empty($users)): ?>
 <optgroup label="clients"> <?php endif; ?>
 <?php  foreach ($client as $k => $v): ?>
 <option value="<?php htmlout($k); ?>"><?php htmlout($v); ?>
@@ -35,35 +35,35 @@ if(!empty($users)) : ?></optgroup> <?php endif; ?>
 			<thead>
 				<tr>
 <th><a href="<?php echo $query_string . $sort . 'f'; ?>">File name</a></th>
-<?php $choice = ($priv =='Admin')  ? 'User' : 'Description'  ?>
+<?php $choice = isset($admin_status)  ? 'User' : 'Description'  ?>
 <th><a href="<?php echo $query_string . $sort . 'u'; ?>"><?php echo $choice; ?></a></th>
 <th><a href="<?php echo $query_string . $sort . 't'; ?>">Time</a></th>
 
-<?php $num = ($priv !='Browser'  ? '2' : '1')  ?>
+<?php $num = ($priv != 'Browser' ? '2' : '1')  ?>
 <th colspan="<?php echo($num) ?>" class="control">Control<?php ?></th>
 </tr>
 </thead>
 <tbody>
 <?php foreach($files as $f): ?>
 <tr valign="top" class="<?php if($f['origin'] == $myip) echo 'admin';?>">
-<?php 
-$fsize = formatFileSize($f['size']);
+<?php $fsize = formatFileSize($f['size']);
 ?>
 <td>
 <a title="<?php htmlout($fsize); ?>" href="?action=view&amp;id=<?php htmlout($f['id']); ?>">
 <?php htmlout($f['filename']); ?></a></td>
-<?php if ($priv == 'Client') : ?>
+    
+<?php if ($priv == 'Client' && !isset($clientname)) : ?>
 <td><?php htmlout($f['description']); ?></td>
 <?php endif;
-if ($priv =='Admin') : 
+    
+if (isset($admin_status)) : 
 $des = (empty($f['description'])  ? 'No description provided' : html($f['description'])); ?>
 <td title="<?php echo $des; ?>" >
 <?php htmlout($f['user']); ?></td>
 <?php endif; 
 ?>
 <td title="<?php echo $tel ?>">
-<?php 
-$stamp = html($f["time"]);
+<?php $stamp = html($f["time"]);
 echo date("g:i a F j ", strtotime($stamp)) ;?></td>
 <td><form action="<?php $_SERVER['PHP_SELF']?>" method="get" name="downloads">
 <div><input type="hidden" name="action" value="download"/>
