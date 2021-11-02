@@ -285,7 +285,7 @@ function getClientType($user){
 
 function getColleagues($id, $dom)
 {
-    return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id= $id ORDER BY name";
+    return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id = $id ORDER BY name";
 }
 
 function getColleaguesFromName($domain, $name)
@@ -393,50 +393,41 @@ function doFind($db, $key, $domain)
 function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display)
 {
     include $db;
-    $tel = '';
+    //$tel = '';
     $from = getBaseFrom();
     $where = ' WHERE TRUE';
     $order = getBaseOrder($order_by, $start, $display);
     $user_id = doSanitize($link, $_GET['user']);
     $check = null;
     $select = "SELECT COUNT(upload.id) as total ";
+    $text = doSanitize($link, $_GET['text']);
+    $suffix = isset($_GET['suffix']) ? doSanitize($link, $_GET['suffix']) : null;
     $haveUser = partial(negate('isEmpty') , $user_id);
-    $user_set = $haveUser();
-    if ($user_set)){
-        if ($priv === 'Admin')
-    {
+    //Clients will look for a numeric user.id. For Users there will be $_GET['user'] will be empty
+    if($priv === 'Admin' &&  $haveUser()){
         //will either return empty set(no error) or produce count. Test to see if a client has been selected.
         $sql = "SELECT domain FROM client WHERE domain = '" . $user_id . "'";
         $result = doQuery($link, $sql, 'Error retrieving records for user');
         $row = goFetch($result, MYSQLI_ASSOC);
-        
         if (isset($row['domain']) && !is_numeric($user_id))
         { 
             $from .= " INNER JOIN client ON $domain = client.domain ";
             $where = " WHERE domain = '" . $user_id . "'";
             $check = count($row);
         }
-    } //admin
-    else
-    {
-        $email = $_SESSION['email'];
-        $where = " WHERE user.email='$email' ";
-    }
-    }
-    $text = doSanitize($link, $_GET['text']);
-    $suffix = isset($_GET['suffix']) ? doSanitize($link, $_GET['suffix']) : null;
-    
+    }    
+   
     $notClient = partial('isEmpty', $check);
     $res = array_reduce([$haveUser, $notClient], 'every', true);
 
     $andUser = curry2('concatString') (" AND user.id = $user_id");
-    $queryUser = getBestPred(partial('doAlways', $res)) ($andUser, partial('doAlways'));
+    $queryUser = getBestPred(partial('doAlways', $res))($andUser, partial('doAlways'));
     $likeText = curry2('concatString') (" AND upload.filename LIKE '%$text%' ");
     $tmp = getBestPred(partial(negate('isEmpty'), $text));
     $queryText = $tmp($likeText, partial('doAlways'));
-    $cb = $compose($queryUser, partial('getFileTypeQuery', $where, $suffix), $likeText);
-    $where = $cb($where);
     
+    $cb = $compose($queryUser, curry2('getFileTypeQuery')($suffix), $likeText);
+    $where = $cb($where);
     $sql = $select . $from . $where . $order;
     $result = doQuery($link, $sql, 'Error fetching file details.');
     $row = goFetch($result, MYSQLI_ASSOC);
@@ -543,7 +534,6 @@ function doDelete($db, $compose)
 
 function prepUpdate($db, $priv, $id, $domain)
 {
-
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
     $sql = "SELECT upload.id, filename, description, upload.userid, user.name FROM upload INNER JOIN user ON upload.userid=user.id  WHERE upload.id=$id";
     include $db;
@@ -589,7 +579,6 @@ function doUpdate($db)
     $sql = $_POST['answer'] === "Yes" ? $extent : $single;
     $doError = partialDefer('errorHandler', 'error updating details', $terror);
     doWhen(partial('doAlways', !mysqli_query($link, $sql)) , $doError) (null);
-
     header('Location: . ');
     exit();
 }
@@ -606,7 +595,6 @@ function getClientName($db, $domain, $email){
     }
     return goFetch($res, MYSQLI_ASSOC);
 }
-
 
 function getUserName($db, $email){
      include $db;

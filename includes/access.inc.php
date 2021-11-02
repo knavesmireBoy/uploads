@@ -71,7 +71,6 @@ function userIsLoggedIn()
 
 function userHasWhatRole()
 {
-
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
     $email = doSanitize($link, $_SESSION['email']);
     $sql = "SELECT userrole.roleid, user.id, count(user.id) as total FROM userrole INNER JOIN user ON user.id = userrole.userid WHERE user.email = '$email' GROUP BY userrole.roleid, user.id";
