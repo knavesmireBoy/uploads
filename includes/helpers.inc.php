@@ -170,6 +170,7 @@ function goFetch($result, $mode = MYSQLI_BOTH)
 
 function doProcess($r, $k, $v, $mode = MYSQLI_BOTH)
 {
+    $gang = array();//may be empty
     while ($row = mysqli_fetch_array($r, $mode))
     {
         //$key = isset($k) ?
@@ -389,97 +390,42 @@ function doFind($db, $key, $domain)
     $client = array();
 }
 
-function prepFind($users, $client)
+function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display)
 {
-    /*
-    if (isset($_GET['find']))
-    {
-    if ($priv != "Admin"): //CUSTOMISES SELECT MENU
-        $email = "{$_SESSION['email']}";
-        include $db;
-        $sql = "SELECT $domain  FROM user WHERE user.email='$email'";
-        $result = mysqli_query($sql);
-        $row = mysqli_fetch_array($result);
-        $dom = $row[0];
-        $sql = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain=client.domain WHERE $domain='$dom' AND client.domain='$dom'";
-        $result = mysqli_query($sql);
-        $row = mysqli_fetch_array($result);
-        $count = $row['dom'];
-        if (count($count) > 0)
-        {
-            $where = " WHERE user.email='$email'"; //client
-    
-        }
-        else
-        {
-            $where = " WHERE user.id=$key"; //user
-    
-        }
-        $sql = "SELECT employer.id, employer.name  FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain=client.domain) AS employer ON $domain=employer.domain $where";
-        $result = mysqli_query($link, $sql);
-        if (!$result)
-        {
-            $error = 'Database error fetching clients.';
-            include $terror;
-            exit();
-        }
-        $users = array(); //resets user array to display users of current client
-        while ($row = mysqli_fetch_array($result))
-        {
-            $users[$row['id']] = $row['name'];
-        }
-        if ($count <= 1)
-        { //SELECT MENU in SEARCH for only more than one "employee"
-            $users = array();
-            $zero = true;
-        }
-        $client = array();
-    endif;
-    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/base.html.php';
-    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/search.html.php';
-    exit();
-    }
-    */
-}
-
-function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip)
-{
-
     include $db;
     $tel = '';
     $from = getBaseFrom();
-    //$from .= " INNER JOIN userrole ON user.id=userrole.userid";
+    $where = ' WHERE TRUE';
+    $order = getBaseOrder($order_by, $start, $display);
     $user_id = doSanitize($link, $_GET['user']);
     $check = null;
-    $select = getBaseSelect();
     $select = "SELECT COUNT(upload.id) as total ";
-    if ($priv == 'Admin')
+    $haveUser = partial(negate('isEmpty') , $user_id);
+    $user_set = $haveUser();
+    if ($user_set)){
+        if ($priv === 'Admin')
     {
         //will either return empty set(no error) or produce count. Test to see if a client has been selected.
         $sql = "SELECT domain FROM client WHERE domain = '" . $user_id . "'";
-
         $result = doQuery($link, $sql, 'Error retrieving records for user');
         $row = goFetch($result, MYSQLI_ASSOC);
-
-        $where = ' WHERE TRUE';
+        
         if (isset($row['domain']) && !is_numeric($user_id))
-        { //user_id is text(domain) for Clients
+        { 
             $from .= " INNER JOIN client ON $domain = client.domain ";
             $where = " WHERE domain = '" . $user_id . "'";
             $check = count($row);
         }
-        
-        //$select .= ", user.name as user";
     } //admin
     else
     {
         $email = $_SESSION['email'];
         $where = " WHERE user.email='$email' ";
     }
+    }
     $text = doSanitize($link, $_GET['text']);
     $suffix = isset($_GET['suffix']) ? doSanitize($link, $_GET['suffix']) : null;
-
-    $haveUser = partial(negate('isEmpty') , $user_id);
+    
     $notClient = partial('isEmpty', $check);
     $res = array_reduce([$haveUser, $notClient], 'every', true);
 
@@ -490,14 +436,9 @@ function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $c
     $queryText = $tmp($likeText, partial('doAlways'));
     $cb = $compose($queryUser, partial('getFileTypeQuery', $where, $suffix), $likeText);
     $where = $cb($where);
-    $order = getBaseOrder($order_by, $start, $display);
+    
     $sql = $select . $from . $where . $order;
-    //dump($sql);
     $result = doQuery($link, $sql, 'Error fetching file details.');
-    //$sqlcount = $select . ', COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;    
-    //$sqlcount = 'SELECT COUNT(upload.id) as total ' . $from . $where . ' GROUP BY upload.id ' . $order;    
-    ///dump($sqlcount);
-    //$result = doQuery($link, $sqlcount, 'Error getting file count.');
     $row = goFetch($result, MYSQLI_ASSOC);
     $records = $row['total'];
     return ($records > $display) ? ceil($records / $display) : 1;
@@ -676,4 +617,41 @@ function getUserName($db, $email){
 
 function asAdmin($p, $clientname){
     return $p === ('Admin') || $clientname;
+}
+function getPages($db, $display, $getCountQuery, $pages){
+    if (isset($_GET['page']) && is_numeric($_GET['page']))
+{
+    $pages = $_GET['page'];    
+}
+elseif(!isset($pages))
+{ // counts all files
+    include $db;
+    $sql = "SELECT COUNT(upload.id) from upload ";
+    $sql .= $getCountQuery();
+    $res = doQuery($link,  $sql, 'Database error fetching requesting the list of files');
+    $row = goFetch($res, MYSQLI_NUM);
+    $records = intval($row[0]);
+    $pages = ($records > $display) ? ceil($records / $display) : 1;
+} //end of IF NOT PAGES SET
+    return $pages;
+}
+
+function getUserList($db, $priv, $domain, $clientname){
+    include $db;
+    $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id";
+    $users = array();
+    $client = array();
+    if($priv === 'Admin'){
+        $result = doQuery($link, $sql . " WHERE client.domain IS NULL ORDER BY name", 'Database error fetching users.');
+        $users = doProcess($result, 'id', 'name');
+        $sql = "SELECT name, domain, tel FROM client ORDER BY name";
+        $result = doQuery($link, $sql, 'Database error fetching clients.');
+        $client = doProcess($result, 'domain', 'name');
+    }
+    elseif(isset($clientname)){/////Present list of users for specific client
+        $sql = getColleaguesFromName($domain, $clientname);
+        $result = doQuery($link, $sql, 'Database error fetching clients.');
+        $client = doProcess($result, 'id', 'name');
+    }
+    return array('users' => $users, 'client' => $client);
 }

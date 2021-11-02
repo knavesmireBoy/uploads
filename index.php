@@ -24,7 +24,7 @@ $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
 
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!!?!! V. USEFUL VARIABLE IN GLOBAL SPACE
-$fileCount = curry2('fileCountByUser') ($domain);
+
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 
 $myip = '86.133.121.115.';
@@ -38,8 +38,7 @@ $display = 5;
 $findmode = false;
 $order_by = 'time DESC';
 $base = 'File Uploads';
-$users = array();
-$client = array();
+$pages = null;
 
 $doDelete = doWhen(partial('goPost', 'extent') , partial('doDelete', $db, $compose));
 $doUpdate = doWhen(partial('goPost', 'update') , partial('doUpdate', $db));
@@ -51,6 +50,11 @@ $clientname = $clientdetails['name'];
 $client_id = $clientdetails['id'];
 $client_domain = $clientdetails['domain'];
 $username = getUserName($db, "{$_SESSION['email']}");
+
+$notPriv = negate(partial('equals', 'Admin', $priv));
+$keytype = isset($client_domain) ? $client_domain : $key;
+$fileCount = curry22('fileCountByUser')($domain)($keytype);
+
 $name = isset($clientname) ? $clientname : $username;
 $where = ' WHERE TRUE';
 $ordering = array(

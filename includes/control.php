@@ -1,6 +1,6 @@
 <?php
 
-if (isset($_POST['action']) && $_POST['action'] == 'upload' && $priv !== 'Browser')
+if (isset($_POST['action']) && $_POST['action'] == 'upload')
 {
     doUpload($db, $priv, $key, $domain);
 }
@@ -76,63 +76,31 @@ if (isset($_POST['swap']))
     }
 } ///
 
-include $db; ///Present list of users for administrators
-$sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id";
-
-if($priv == 'Admin'){
-$result = doQuery($link, $sql . " WHERE client.domain IS NULL ORDER BY name", 'Database error fetching users.');
-$users = doProcess($result, 'id', 'name');
-
-$sql = "SELECT name, domain, tel FROM client ORDER BY name";
-$result = doQuery($link, $sql, 'Database error fetching clients.');
-$client = doProcess($result, 'domain', 'name');
-}
-elseif(isset($clientname)){/////Present list of users for specific client
-    $sql = getColleaguesFromName($domain, $clientname);
-    $result = doQuery($link, $sql, 'Database error fetching clients.');
-    $client = doProcess($result, 'id', 'name');
+ ///Present list of users for administrators
+$vars = getUserList($db, $priv, $domain, $clientname);
+foreach ($vars as $k => $v)
+{
+    ${$k} = $v;
 }
 
 //$users and $client required at this point
 if (isset($_GET['find']))
 {
-    $isAdmin = partial('equals', $priv, 'Admin');
-    $prepFind = partial('prepFind', $users, $client);
-    $punter = $compose(partial('doFind', $db, $key, $domain) , $prepFind);
-    $admin = $compose('prepFind');
-    $perform = getBest(negate($isAdmin));
-    $perform($punter, $prepFind) (); //CUSTOMISES SELECT MENU FOR NON ADMIN
     $findmode = true;
 }
 
 if (isset($_GET['action']) and $_GET['action'] == 'search')
 {
-    $pages = doSearch($db, $priv, $domain, $compose, $order_by, $start, $display, $client, $users, $myip);
+    $pages = doSearch($db, $priv, $domain, $compose, $order_by, $start, $display);
 }
-
+include $db;
 $vars = array_map(partial('doSanitize', $link) , $_GET);
-
-//obtain vars from $_GET array
+//obtain vars from $_GET array, after potential search
 foreach ($vars as $k => $v)
 {
     ${$k} = $v;
 }
-if (isset($_GET['page']) && is_numeric($_GET['page']))
-{
-    $pages = $_GET['page'];    
-}
-elseif(!isset($pages))
-{ // counts all files
-    include $db;
-    $sqlc = "SELECT COUNT(upload.id) from upload ";
-    $tmpKey = isset($client_domain) ? $client_domain : $key;
-    $sqlc .= $fileCount($tmpKey);
-    $res = doQuery($link, $sqlc, 'Database error fetching requesting the list of files');
-    $row = goFetch($res, MYSQLI_NUM);
-    $records = intval($row[0]);
-    $pages = ($records > $display) ? ceil($records / $display) : 1;
-} //end of IF NOT PAGES SET
-
+$pages = getPages($db, $display, getBestArgs($notPriv)($fileCount, 'emptyString'), $pages);
 $start = (isset($_GET['start']) && is_numeric($_GET['start'])) ? $_GET['start'] : 0;
 
 $sort = (isset($_GET['sort']) ? $_GET['sort'] : '');
@@ -156,33 +124,27 @@ $from = getBaseFrom();
 $select .= ", user.name as user";
 //INITIAL FILE SELECTION/////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
 //bear in mind, as we are including prompt and update forms BELOW the file list, as opposed to exiting and directing to a separate prompt.html.php or update.html.php ANY vars MAY get overwritten by these $vars in the wild
-if ($priv == 'Admin')
-{
-    //possible constraints
-    //dump($pages);
-    $where = getIdTypeQuery($where, $user, $domain);//by user
-    $where = getFileTypeQuery($where, $suffix);// by file type
-    $w = isset($text) ? " AND upload.filename LIKE '%$text%'" : '';
-    $where .= $w;
-} //admin
-else
-{
-    if(isset($clientname)){
-    $res = doQuery($link, "SELECT client.id FROM client WHERE client.name = '$clientname'", 'Database error retrieving client id');
-    $cid = goFetch($res)[0];// ! not $id, as will overwrite for prompt and update forms
-    $where = " WHERE client.id = $cid";
-}
+//possible constraints from search
+if ($priv !== 'Admin'){
+    if(isset($client_id)){
+        $where = " WHERE client.id = $client_id";
+    }
     else {
         $email = $_SESSION['email'];
         $where = " WHERE user.email='$email' ";
     }
-}
+}//!Admin
+
+$where = getIdTypeQuery($where, $user, $domain);//by user
+$where = getFileTypeQuery($where, $suffix);// by file type
+$w = isset($text) ? " AND upload.filename LIKE '%$text%'" : '';
+$where .= $w;
+
 $sql = $select;
 $sql .= ", client.tel";
 $from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to include just 'users' also
 $order = getBaseOrder($order_by, $start, $display);
 $sql .=  $from . $where . $order;
-//dump($sql);
 $result = doQuery($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();
 while ($row = mysqli_fetch_array($result))

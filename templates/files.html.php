@@ -1,15 +1,18 @@
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
 //ob_start('ob_postprocess');
 //ob_start('ob_gzhandler');
+$span = 2;
 ?>
-		<h1><a href="?"><?php echo "$base | $name"; ?></a></h1>
+		<h1 class="<?php echo strtolower($priv); ?>"><a href="?"><?php echo "$base | $name"; ?></a></h1>
 		<h2><?php echo date('l F j, Y'); ?></h2>
+
+<?php if($priv !== 'Browser') : ?>
 		<form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="uploadform" enctype="multipart/form-data">
 		<table class="up"><tr><td><label for="uploadfiles">Upload File:</label></td><td><input id="uploadfiles" type="file" name="upload"/></td></tr>
 		<tr><td><label for="desc">File Description: </label></td><td><input id="desc" type="text" name="desc" maxlength="255"/></td></tr>
-            <?php if (isset($admin_status)) : ?>
+<?php if($priv !== 'Browser' && !empty($client)): ?>
 <tr><td><label for="user">User:</label></td><td>
-    <select id="user" name="user"><option value="">Select one</option>
+<select id="user" name="user"><option value="">Select one</option>
 <?php if(!empty($users)): ?>
 <optgroup label="clients"> <?php endif; ?>
 <?php  foreach ($client as $k => $v): ?>
@@ -29,18 +32,19 @@ if(!empty($users)) : ?></optgroup> <?php endif; ?>
 <input type="hidden" name="action" value="upload"/>
 <tr><td><input type="submit" value="Upload"/></td><td>&nbsp;</td></tr></table>
 </form>
-	<?php if (count($files) > 0): ?>
+	<?php endif; //Browser
+if (count($files) > 0): ?>
 		<p>The following files are stored in the database:</p>
 		<table>
 			<thead>
 				<tr>
 <th><a href="<?php echo $query_string . $sort . 'f'; ?>">File name</a></th>
-<?php $choice = isset($admin_status)  ? 'User' : 'Description'  ?>
+<?php $choice = isset($admin_status) && !empty($client) ? 'User' : 'Description'  ?>
 <th><a href="<?php echo $query_string . $sort . 'u'; ?>"><?php echo $choice; ?></a></th>
 <th><a href="<?php echo $query_string . $sort . 't'; ?>">Time</a></th>
 
-<?php $num = ($priv != 'Browser' ? '2' : '1')  ?>
-<th colspan="<?php echo($num) ?>" class="control">Control<?php ?></th>
+<?php $span = ($priv != 'Browser' ? '2' : '1')  ?>
+<th colspan="<?php echo($span) ?>" class="control">Control<?php ?></th>
 </tr>
 </thead>
 <tbody>
@@ -56,7 +60,7 @@ if(!empty($users)) : ?></optgroup> <?php endif; ?>
 <td><?php htmlout($f['description']); ?></td>
 <?php endif;
     
-if (isset($admin_status)) : 
+if (isset($admin_status) && !empty($client)) : //add description as title attribute on user field
 $des = (empty($f['description'])  ? 'No description provided' : html($f['description'])); ?>
 <td title="<?php echo $des; ?>" >
 <?php htmlout($f['user']); ?></td>

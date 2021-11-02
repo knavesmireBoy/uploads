@@ -194,3 +194,13 @@ input[type=submit]:hover {
 .clientlist {
     margin: 0 0 1em;
 }
+
+h1.admin a {
+    color: navy;
+}
+h1.manager a {
+    color: darkgreen;
+}
+h1.browser a{
+    color: slategray;
+}
