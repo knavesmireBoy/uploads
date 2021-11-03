@@ -93,7 +93,7 @@ if (isset($_GET['find']))
 
 if (isset($_GET['action']) and $_GET['action'] == 'search')
 {
-    $pages = doSearch($db, $user_int, $client_domain, $domain, $compose, $order_by, $start, $display, getBestArgs($notPriv)($fileAwait, 'emptyString'));
+    $pages = doSearch($db, $user_int, $client_domain, $domain, $compose, $order_by, $start, $display);
 }
 include $db;
 $vars = array_map(partial('doSanitize', $link) , $_GET);

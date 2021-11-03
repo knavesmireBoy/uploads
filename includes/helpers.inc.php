@@ -413,13 +413,14 @@ function massSanitize($db, $src){
     return $export;
 }
 
-function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $display, $fileCountByUser)
+function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $display)
 {
     include $db;
     $email = $_SESSION['email'];
     $select = "SELECT COUNT(upload.id) as total ";
     $from = getBaseFrom();
     $order = getBaseOrder($order_by, $start, $display);
+    $isAdmin = partial('equals', $user_int, 0);
     $fallback_where = [' WHERE TRUE', '', " WHERE user.email = '$email'"];
     $fallback_from = [partial('doAlways', ''), partial('fileCountByUser', $dom, $domain), partial('doAlways', '')];
     $vars = massSanitize($db, $_GET);
@@ -427,82 +428,31 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     foreach($vars as $k => $v) {
         ${$k} = $v;
     }
-    $active_where = [' WHERE TRUE', " WHERE user.id = $user", " WHERE user.email = '$email'"];
+    $emptyText = partial('isEmpty', $text);
+    $active_where = [' ', " WHERE user.id = $user", " WHERE user.email = '$email'"];
     $haveUser = partial(negate('isEmpty') , $user);
     $andUser = curry2('concatString') (" AND user.id = $user");
-    $isAdmin = partial('equals', $user_int, 0);
     $queryUser = getBestPred($isAdmin)($andUser, partial('doAlways'));
     $where = $active_where[$user_int];
-                        
+    $active_from = [partial('fileCountByUser', $user, $domain), partial('doAlways', ''), partial('doAlways', '')];
     if(empty($user)){
         $where = $fallback_where[$user_int];
         $from .= $fallback_from[$user_int]();
-    }
-    $likeText = curry2('concatString')(" AND upload.filename LIKE '%$text%' ");
-    $emptyText = partial('isEmpty', $text);    
-    $queryText = getBestPred($emptyText)(partial('doAlways'), $likeText);    
-    $cb = $compose($queryUser, curry2('getFileTypeQuery')($suffix), $queryText);
-    $where = $cb($where);
-    $sql = $select . $from . $where . $order;
-    return calculatePages($db, $display, $sql);
-}
-
-
-function doSearch1($db, $priv, $domain, $compose, $order_by, $start, $display, $fileCountByUser)
-{
-    include $db;
-    $select = "SELECT COUNT(upload.id) as total ";
-    $from = getBaseFrom();
-    $where = ' WHERE TRUE';
-    $order = getBaseOrder($order_by, $start, $display);
-    $vars = massSanitize($db, $_GET);
-    foreach($vars as $k => $v) {
-        ${$k} = $v;
-    }    
-    $check = null;
-    $haveUser = partial(negate('isEmpty') , $user);
-    
-    //Clients will look for a numeric user.id. For Users $_GET['user'] will be empty
-    if($priv === 'Admin' && $haveUser()){
-        //will either return empty set(no error) or produce count. Test to see if a client has been selected.
-        $sql = "SELECT domain FROM client WHERE domain = '" . $user . "'";
-        $result = doQuery($link, $sql, 'Error retrieving records for user');
-        $row = goFetch($result, MYSQLI_ASSOC);
-        if (isset($row['domain']) && !is_numeric($user))
-        { 
-            $from .= " INNER JOIN client ON $domain = client.domain ";
-            $where = " WHERE domain = '" . $user . "'";
-            $check = count($row);
+        if($isAdmin()){//only admin can have no constraints on user
+            $from = "FROM upload ";
+            $queryUser = getBestPred($isAdmin)(partial('doAlways'), $andUser);
         }
     }
     else {
-        //used to constrain records for user only
-        $email = $_SESSION['email'];
-        $user = idFromEmail($email, true);
-        //$where = " WHERE user.email = '$email'";
-        $where = " AND user.id = '$user'";
-        //dump(idFromEmail($email));
+        $from .= $active_from[$user_int]();
+        $queryUser = getBestPred($isAdmin)(partial('doAlways'), $andUser);
     }
-   
-    $notClient = partial('isEmpty', $check);
-    $res = array_reduce([$haveUser, $notClient], 'every', true);
-
-    $andUser = curry2('concatString') (" AND user.id = $user");
-    $queryUser = getBestPred(partial('doAlways', $res))($andUser, partial('doAlways'));
-    $likeText = curry2('concatString') (" AND upload.filename LIKE '%$text%' ");
-    $tmp = getBestPred(partial(negate('isEmpty'), $text));
-    $queryText = $tmp($likeText, partial('doAlways'));
-    $cb = $compose($queryUser, curry2('getFileTypeQuery')($suffix), $likeText);
-    $where = $cb($where);
+    $likeText = curry2('concatString')(" AND upload.filename LIKE '%$text%' ");
+    $queryText = getBestPred($emptyText)(partial('doAlways'), $likeText);    
+    $decorate = $compose($queryUser, curry2('getFileTypeQuery')($suffix), $queryText);
+    $where = $decorate($where);
     $sql = $select . $from . $where . $order;
-    //dump($sql);
     return calculatePages($db, $display, $sql);
-}
-
-function searchFactory($priv){
-    if($priv === 'Admin'){
-        
-    }
 }
 
 function doUpload($db, $priv, $key, $domain)

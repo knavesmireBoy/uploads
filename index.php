@@ -55,7 +55,6 @@ $isPriv = partial('equals', 'Admin', $priv);
 $notPriv = negate($isPriv);
 $keytype = isset($client_domain) ? $client_domain : $key;
 $fileCount = curry22('fileCountByUser')($domain)($keytype);
-$fileAwait = curry2('fileCountByUser')($domain);
 
 $doZero = doWhen($isPriv, $always(0));
 $doOne = doWhen($always($client_id), $always(1));
