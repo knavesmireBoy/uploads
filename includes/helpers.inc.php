@@ -421,13 +421,12 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     $from = getBaseFrom();
     $order = getBaseOrder($order_by, $start, $display);
     $isAdmin = partial('equals', $user_int, 0);
-    $fallback_where = [' WHERE TRUE', '', " WHERE user.email = '$email'"];
+    //we need fallbacks for FROM and WHERE clauses in case a user isn't selected in our serach box
+    $fallback_where = [' WHERE TRUE', ' ', " WHERE user.email = '$email'"];
     $fallback_from = [partial('doAlways', ''), partial('fileCountByUser', $dom, $domain), partial('doAlways', '')];
     $vars = massSanitize($db, $_GET);
+    foreach($vars as $k => $v) { ${$k} = $v; }
     
-    foreach($vars as $k => $v) {
-        ${$k} = $v;
-    }
     $emptyText = partial('isEmpty', $text);
     $active_where = [' ', " WHERE user.id = $user", " WHERE user.email = '$email'"];
     $haveUser = partial(negate('isEmpty') , $user);
@@ -440,7 +439,7 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
         $from .= $fallback_from[$user_int]();
         if($isAdmin()){//only admin can have no constraints on user
             $from = "FROM upload ";
-            $queryUser = getBestPred($isAdmin)(partial('doAlways'), $andUser);
+            $queryUser = partial('doAlways', '');
         }
     }
     else {
@@ -473,7 +472,6 @@ function doUpload($db, $priv, $key, $domain)
 
     $theKey = getInitialKey($db, $priv, $_POST['user'], $domain);
     $mykey = $theKey ? $theKey : $key;
-    //dump($mykey);
     // Prepare user-submitted values for safe database insert
     include $db;
     $uploaddesc = isset($_POST['desc']) ? $_POST['desc'] : '';
