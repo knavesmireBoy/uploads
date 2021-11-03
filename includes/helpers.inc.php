@@ -400,7 +400,8 @@ function calculatePages($db, $display, $sql){
     $result = doQuery($link, $sql, 'Error generating page count.');
     $row = goFetch($result);
     $records = $row[0];//
-    return ($records > $display) ? ceil($records / $display) : 1;
+    $pages = ($records > $display) ? ceil($records / $display) : 1;
+    return array('pages' => $pages, 'searched' => preg_split('/(?=\sFROM)/', $sql)[1]);
 }
 
 function massSanitize($db, $src){
@@ -441,6 +442,7 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
             $from = "FROM upload ";
             $queryUser = partial('doAlways', '');
         }
+        $queryUser = partial('doAlways', '');
     }
     else {
         $from .= $active_from[$user_int]();

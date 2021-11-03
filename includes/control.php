@@ -1,6 +1,6 @@
 <?php
 
-if (isset($_POST['action']) && $_POST['action'] == 'upload')
+if (isset($_POST['action']) && $_POST['action'] === 'upload')
 {
     doUpload($db, $priv, $key, $domain);
 }
@@ -9,12 +9,12 @@ if (isset($_GET['action']) and isset($_GET['id']))
 {
     doView($db);
 } // end of download/view
-if (isset($_POST['action']) and $_POST['action'] == 'delete')
+if (isset($_POST['action']) and $_POST['action'] === 'delete')
 {
     $id = $_POST['id'];
     $call = "confirm";
 }
-if (isset($_POST['confirm']) and $_POST['confirm'] == 'Yes')
+if (isset($_POST['confirm']) and $_POST['confirm'] === 'Yes')
 {
     $id = $_POST['id'];
     $call = "confirmed";
@@ -32,7 +32,7 @@ if (isset($_POST['confirm']) and $_POST['confirm'] == 'Yes')
     }
 }
 
-if (isset($_POST['confirm']) and $_POST['confirm'] == 'No')
+if (isset($_POST['confirm']) and $_POST['confirm'] === 'No')
 { //swap
     include $db;
     $extent = 0;
@@ -77,76 +77,45 @@ if (isset($_POST['swap']))
 } ///
 
 ///////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
-
 ///Present list of users for administrators
 $vars = getUserList($db, $priv, $domain, $clientname);
-
-foreach ($vars as $k => $v)
-{
-    ${$k} = $v;
-}
+foreach ($vars as $k => $v) { ${$k} = $v; }
 //$users and $client required at this point
-if (isset($_GET['find']))
-{
-    $findmode = true;
-}
+$findmode = isset($_GET['find']) ? true : false;
 
 if (isset($_GET['action']) and $_GET['action'] == 'search')
 {
-    $pages = doSearch($db, $user_int, $client_domain, $domain, $compose, $order_by, $start, $display);
-}
-include $db;
-$vars = array_map(partial('doSanitize', $link) , $_GET);
-//obtain vars from $_GET array, after potential search
-foreach ($vars as $k => $v)
-{
-    ${$k} = $v;
-}
-$pages = getPages($db, $display, getBestArgs($notPriv)($fileCount, 'emptyString'), $pages);
-$start = (isset($_GET['start']) && is_numeric($_GET['start'])) ? $_GET['start'] : 0;
-
-$sort = (isset($_GET['sort']) ? $_GET['sort'] : '');
-$sort = isset($lookup[$sort]) ? $lookup[$sort] : $sort;
-
-foreach ($ordering as $k => $v)
-{
-    if ($k == $sort) break;
-}
-switch ($sort)
-{
-    case $k:
-        $order_by = $ordering[$k];
-    break;
-    default:
-        $order_by = 'time DESC';
+    $vars = doSearch($db, $user_int, $client_domain, $domain, $compose, $order_by, $start, $display);
+    foreach ($vars as $k => $v) { ${$k} = $v; }//return $pages an $searched variables
 }
 
 $select = getBaseSelect();
-$from = getBaseFrom();
 $select .= ", user.name as user";
-//bear in mind, as we are including prompt and update forms BELOW the file list, as opposed to exiting and directing to a separate prompt.html.php or update.html.php ANY vars MAY get overwritten by these $vars in the wild
-//possible constraints from search
+//*the searched SELECT statement has only COUNT(upload.id), but all the current constraints follow in the FROM and WHERE and ORDER clauses, so we simply append the default SELECT which returns all the file info with the constraints
+if(!isset($searched)){
+$pages = getPages($db, $display, getBestArgs($notPriv)($fileCount, 'emptyString'), $pages);
+$from = getBaseFrom();
 if ($priv !== 'Admin'){
     if(isset($client_id)){
         $where = " WHERE client.id = $client_id";
     }
     else {
         $email = $_SESSION['email'];
-        $where = " WHERE user.email='$email' ";
+        $where = " WHERE user.email = '$email' ";
     }
 }//!Admin
-
-$where = getIdTypeQuery($where, $user, $domain);//by user
-$where = getFileTypeQuery($where, $suffix);// by file type
-$w = isset($text) ? " AND upload.filename LIKE '%$text%'" : '';
-$where .= $w;
-
+//$select .= ", client.tel";
 $sql = $select;
-$sql .= ", client.tel";
 $from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to include just 'users' also
 $order = getBaseOrder($order_by, $start, $display);
 $sql .=  $from . $where . $order;
-
+}
+else {
+    //$select .= ", client.tel";
+    $sql = $select;
+    $sql .= $searched;
+}
+include $db;
 $result = doQuery($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();
 while ($row = mysqli_fetch_array($result))
@@ -162,7 +131,7 @@ while ($row = mysqli_fetch_array($result))
         'file' => $row['file'],
         'origin' => $row['origin'],
         'time' => $row['time'],
-        'tel' => $row['tel'],
+        //'tel' => $row['tel'],
         'size' => $row['size']
     );
 }
