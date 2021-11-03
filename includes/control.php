@@ -86,6 +86,25 @@ if (isset($_GET['action']) and $_GET['action'] == 'search')
     foreach ($vars as $k => $v) { ${$k} = $v; }//return $pages an $searched variables
 }
 
+// TABLE ORDERING...
+$start = (isset($_GET['start']) && is_numeric($_GET['start'])) ? $_GET['start'] : 0;
+
+$sort = (isset($_GET['sort']) ? $_GET['sort'] : '');
+$sort = isset($lookup[$sort]) ? $lookup[$sort] : $sort;
+
+foreach ($ordering as $k => $v)
+{
+    if ($k === $sort) break;
+}
+switch ($sort)
+{
+    case $k:
+        $order_by = $ordering[$k];
+    break;
+    default:
+        $order_by = 'time DESC';
+}
+
 $select = getBaseSelect();
 $select .= ", user.name as user";
 //*the searched SELECT statement has only COUNT(upload.id), but all the current constraints follow in the FROM and WHERE and ORDER clauses, so we simply append the default SELECT which returns all the file info with the constraints

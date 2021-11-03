@@ -1,22 +1,4 @@
 <?php
-// TABLE ORDERING...
-$start = (isset($_GET['start']) && is_numeric($_GET['start'])) ? $_GET['start'] : 0;
-
-$sort = (isset($_GET['sort']) ? $_GET['sort'] : '');
-$sort = isset($lookup[$sort]) ? $lookup[$sort] : $sort;
-
-foreach ($ordering as $k => $v)
-{
-    if ($k === $sort) break;
-}
-switch ($sort)
-{
-    case $k:
-        $order_by = $ordering[$k];
-    break;
-    default:
-        $order_by = 'time DESC';
-}
 
 $sorted = isset($_GET['sort']) ? true : false;
 $query_string = preg_replace('/(\?[a-z0-9=&]*)(&sort)([a-z]*)/', '$1$2', '?' . $_SERVER['QUERY_STRING']);
