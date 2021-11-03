@@ -1,14 +1,11 @@
 <?php
 
-if (isset($_POST['action']) && $_POST['action'] === 'upload')
-{
-    doUpload($db, $priv, $key, $domain);
-}
+$doUpload = doWhen(partial('postWhen', 'action', 'upload'), partial('doUpload', $db, $priv, $key, $domain));
+$doView = doWhen(partial('goGet', 'action'), partial('doView', $db));
 
-if (isset($_GET['action']) and isset($_GET['id']))
-{
-    doView($db);
-} // end of download/view
+$doUpload(null);
+$doView(null);
+
 if (isset($_POST['action']) and $_POST['action'] === 'delete')
 {
     $id = $_POST['id'];
@@ -35,7 +32,7 @@ if (isset($_POST['confirm']) and $_POST['confirm'] === 'Yes')
 if (isset($_POST['confirm']) and $_POST['confirm'] === 'No')
 { //swap
     include $db;
-    $extent = 0;
+    $extent = 0;//used to determine what views to render
     $id = doSanitize($link, $_POST['id']);
     $result = doQuery($link, getColleagues($id, $domain), 'Database error fetching colleagues.');
 
