@@ -49,11 +49,19 @@ $clientdetails = getClientName($db, $domain, "{$_SESSION['email']}");
 $clientname = $clientdetails['name'];
 $client_id = $clientdetails['id'];
 $client_domain = $clientdetails['domain'];
-$username = getUserName($db, "{$_SESSION['email']}");
 
-$notPriv = negate(partial('equals', 'Admin', $priv));
+$username = getUserName($db, "{$_SESSION['email']}");
+$isPriv = partial('equals', 'Admin', $priv);
+$notPriv = negate($isPriv);
 $keytype = isset($client_domain) ? $client_domain : $key;
 $fileCount = curry22('fileCountByUser')($domain)($keytype);
+$fileAwait = curry2('fileCountByUser')($domain);
+
+$doZero = doWhen($isPriv, $always(0));
+$doOne = doWhen($always($client_id), $always(1));
+$doTwo = doWhen($always(!$client_id), $always(2));
+
+$user_int = array_reduce([$doZero, $doOne, $doTwo], 'reducer');
 
 $name = isset($clientname) ? $clientname : $username;
 $where = ' WHERE TRUE';

@@ -76,13 +76,15 @@ if (isset($_POST['swap']))
     }
 } ///
 
- ///Present list of users for administrators
+///////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
+
+///Present list of users for administrators
 $vars = getUserList($db, $priv, $domain, $clientname);
+
 foreach ($vars as $k => $v)
 {
     ${$k} = $v;
 }
-
 //$users and $client required at this point
 if (isset($_GET['find']))
 {
@@ -91,7 +93,7 @@ if (isset($_GET['find']))
 
 if (isset($_GET['action']) and $_GET['action'] == 'search')
 {
-    $pages = doSearch($db, $priv, $domain, $compose, $order_by, $start, $display);
+    $pages = doSearch($db, $user_int, $client_domain, $domain, $compose, $order_by, $start, $display, getBestArgs($notPriv)($fileAwait, 'emptyString'));
 }
 include $db;
 $vars = array_map(partial('doSanitize', $link) , $_GET);
@@ -122,7 +124,6 @@ switch ($sort)
 $select = getBaseSelect();
 $from = getBaseFrom();
 $select .= ", user.name as user";
-//INITIAL FILE SELECTION/////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
 //bear in mind, as we are including prompt and update forms BELOW the file list, as opposed to exiting and directing to a separate prompt.html.php or update.html.php ANY vars MAY get overwritten by these $vars in the wild
 //possible constraints from search
 if ($priv !== 'Admin'){
@@ -145,6 +146,7 @@ $sql .= ", client.tel";
 $from .= " LEFT JOIN client ON user.client_id = client.id"; //note LEFT join to include just 'users' also
 $order = getBaseOrder($order_by, $start, $display);
 $sql .=  $from . $where . $order;
+
 $result = doQuery($link, $sql, 'Database error fetching files. ' . $sql);
 $files = array();
 while ($row = mysqli_fetch_array($result))
@@ -160,7 +162,7 @@ while ($row = mysqli_fetch_array($result))
         'file' => $row['file'],
         'origin' => $row['origin'],
         'time' => $row['time'],
-        'tel' => $row['tel'], // ONLY REQUIRED FOR TELEPHONE BLOCK
+        'tel' => $row['tel'],
         'size' => $row['size']
     );
 }

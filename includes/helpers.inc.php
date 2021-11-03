@@ -215,7 +215,7 @@ function domainFromUserID($link, $id)
 {
     $sql = "SELECT domain from client INNER JOIN user ON user.client_id = client.id WHERE user.id = $id";
     $res = doQuery($link, $sql, 'Database getting client domain.');
-    return goFetch($res) [0];
+    return goFetch($res)[0];
 }
 
 function formatFileSize($size)
@@ -227,6 +227,10 @@ function formatFileSize($size)
     return ceil($size) . 'kb';
 }
 
+function idFromEmail($email){
+    return " SELECT user.id FROM user WHERE user.email = '$email'";
+}
+
 function getBaseSelect()
 {
     return "SELECT upload.id, filename, mimetype, description, filepath, file, size, time,  MID(file, 11, 14) AS origin, user.email";
@@ -234,7 +238,7 @@ function getBaseSelect()
 
 function getBaseFrom()
 {
-    return " FROM upload INNER JOIN user ON upload.userid=user.id";
+    return " FROM upload INNER JOIN user ON upload.userid = user.id";
 }
 function getBaseOrder($o, $s, $d)
 {
@@ -262,10 +266,11 @@ function getFileTypeQuery($where, $ext)
 }
 
 function fileCountByUser($user, $domain) {
+    //assumes getBaseFrom is invoked first
     if(is_numeric($user)){
-        return  " INNER JOIN user on upload.userid = user.id WHERE user.id = $user ";
+        return  " WHERE user.id = $user ";
     }
-    return " INNER JOIN user ON user.id = upload.userid INNER JOIN client ON $domain = client.domain AND client.domain='$user'";
+    return " INNER JOIN client ON $domain = client.domain WHERE client.domain = '$user'";
 }
 
 function getIdTypeQuery($where, $user, $domain){
@@ -390,49 +395,114 @@ function doFind($db, $key, $domain)
     $client = array();
 }
 
-function doSearch($db, $priv, $domain, $compose, $order_by, $start, $display)
+function calculatePages($db, $display, $sql){
+    include $db;
+    $result = doQuery($link, $sql, 'Error generating page count.');
+    $row = goFetch($result);
+    $records = $row[0];//
+    return ($records > $display) ? ceil($records / $display) : 1;
+}
+
+function massSanitize($db, $src){
+    include $db;
+    $export = array();
+    $vars = array_map(partial('doSanitize', $link), array_filter($src, 'iSet'));
+    foreach($vars as $k => $v) {
+        $export[$k] = $v;
+    }
+    return $export;
+}
+
+function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $display, $fileCountByUser)
 {
     include $db;
-    //$tel = '';
+    $email = $_SESSION['email'];
+    $select = "SELECT COUNT(upload.id) as total ";
+    $from = getBaseFrom();
+    $order = getBaseOrder($order_by, $start, $display);
+    $fallback_where = [' WHERE TRUE', '', " WHERE user.email = '$email'"];
+    $fallback_from = [partial('doAlways', ''), partial('fileCountByUser', $dom, $domain), partial('doAlways', '')];
+    $vars = massSanitize($db, $_GET);
+    
+    foreach($vars as $k => $v) {
+        ${$k} = $v;
+    }
+    $active_where = [' WHERE TRUE', " WHERE user.id = $user", " WHERE user.email = '$email'"];
+    $haveUser = partial(negate('isEmpty') , $user);
+    $andUser = curry2('concatString') (" AND user.id = $user");
+    $isAdmin = partial('equals', $user_int, 0);
+    $queryUser = getBestPred($isAdmin)($andUser, partial('doAlways'));
+    $where = $active_where[$user_int];
+                        
+    if(empty($user)){
+        $where = $fallback_where[$user_int];
+        $from .= $fallback_from[$user_int]();
+    }
+    $likeText = curry2('concatString')(" AND upload.filename LIKE '%$text%' ");
+    $emptyText = partial('isEmpty', $text);    
+    $queryText = getBestPred($emptyText)(partial('doAlways'), $likeText);    
+    $cb = $compose($queryUser, curry2('getFileTypeQuery')($suffix), $queryText);
+    $where = $cb($where);
+    $sql = $select . $from . $where . $order;
+    return calculatePages($db, $display, $sql);
+}
+
+
+function doSearch1($db, $priv, $domain, $compose, $order_by, $start, $display, $fileCountByUser)
+{
+    include $db;
+    $select = "SELECT COUNT(upload.id) as total ";
     $from = getBaseFrom();
     $where = ' WHERE TRUE';
     $order = getBaseOrder($order_by, $start, $display);
-    $user_id = doSanitize($link, $_GET['user']);
+    $vars = massSanitize($db, $_GET);
+    foreach($vars as $k => $v) {
+        ${$k} = $v;
+    }    
     $check = null;
-    $select = "SELECT COUNT(upload.id) as total ";
-    $text = doSanitize($link, $_GET['text']);
-    $suffix = isset($_GET['suffix']) ? doSanitize($link, $_GET['suffix']) : null;
-    $haveUser = partial(negate('isEmpty') , $user_id);
-    //Clients will look for a numeric user.id. For Users there will be $_GET['user'] will be empty
-    if($priv === 'Admin' &&  $haveUser()){
+    $haveUser = partial(negate('isEmpty') , $user);
+    
+    //Clients will look for a numeric user.id. For Users $_GET['user'] will be empty
+    if($priv === 'Admin' && $haveUser()){
         //will either return empty set(no error) or produce count. Test to see if a client has been selected.
-        $sql = "SELECT domain FROM client WHERE domain = '" . $user_id . "'";
+        $sql = "SELECT domain FROM client WHERE domain = '" . $user . "'";
         $result = doQuery($link, $sql, 'Error retrieving records for user');
         $row = goFetch($result, MYSQLI_ASSOC);
-        if (isset($row['domain']) && !is_numeric($user_id))
+        if (isset($row['domain']) && !is_numeric($user))
         { 
             $from .= " INNER JOIN client ON $domain = client.domain ";
-            $where = " WHERE domain = '" . $user_id . "'";
+            $where = " WHERE domain = '" . $user . "'";
             $check = count($row);
         }
-    }    
+    }
+    else {
+        //used to constrain records for user only
+        $email = $_SESSION['email'];
+        $user = idFromEmail($email, true);
+        //$where = " WHERE user.email = '$email'";
+        $where = " AND user.id = '$user'";
+        //dump(idFromEmail($email));
+    }
    
     $notClient = partial('isEmpty', $check);
     $res = array_reduce([$haveUser, $notClient], 'every', true);
 
-    $andUser = curry2('concatString') (" AND user.id = $user_id");
+    $andUser = curry2('concatString') (" AND user.id = $user");
     $queryUser = getBestPred(partial('doAlways', $res))($andUser, partial('doAlways'));
     $likeText = curry2('concatString') (" AND upload.filename LIKE '%$text%' ");
     $tmp = getBestPred(partial(negate('isEmpty'), $text));
     $queryText = $tmp($likeText, partial('doAlways'));
-    
     $cb = $compose($queryUser, curry2('getFileTypeQuery')($suffix), $likeText);
     $where = $cb($where);
     $sql = $select . $from . $where . $order;
-    $result = doQuery($link, $sql, 'Error fetching file details.');
-    $row = goFetch($result, MYSQLI_ASSOC);
-    $records = $row['total'];
-    return ($records > $display) ? ceil($records / $display) : 1;
+    //dump($sql);
+    return calculatePages($db, $display, $sql);
+}
+
+function searchFactory($priv){
+    if($priv === 'Admin'){
+        
+    }
 }
 
 function doUpload($db, $priv, $key, $domain)
@@ -614,7 +684,8 @@ function getPages($db, $display, $getCountQuery, $pages){
 elseif(!isset($pages))
 { // counts all files
     include $db;
-    $sql = "SELECT COUNT(upload.id) from upload ";
+    $sql = "SELECT COUNT(upload.id) ";
+    $sql .= getBaseFrom();
     $sql .= $getCountQuery();
     $res = doQuery($link,  $sql, 'Database error fetching requesting the list of files');
     $row = goFetch($res, MYSQLI_NUM);
