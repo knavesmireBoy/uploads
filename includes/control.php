@@ -75,7 +75,11 @@ if (isset($_REQUEST['swap']))
 $vars = getUserList($db, $priv, $domain, $clientname);
 foreach ($vars as $k => $v) { ${$k} = $v; }
 //$users and $client required at this point
-$findmode = isset($_GET['find']) ? true : false;
+if(isset($_GET['find'])){
+    $findmode = true;
+    $zero = $user_int == 2 ? true : null;
+}
+
 
 if (isset($_GET['action']) and $_GET['action'] == 'search')
 {
