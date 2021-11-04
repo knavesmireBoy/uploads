@@ -28,19 +28,9 @@ if (isset($_POST['confirm']) and $_POST['confirm'] === 'Yes')
     $colleagues = array();
     $extent = 0;
     include $db;
-    
     $res = doQuery($link, getColleagues($id, $domain), 'Database error fetching list of users.');
-    
     $colleagues = doProcess($res, 'id', 'name');//for assigning to client
     $extent = count($colleagues);
-    dump($extent);
-/*
-    while ($row = mysqli_fetch_array($res))
-    {
-        $colleagues[$row['id']] = $row['name'];
-        $extent += 1;
-    }
-    */
 }
 
 if (isset($_POST['confirm']) and $_POST['confirm'] === 'No')
@@ -75,7 +65,6 @@ if (isset($_REQUEST['swap']))
     $extent = count($colleagues);
     if (!$extent)
     {
-        //$colleagues = prepUpdateUser($db, $priv);
         $colleagues = $prepareUserList($db);
     }
    

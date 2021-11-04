@@ -445,14 +445,15 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     $queryUser = getBestPred($isAdmin)($andUser, partial('doAlways'));
     $where = $active_where[$user_int];
     $active_from = [partial('fileCountByUser', $user, $domain), partial('doAlways', ''), partial('doAlways', '')];
+    
     if(empty($user)){
+        //dump($from);
         $where = $fallback_where[$user_int];
         $from .= $fallback_from[$user_int]();
         if($isAdmin()){//only admin can have no constraints on user
-            $from = "FROM upload ";
-            $queryUser = partial('doAlways', '');
+            $queryUser = partial('doAlways', $where);
         }
-        $queryUser = partial('doAlways', '');
+        //$queryUser = partial('doAlways', '');
     }
     else {
         $from .= $active_from[$user_int]();
@@ -463,7 +464,7 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     $decorate = $compose($queryUser, curry2('getFileTypeQuery')($suffix), $queryText);
     $where = $decorate($where);
     $sql = $select . $from . $where . $order;
-    ///dump($sql);
+    //dump($sql);
     return calculatePages($db, $display, $sql);
 }
 
