@@ -292,7 +292,12 @@ function getColleagues($id, $dom)
 {
     return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id = $id ORDER BY name";
 }
-
+/*
+function getColleaguesExtent($id, $dom)
+{
+    return "SELECT employer.id, employer.name, COUNT(employer.id) AS extent FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id = $id GROUP BY employer.id ORDER BY name";
+}
+*/
 function getColleaguesFromName($domain, $name)
 {
     return "SELECT user.id, user.name FROM user INNER JOIN client ON $domain = client.domain WHERE client.name = '$name' ORDER BY name";
@@ -303,6 +308,11 @@ function getColleagues3($id)
 INNER JOIN upload ON user.id = upload.userid 
 INNER JOIN (SELECT user.client_id FROM user INNER JOIN upload ON user.id = upload.userid  WHERE upload.id = $id)  AS tgt 
 ON user.client_id  =  tgt.client_id LIMIT 1)  AS client ON client.client_id = user.client_id ORDER BY name";
+}
+
+function doGetColleagues($link, $id, $domain){
+    $res = doQuery($link, getColleagues($id, $domain), 'Database error fetching list of users.');
+    return doProcess($res, 'id', 'name');//for assigning to client
 }
 
 function assignColleague($upload_id, $user_id)
@@ -453,6 +463,7 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     $decorate = $compose($queryUser, curry2('getFileTypeQuery')($suffix), $queryText);
     $where = $decorate($where);
     $sql = $select . $from . $where . $order;
+    ///dump($sql);
     return calculatePages($db, $display, $sql);
 }
 
@@ -552,35 +563,22 @@ function doDelete($db, $compose)
     exit();
 }
 
-function prepUpdate($db, $priv, $id, $domain)
+function prepUpdate($db, $id)
 {
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-    $sql = "SELECT upload.id, filename, description, upload.userid, user.name FROM upload INNER JOIN user ON upload.userid=user.id  WHERE upload.id=$id";
+    $sql = "SELECT upload.id, filename, description, upload.userid, user.name FROM upload INNER JOIN user ON upload.userid=user.id  WHERE upload.id = $id";
     include $db;
-    $result = mysqli_query($link, $sql);
-    $doError = partialDefer('errorHandler', 'Database error fetching stored files', $terror);
-    doWhen(partial('doAlways', !$result) , $doError) (null); //doWhen expects an argument to pass to predicate and action functions
-    return mysqli_fetch_array($result);
+    $res = doQuery($link, $sql, 'Database error fetching list of users.');
+    return goFetch($res, MYSQLI_ASSOC);
 }
 
-function prepUpdateUser($db, $priv)
+function prepUpdateUser($db)
 {
-    if ($priv == 'Admin')
-    {
         include $db;
         $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
         $sql = "SELECT user.name, user.id FROM user LEFT JOIN client ON user.client_id=client.id  WHERE client.domain IS NULL UNION SELECT user.name, user.id FROM user INNER JOIN client ON user.client_id = client.id ORDER BY name";
-        $result = mysqli_query($link, $sql);
-
-        $doError = partialDefer('errorHandler', 'Database error fetching users.', $terror);
-        doWhen(partial('doAlways', !$result) , $doError) (null);
-
-        while ($row = mysqli_fetch_array($result))
-        {
-            $colleagues[$row['id']] = $row['name'];
-        }
-        return $colleagues;
-    }
+        $res = doQuery($link, $sql, 'Database error fetching list of users.');
+        return doProcess($res, 'id', 'name');
 }
 
 function doUpdate($db)

@@ -1,10 +1,20 @@
 <?php
 
-$doUpload = doWhen(partial('postWhen', 'action', 'upload'), partial('doUpload', $db, $priv, $key, $domain));
-$doView = doWhen(partial('goGet', 'action'), partial('doView', $db));
+//$doUpload = doWhen(partial('postWhen', 'action', 'upload'), partial('doUpload', $db, $priv, $key, $domain));
+//$doView = doWhen(partial('goGet', 'action'), partial('doView', $db));
 
-$doUpload(null);
-$doView(null);
+//$doUpload(null);
+//$doView(null);
+
+if (isset($_POST['action']) && $_POST['action'] === 'upload')
+{
+    doUpload($db, $priv, $key, $domain);
+}
+
+if (isset($_GET['action']) and isset($_GET['id']))
+{
+    doView($db);
+} // end of download/view
 
 if (isset($_POST['action']) and $_POST['action'] === 'delete')
 {
@@ -18,59 +28,57 @@ if (isset($_POST['confirm']) and $_POST['confirm'] === 'Yes')
     $colleagues = array();
     $extent = 0;
     include $db;
-    $result = mysqli_query($link, getColleagues($id, $domain));
-    $doError = partialDefer('errorHandler', 'Database error fetching list of users.', $terror);
-    doWhen($always(!$result) , $doError) (null);
-
-    while ($row = mysqli_fetch_array($result))
+    
+    $res = doQuery($link, getColleagues($id, $domain), 'Database error fetching list of users.');
+    
+    $colleagues = doProcess($res, 'id', 'name');//for assigning to client
+    $extent = count($colleagues);
+    dump($extent);
+/*
+    while ($row = mysqli_fetch_array($res))
     {
         $colleagues[$row['id']] = $row['name'];
         $extent += 1;
     }
+    */
 }
 
 if (isset($_POST['confirm']) and $_POST['confirm'] === 'No')
 { //swap
     include $db;
-    $extent = 0;//used to determine what views to render
     $id = doSanitize($link, $_POST['id']);
-    $result = doQuery($link, getColleagues($id, $domain), 'Database error fetching colleagues.');
-
+    $colleagues = doGetColleagues($link, $id, $domain);
+    $extent = count($colleagues);
+    if($extent <= 1){
+        header("Location: ?id=$id&swap=No");
+        exit();
+    }
     $prompt1 = "Choose <b>yes</b> to select assign a new owner to all ";
     $prompt2 = " files. Choose <b>no</b> to edit a single file";
     $prompt = "$prompt1 client $prompt2";
-
-    while ($row = mysqli_fetch_array($result))
-    {
-        $colleagues[$row['id']] = $row['name'];
-        $extent++;
-    }
     $prompt = !$extent ? "$prompt1 user $prompt2" : $prompt;
     $call = "swap";
 }
-if (isset($_POST['swap']))
+if (isset($_REQUEST['swap']))
 { //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (FILE AMEND BLOCK)
-    //$colleagues = array();
     $button = "Update";
-    $extent = 0;
     include $db;
-    $id = doSanitize($link, $_POST['id']);
-    $answer = $_POST['swap']; //$answer used as conditional to load update.html.php
+   
+    $id = doSanitize($link, $_REQUEST['id']);
+    $answer = $_REQUEST['swap']; //$answer used as conditional to load update.html.php
     $email = "{$_SESSION['email']}";
-    $row = prepUpdate($db, $priv, $id, $domain);
+    $row = prepUpdate($db, $id);
     $filename = $row['filename'];
     $diz = $row['description'];
     $userid = $row['userid'];
-    $result = doQuery($link, getColleagues($row['id'], $domain) , 'Database error fetching colleagues.');
-    while ($row = mysqli_fetch_array($result))
-    {
-        $colleagues[$row['id']] = $row['name'];
-        $extent++;
-    }
+    $colleagues = doGetColleagues($link, $id, $domain);
+    $extent = count($colleagues);
     if (!$extent)
     {
-        $colleagues = prepUpdateUser($db, $priv);
+        //$colleagues = prepUpdateUser($db, $priv);
+        $colleagues = $prepareUserList($db);
     }
+   
 } ///
 
 ///////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////

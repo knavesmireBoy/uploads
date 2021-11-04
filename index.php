@@ -23,6 +23,9 @@ doWhen($always(!$roleplay) , $doError) (null);
 $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
 
+$isPriv = partial('equals', 'Admin', $priv);
+$notPriv = negate($isPriv);
+
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!!?!! V. USEFUL VARIABLE IN GLOBAL SPACE
 
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
@@ -40,8 +43,9 @@ $order_by = 'time DESC';
 $base = 'File Uploads';
 $pages = null;
 
-$doDelete = doWhen(partial('goPost', 'extent') , partial('doDelete', $db, $compose));
-$doUpdate = doWhen(partial('goPost', 'update') , partial('doUpdate', $db));
+$doDelete = doWhen(partial('goPost', 'extent'), partial('doDelete', $db, $compose));
+$doUpdate = doWhen(partial('goPost', 'update'), partial('doUpdate', $db));
+$prepareUserList = doWhen($isPriv, partial('prepUpdateUser'));
 //doWhen expects an argument
 $doDelete(null);
 $doUpdate(null);
@@ -51,8 +55,7 @@ $client_id = $clientdetails['id'];
 $client_domain = $clientdetails['domain'];
 
 $username = getUserName($db, "{$_SESSION['email']}");
-$isPriv = partial('equals', 'Admin', $priv);
-$notPriv = negate($isPriv);
+
 $keytype = isset($client_domain) ? $client_domain : $key;
 $fileCount = curry22('fileCountByUser')($domain)($keytype);
 

@@ -1,14 +1,14 @@
 <form action="." method="post" name="updateFileInfo">
-<?php if($_POST['swap'] == 'No'): ?>
+<?php if($_REQUEST['swap'] == 'No'): ?>
 	<div>
 		<label for="filename">Name: <input id="filename" type="text" name="filename" value="<?php htmlout($filename); ?>"/></label></div>
 	<div>
 		<label for="description">Description: <input id="description" type="text" name="description" value="<?php htmlout($diz); ?>"/></label></div>
 	<div>
-	<?php $update = true; endif; ?>
-	<?php 
+	<?php $update = true;
+        endif; 
         //allows Admin to associate a single USER to a single file, USER may/may not belong to a client
-if(!$extent && $priv == 'Admin') : ?>
+if(!$extent && $priv === 'Admin') : ?>
 <label for="user">User:&nbsp;</label>
 <select id="user" name="user">
 <option value="">Select one like</option>
