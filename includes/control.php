@@ -67,12 +67,13 @@ if (isset($_REQUEST['swap']))
     {
         $colleagues = $prepareUserList($db);
     }
-   
+    $equals = partial(equality(true), $userid);
+    $doSelected = $compose('optionOpenTag', curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
 } ///
 
 ///////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
 ///Present list of users for administrators
-$vars = getUserList($db, $priv, $domain, $clientname);
+$vars = getUserList($db, $domain, $user_int, $clientname);
 foreach ($vars as $k => $v) { ${$k} = $v; }
 //$users and $client required at this point
 if(isset($_GET['find'])){

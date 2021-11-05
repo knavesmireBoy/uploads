@@ -577,9 +577,38 @@ function prepUpdateUser($db)
 {
         include $db;
         $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-        $sql = "SELECT user.name, user.id FROM user LEFT JOIN client ON user.client_id=client.id  WHERE client.domain IS NULL UNION SELECT user.name, user.id FROM user INNER JOIN client ON user.client_id = client.id ORDER BY name";
+        $sql = "SELECT user.name, user.id FROM user LEFT JOIN client ON user.client_id = client.id  WHERE client.domain IS NULL UNION SELECT user.name, user.id FROM user INNER JOIN client ON user.client_id = client.id ORDER BY name";
         $res = doQuery($link, $sql, 'Database error fetching list of users.');
         return doProcess($res, 'id', 'name');
+}
+
+function doSelected($pred){
+    if(equals($a, $b)){
+        return " selected='selected' ";
+    }
+    return '';
+}
+
+
+function getUserList($db, $domain, $user_int, $clientname){
+    include $db;
+    $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id";
+    $users = array();
+    $client = array();
+    if(!$user_int){
+        $result = doQuery($link, $sql . " WHERE client.domain IS NULL ORDER BY name", 'Database error fetching users.');
+        $users = doProcess($result, 'id', 'name');
+        
+        $sql = "SELECT name, domain, tel FROM client ORDER BY name";
+        $result = doQuery($link, $sql, 'Database error fetching clients.');
+        $client = doProcess($result, 'domain', 'name');
+    }
+    elseif($user_int === 1){/////Present list of users for specific client
+        $sql = getColleaguesFromName($domain, $clientname);
+        $result = doQuery($link, $sql, 'Database error fetching clients.');
+        $client = doProcess($result, 'id', 'name');
+    }
+    return array('users' => $users, 'client' => $client);
 }
 
 function doUpdate($db)
@@ -642,24 +671,4 @@ elseif(!isset($pages))
     $pages = ($records > $display) ? ceil($records / $display) : 1;
 } //end of IF NOT PAGES SET
     return $pages;
-}
-
-function getUserList($db, $priv, $domain, $clientname){
-    include $db;
-    $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id";
-    $users = array();
-    $client = array();
-    if($priv === 'Admin'){
-        $result = doQuery($link, $sql . " WHERE client.domain IS NULL ORDER BY name", 'Database error fetching users.');
-        $users = doProcess($result, 'id', 'name');
-        $sql = "SELECT name, domain, tel FROM client ORDER BY name";
-        $result = doQuery($link, $sql, 'Database error fetching clients.');
-        $client = doProcess($result, 'domain', 'name');
-    }
-    elseif(isset($clientname)){/////Present list of users for specific client
-        $sql = getColleaguesFromName($domain, $clientname);
-        $result = doQuery($link, $sql, 'Database error fetching clients.');
-        $client = doProcess($result, 'id', 'name');
-    }
-    return array('users' => $users, 'client' => $client);
 }
