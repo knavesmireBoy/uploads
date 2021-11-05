@@ -589,7 +589,6 @@ function doSelected($pred){
     return '';
 }
 
-
 function getUserList($db, $domain, $user_int, $clientname){
     include $db;
     $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id";

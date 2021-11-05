@@ -105,7 +105,6 @@ switch ($sort)
     default:
         $order_by = 'time DESC';
 }
-
 $select = getBaseSelect();
 $select .= ", user.name as user";
 //*the searched SELECT statement has only COUNT(upload.id), but all the current constraints follow in the FROM and WHERE and ORDER clauses, so we simply append the default SELECT which returns all the file info with the constraints
@@ -152,9 +151,10 @@ while ($row = mysqli_fetch_array($result))
         'size' => $row['size']
     );
 }
-    $doSelected = $compose('optionOpenTag', curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
 
+$doSelected = $compose('optionOpenTag', curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
 $doOpt = getBestArgs(negate(partial('isEmpty', $users)))('optGroupOpen', $always(""));
 $doOptEnd = getBestArgs(negate(partial('isEmpty', $users)))('optGroupClose', $always(""));
+$isTrueClient = partial('array_reduce', [$isClient, $compose(partial('count', $client), curry2('greaterThan')(1))], 'every', true);
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/ordering.php';

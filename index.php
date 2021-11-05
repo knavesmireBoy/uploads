@@ -24,6 +24,7 @@ $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
 
 $isPriv = partial('equals', 'Admin', $priv);
+$isClient = partial('equals', 'Client', $priv);
 $notPriv = negate($isPriv);
 
 $domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))"; //!!?!! V. USEFUL VARIABLE IN GLOBAL SPACE
@@ -56,6 +57,9 @@ $client_domain = $clientdetails['domain'];
 
 $username = getUserName($db, "{$_SESSION['email']}");
 
+$isSingleUser = partial('equals', 'Client', $priv);
+
+
 $keytype = isset($client_domain) ? $client_domain : $key;
 $fileCount = curry22('fileCountByUser')($domain)($keytype);
 
@@ -63,7 +67,9 @@ $doZero = doWhen($isPriv, $always(0));
 $doOne = doWhen($always($client_id), $always(1));
 $doTwo = doWhen($always(!$client_id), $always(2));
 
-$user_int = array_reduce([$doZero, $doOne, $doTwo], 'reducer');
+$user_int = array_reduce([$doZero, $doOne, $doTwo], 'getOne');
+
+$isSingleUser = partial('array_reduce', [$isClient, negate(partial('iSet', $clientname))], 'every', true);
 $userid = -1;
 $equals = partial(equality(true), $userid);
 
@@ -95,5 +101,6 @@ $lookup = array(
 );
 
 $admin_status = asAdmin($priv, $clientname);
+$nonBrowser = negate(partial('equals', $priv, 'Browser'));
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/control.php';
