@@ -104,3 +104,10 @@ $admin_status = asAdmin($priv, $clientname);
 $nonBrowser = negate(partial('equals', $priv, 'Browser'));
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/control.php';
+
+/*
+scp storm.csv andrewsykes@northwolds.serveftp.net:/Users/andrewsykes
+ LOAD DATA LOCAL INFILE '../../../../users/andrewsykes/storm.csv' INTO TABLE fname FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '\r';
+ 
+ SELECT * from fchar  INTO OUTFILE '../../../../users/andrewsykes/sunday.csv' FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"' LINES TERMINATED BY '/n';
+ */

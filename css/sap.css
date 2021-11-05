@@ -1,1 +1,0 @@
-ul.sap  { overflow: hidden; outline: solid 1px black }ul.sap li   { position: relative; width: 100%; float: left }ul.sap div, ul.sap span     { display: block; position: relative; left: 100%; width: 100%; float: left }ul.sap label     { display: block; margin-left: -100%; z-index: 1; float: left; outline: solid 1px purple }

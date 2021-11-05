@@ -57,7 +57,7 @@ if (count($files) > 0): ?>
             <?php endif;
             if (isset($admin_status)) : //add description as title attribute on user field
             $des = (empty($f['description'])  ? 'No description provided' : html($f['description'])); 
-            if($isPriv() || $isTrueClient()): ?>
+            if($isPriv() || count($client) > 1): ?>
             <td title="<?php echo $des; ?>" >
                 <?php htmlout($f['user']); ?></td>
             <?php elseif(!$isSingleUser()): ?>
