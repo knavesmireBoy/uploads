@@ -68,7 +68,6 @@ if (isset($_REQUEST['swap']))
         $colleagues = $prepareUserList($db);
     }
     $equals = partial(equality(true), $userid);
-    $doSelected = $compose('optionOpenTag', curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
 } ///
 
 ///////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
@@ -153,4 +152,9 @@ while ($row = mysqli_fetch_array($result))
         'size' => $row['size']
     );
 }
+    $doSelected = $compose('optionOpenTag', curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
+
+$doOpt = getBestArgs(negate(partial('isEmpty', $users)))('optGroupOpen', $always(""));
+$doOptEnd = getBestArgs(negate(partial('isEmpty', $users)))('optGroupClose', $always(""));
+
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/ordering.php';

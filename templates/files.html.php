@@ -3,29 +3,29 @@
 //ob_start('ob_gzhandler');
 $span = 2;
 ?>
-		<h1 class="<?php echo strtolower($priv); ?>"><a href="?"><?php echo "$base | $name"; ?></a></h1>
-		<h2><?php echo date('l F j, Y'); ?></h2>
-
+<h1 class="<?php echo strtolower($priv); ?>"><a href="?"><?php echo "$base | $name"; ?></a></h1>
+<h2><?php echo date('l F j, Y'); ?></h2>
 <?php if($priv !== 'Browser') : ?>
-		<form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="uploadform" enctype="multipart/form-data">
-		<table class="up"><tr><td><label for="uploadfiles">Upload File:</label></td><td><input id="uploadfiles" type="file" name="upload"/></td></tr>
-		<tr><td><label for="desc">File Description: </label></td><td><input id="desc" type="text" name="desc" maxlength="255"/></td></tr>
-<?php if($priv !== 'Browser' && !empty($client)): ?>
+<form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="uploadform" enctype="multipart/form-data">
+    <table class="up">
+        <tr><td><label for="uploadfiles">Upload File:</label></td><td><input id="uploadfiles" type="file" name="upload"/></td></tr>
+        <tr><td><label for="desc">File Description: </label></td><td><input id="desc" type="text" name="desc" maxlength="255"/></td></tr>
+<?php
+    if($priv !== 'Browser' && count($client) > 1) : ?>
 <tr><td><label for="user">User:</label></td><td>
-<select id="user" name="user"><option value="">Select one</option>
-<?php if(!empty($users)): ?>
-<optgroup label="clients"> <?php endif; ?>
-<?php  foreach ($client as $k => $v): ?>
-<option value="<?php htmlout($k); ?>"><?php htmlout($v); ?>
-</option><?php endforeach; 
-    if(!empty($users)) : ?>
-        </optgroup>
-<optgroup label="users">
-<?php  endif;
-    foreach ($users as $k => $v): ?>
-<option value="<?php htmlout($k); ?>"><?php htmlout($v); ?>
-</option><?php endforeach;
-if(!empty($users)) : ?></optgroup> <?php endif; ?>
+<select id="user" name="user">
+<option value="">Select one</option>
+    <?php 
+    echo $doOpt('clients');
+    foreach ($client as $k => $v){
+    echo $doSelected($k, $v);
+    }
+    echo $doOptEnd();
+    echo $doOpt('users');
+    foreach ($users as $k => $v) {
+    echo $doSelected($k, $v);
+    }
+    echo $doOptEnd(); ?>
     </select>
 </td></tr>
 <?php endif; ?>
@@ -34,15 +34,14 @@ if(!empty($users)) : ?></optgroup> <?php endif; ?>
 </form>
 	<?php endif; //Browser
 if (count($files) > 0): ?>
-		<p>The following files are stored in the database:</p>
-		<table>
-			<thead>
-				<tr>
+<p>The following files are stored in the database:</p>
+<table>
+    <thead>
+        <tr>
 <th><a href="<?php echo $query_string . $sort . 'f'; ?>">File name</a></th>
-<?php $choice = isset($admin_status) && !empty($client) ? 'User' : 'Description'  ?>
+<?php $choice = isset($admin_status) && count($client) > 1 ? 'User' : 'Description'  ?>
 <th><a href="<?php echo $query_string . $sort . 'u'; ?>"><?php echo $choice; ?></a></th>
 <th><a href="<?php echo $query_string . $sort . 't'; ?>">Time</a></th>
-
 <?php $span = ($priv != 'Browser' ? '2' : '1')  ?>
 <th colspan="<?php echo($span) ?>" class="control">Control<?php ?></th>
 </tr>
@@ -60,12 +59,17 @@ if (count($files) > 0): ?>
 <td><?php htmlout($f['description']); ?></td>
 <?php endif;
     
-if (isset($admin_status) && !empty($client)) : //add description as title attribute on user field
-$des = (empty($f['description'])  ? 'No description provided' : html($f['description'])); ?>
+if (isset($admin_status)) : //add description as title attribute on user field
+$des = (empty($f['description'])  ? 'No description provided' : html($f['description'])); 
+if(count($client) > 1): ?>
 <td title="<?php echo $des; ?>" >
 <?php htmlout($f['user']); ?></td>
-<?php endif; 
-?>
+<?php elseif(count($client)): ?>
+<td><?php echo $des; ?></td>
+    <?php
+    endif;
+    endif;
+    ?>
 <td title="<?php echo $tel ?>">
 <?php $stamp = html($f["time"]);
 echo date("g:i a F j ", strtotime($stamp)) ;?></td>

@@ -64,6 +64,8 @@ $doOne = doWhen($always($client_id), $always(1));
 $doTwo = doWhen($always(!$client_id), $always(2));
 
 $user_int = array_reduce([$doZero, $doOne, $doTwo], 'reducer');
+$userid = -1;
+$equals = partial(equality(true), $userid);
 
 $name = isset($clientname) ? $clientname : $username;
 $where = ' WHERE TRUE';
