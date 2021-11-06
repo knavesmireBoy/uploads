@@ -4,13 +4,13 @@
 <head>
 	<meta content="text/html; charset=utf-8" http-equiv="content-type">
 	<link href="../css/lofi.css" media="all" rel="stylesheet" type="text/css">
-	<link href="../css/sap.css" media="all" rel="stylesheet" type="text/css">
 	<title>Manage Users</title>
 </head>
 <body>
 	<div>
 		<h1><?php echo $data['manage']; ?></h1>
-        <?php if(isset($data['client'])): ?><!-- A flag, clients forego select page which includes an "add user link" so we put that here for them-->
+        <!-- A flag, clients forego select page which includes an "add user link" so we put that here for them-->
+        <?php if(isset($data['client'])): ?>
         <p><a href="?add">Add New User</a></p>
         <?php endif; ?>
 		<?php if(isset($data['users'])): foreach ($data['users'] as $k => $v): ?>

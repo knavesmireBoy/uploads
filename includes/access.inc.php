@@ -94,10 +94,10 @@ function email($em, $id)
 }
 
 function validateAccess(){
-$roleplay = userHasWhatRole();
-if (!in_array($roleplay['roleid'], func_get_args()))
+    $roleplay = userHasWhatRole();
+    if(!in_array($roleplay['roleid'], func_get_args()))
 {
-	$error = 'Only Account Administrators may access this page!!';
+	$error = 'Only Account Administrators may access this page!';
 	include '../templates/accessdenied.html.php';
 	exit();
 }

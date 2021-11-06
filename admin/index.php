@@ -17,9 +17,24 @@ if (!userIsLoggedIn())
 }
 
 $roleplay = validateAccess('Admin', 'Client');
+$domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
 
 $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
+
+$isPriv = partial('equals', 'Admin', $priv);
+$isClient = partial('equals', 'Client', $priv);
+
+$notPriv = negate($isPriv);
+
+$clientdetails = getClientName($db, $domain, "{$_SESSION['email']}");
+$clientname = $clientdetails['name'];
+$client_id = $clientdetails['id'];
+$client_domain = $clientdetails['domain'];
+
+$username = getUserName($db, "{$_SESSION['email']}");
+$admin_status = asAdmin($priv, $clientname);
+$isSingleUser = partial('array_reduce', [$isClient, negate(partial('iSet', $clientname))], 'every', true);
 
 $single;
 
@@ -27,7 +42,6 @@ if(!isset($priv)){
     exit();
 }
 
-$domain = "RIGHT(user.email, LENGTH(user.email) - LOCATE('@', user.email))";
 $isAdmin = partial('equals', $priv, 'Admin');
 $testPriv = getBestArgs($isAdmin)('chooseAdmin', 'chooseClient');
 $manage = $isAdmin() ? 'Manage User' : 'Edit Details';
@@ -57,6 +71,7 @@ if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'Choose' && isset($_REQUEST[
 {
     $domain = strrpos($key, "@") ? " user.email" : $domain;
     $data = $testPriv($db, $key, $_REQUEST['user'], $domain);
+    setcookie('extent', count($data['users']));
     include 'edit_users.html.php';
     exit();
     
@@ -149,6 +164,16 @@ if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || isset($pwderro
     $res = doQuery($link, "SELECT client_id FROM user WHERE id = $id", "Error retrieving client id from user!");
 	$row = goFetch($res);
 	$job = $row['client_id']; //selects client in drop down menu
+    $extent = $_COOKIE['extent'];
+    $data = array();
+    if(isset($extent) && $extent > 1){
+        $data['ret'] = '.';
+        $data['page'] = 'list';
+    }
+    else {
+        $data['ret'] = '..';
+        $data['page'] = 'Uploads';
+    }
 	include 'form.html.php';
 	exit();
 } //edit
@@ -168,6 +193,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
     exit();
 } //DELETE
 
+
 include $db;
 
 if ($priv == "Admin")
@@ -177,6 +203,11 @@ if ($priv == "Admin")
     $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id WHERE client.domain IS NULL ORDER BY name"; 
     $res = doQuery($link, $sql, 'Database error fetching user list.');
     $users = doProcess($res, 'id', 'name');
+    $userid = -1;
+    $equals = partial(equality(true), $userid);
+    $doSelected = $compose('optionOpenTag', curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
+    $doOpt = getBestArgs(negate(partial('isEmpty', $users)))('optGroupOpen', $always(""));
+    $doOptEnd = getBestArgs(negate(partial('isEmpty', $users)))('optGroupClose', $always(""));
     include 'select_users.html.php';
 }
 else {
