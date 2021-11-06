@@ -117,6 +117,18 @@ if (isset($_GET['add']))
     
     $res = doQuery($link, "SELECT id, name FROM client ORDER BY name", "Error retrieving clients from database!");
     $clientlist = doProcess($res, 'id', 'name');//for assigning to client
+    
+    $extent = $_COOKIE['extent'];
+    $data = array();
+    if(isset($extent) && $extent > 1){
+        $data['ret'] = '.';
+        $data['page'] = 'list';
+    }
+    else {
+        $data['ret'] = '..';
+        $data['page'] = 'Uploads';
+    }
+    
 	include 'form.html.php';
 	exit();
 }

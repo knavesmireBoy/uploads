@@ -24,10 +24,6 @@ function uploadedfile($arg)
 {
     return $_FILES['upload'][$arg];
 }
-function isTreble($q)
-{
-    return substr($q, -4, 1) === '=';
-}
 
 function notToggled($q){
     return substr($q,-2, 1) != substr($q,-1, 1);
@@ -634,7 +630,7 @@ function getClientName($db, $domain, $email){
      include $db;
     if(isset($email)){
         $key = doSanitize($link, $email);
-       $res = doQuery($link, "SELECT client.name, client.id, client.domain FROM client INNER JOIN user ON $domain = client.domain WHERE user.email='$email'", 'Db error retrieving client name'); 
+       $res = doQuery($link, "SELECT client.name, client.id, client.domain FROM client INNER JOIN user ON $domain = client.domain WHERE user.email='$email' ", 'Db error retrieving client name'); 
     }
     else {
         $key = doSanitize($link, $domain);

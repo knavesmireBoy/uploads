@@ -8,7 +8,7 @@ if (!userIsLoggedIn())
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/login.html.php';
     exit();
 }
-$roleplay = validateAccess('Admin', 'Client');
+$roleplay = validateAccess('Admin');
 $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';

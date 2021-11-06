@@ -31,6 +31,9 @@
                 </ul>
             </form>
             <p><a href="..">Return to uploads</a></p>
+            <?php if($isAdmin()) { ?>
+            <p><a href="../clients/">Edit Clients</a></p>
+            <?php } ?>
         </div>
     </body>
 </html>
