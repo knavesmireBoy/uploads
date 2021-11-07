@@ -72,7 +72,7 @@ if (isset($_REQUEST['swap']))
 
 ///////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
 ///Present list of users for administrators
-$vars = getUserList($db, $domain, $user_int, $clientname);
+$vars = populateList($db, $domain, $user_int, $clientname);
 foreach ($vars as $k => $v) { ${$k} = $v; }
 //$users and $client required at this point
 if(isset($_GET['find'])){

@@ -11,6 +11,7 @@ $span = 2;
         <tr><td><label for="uploadfiles">Upload File:</label></td><td><input id="uploadfiles" type="file" name="upload"/></td></tr>
         <tr><td><label for="desc">File Description: </label></td><td><input id="desc" type="text" name="desc" maxlength="255"/></td></tr>
 <?php
+    
     if($isPriv() || $isTrueClient()) : ?>
 <tr><td><label for="user">User:</label></td><td>
 <select id="user" name="user">

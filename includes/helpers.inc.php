@@ -25,10 +25,6 @@ function uploadedfile($arg)
     return $_FILES['upload'][$arg];
 }
 
-function notToggled($q){
-    return substr($q,-2, 1) != substr($q,-1, 1);
-}
-
 function resetQuery($query_str, $str = ''){
     $query_str = explode('sort=', $query_str)[0];
     ///$query_str = preg_split('/&?sort=/', $query_str)[0];
@@ -42,113 +38,6 @@ function isDouble($q)
     return substr($q, -3, 1) === '=';
 }
 
-function isSingle($q)
-{
-    return substr($q, -2, 1) === '=';
-}
-
-function isSubList($q)
-{
-    return substr($q, -2, 1) !== substr($q, -1, 1);
-}
-
-function getToggle($arr)
-{
-    return function ($i) use ($arr)
-    {
-        return isset($i) ? $arr[$i] : $arr;
-    };
-}
-
-if (!function_exists("GetSQLValueString"))
-{
-    function GetSQLValueString($theValue, $theType, $theDefinedValue = "", $theNotDefinedValue = "")
-    {
-        if (PHP_VERSION < 6)
-        {
-            $theValue = get_magic_quotes_gpc() ? stripslashes($theValue) : $theValue;
-        }
-
-        $theValue = function_exists("mysql_real_escape_string") ? mysql_real_escape_string($theValue) : mysql_escape_string($theValue);
-
-        switch ($theType)
-        {
-            case "text":
-                $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL";
-            break;
-            case "long":
-            case "int":
-                $theValue = ($theValue != "") ? intval($theValue) : "NULL";
-            break;
-            case "double":
-                $theValue = ($theValue != "") ? doubleval($theValue) : "NULL";
-            break;
-            case "date":
-                $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL";
-            break;
-            case "defined":
-                $theValue = ($theValue != "") ? $theDefinedValue : $theNotDefinedValue;
-            break;
-        }
-        return $theValue;
-    }
-}
-
-function bbcode2html($text)
-{
-    $text = html($text); // [B]old
-    $text = preg_replace('/\[B](.+?)\[\/B]/i', '<strong>$1</strong>', $text);
-    // [I]talic
-    $text = preg_replace('/\[I](.+?)\[\/I]/i', '<em>$1</em>', $text);
-    // Convert Windows (\r\n) to Unix (\n)
-    $text = str_replace("\r\n", "\n", $text);
-    // Convert Macintosh (\r) to Unix (\n)
-    $text = str_replace("\r", "\n", $text);
-    // Paragraphs
-    $text = '<p>' . str_replace("\n\n", '</p><p>', $text) . '</p>';
-    // Line breaks
-    $text = str_replace("\n", '<br/>', $text);
-    // [URL]link[/URL]
-    $text = preg_replace('/\[URL]([-a-z0-9._~:\/?#@!$&\'()*+,;=%]+)\[\/URL]/i', '<a href="$1">$1</a>', $text);
-    // [URL=url]link[/URL]
-    $text = preg_replace('/\[URL=([-a-z0-9._~:\/?#@!$&\'()*+,;=%]+)](.+?)\[\/URL]/i', '<a href="$1">$2</a>', $text);
-    return $text;
-}
-function bbcodeout($text)
-{
-    echo bbcode2html($text);
-}
-/*
-function html($text)
-{
-    return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-}
-
-function htmlout($text)
-{
-    echo html($text);
-}
-*/
-function add_querystring_var($url, $key, $value)
-{
-    $url = preg_replace('/(.*)(\?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
-    $url = substr($url, 0, -1);
-    if (strpos($url, '?') === false)
-    {
-        return ($url . '?' . $key . '=' . $value);
-    }
-    else
-    {
-        return ($url . '&' . $key . '=' . $value);
-    }
-}
-
-function remove_querystring_var($url, $key)
-{
-    $url = preg_replace('/(.*)(\?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
-    $url = substr($url, 0, -1);
-    return ($url);
-}
 function doSanitize($lnk, $arg)
 {
     return mysqli_real_escape_string($lnk, $arg);
@@ -223,10 +112,6 @@ function formatFileSize($size)
     return ceil($size) . 'kb';
 }
 
-function idFromEmail($email){
-    return " SELECT user.id FROM user WHERE user.email = '$email'";
-}
-
 function getBaseSelect()
 {
     return "SELECT upload.id, filename, mimetype, description, filepath, file, size, time,  MID(file, 11, 14) AS origin, user.email";
@@ -241,11 +126,6 @@ function getBaseOrder($o, $s, $d)
     return " ORDER BY $o LIMIT $s, $d";
     //return " ORDER BY $o ";
     
-}
-
-function concatString($str, $opt = '')
-{
-    return $str .= $opt;
 }
 
 function getFileTypeQuery($where, $ext)
@@ -269,21 +149,6 @@ function fileCountByUser($user, $domain) {
     return " INNER JOIN client ON $domain = client.domain WHERE client.domain = '$user'";
 }
 
-function getIdTypeQuery($where, $user, $domain){
-    if (isset($user) && !empty($user) && !is_numeric($user)) {
-        return $where .= " AND $domain = '$user'";
-    }
-    elseif (isset($user) && !empty($user) && is_numeric($user)) { 
-        return $where .= " AND user.id = $user";
-    }
-    return $where;
-}
-
-function getClientType($user){
-    $user = (isset($user) && !empty($user)) ? true : false;
-    return is_numeric($user) ? 'USER' : 'CLIENT';
-}
-
 function getColleagues($id, $dom)
 {
     return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id = $id ORDER BY name";
@@ -293,17 +158,17 @@ function getColleaguesExtent($id, $dom)
 {
     return "SELECT employer.id, employer.name, COUNT(employer.id) AS extent FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id = $id GROUP BY employer.id ORDER BY name";
 }
-*/
-function getColleaguesFromName($domain, $name)
-{
-    return "SELECT user.id, user.name FROM user INNER JOIN client ON $domain = client.domain WHERE client.name = '$name' ORDER BY name";
-}
 function getColleagues3($id)
 {
     return "SELECT user.id, user.name FROM user INNER JOIN (SELECT tgt.client_id FROM user 
 INNER JOIN upload ON user.id = upload.userid 
 INNER JOIN (SELECT user.client_id FROM user INNER JOIN upload ON user.id = upload.userid  WHERE upload.id = $id)  AS tgt 
 ON user.client_id  =  tgt.client_id LIMIT 1)  AS client ON client.client_id = user.client_id ORDER BY name";
+}
+*/
+function getColleaguesFromName($domain, $name)
+{
+    return "SELECT user.id, user.name FROM user INNER JOIN client ON $domain = client.domain WHERE client.name = '$name' ORDER BY name";
 }
 
 function doGetColleagues($link, $id, $domain){
@@ -340,7 +205,6 @@ function doEmail($link, $id)
         $body = 'We have just uploaded the file' . $file . 'for checking.';
         $body = wordwrap($body, 70);
         //mail($email, $file, $body, "From: $name <{$_SESSION['email']}>");
-        
     }
 }
 
@@ -375,30 +239,6 @@ function getInitialKey($conn, $privilege, $user, $dom)
         return $key;
     }
     return null;
-}
-
-function doFind($db, $key, $domain)
-{
-    $email = "{$_SESSION['email']}";
-    include $db;
-    $sql = "SELECT $domain FROM user WHERE user.email='$email'";
-    $result = doQuery($link, $sql, 'Error selecting client domain');
-    $row = goFetch($result);
-    $dom = $row[0];
-    $sql = "SELECT COUNT(*) AS dom FROM user INNER JOIN client ON $domain = client.domain WHERE $domain = '$dom' AND client.domain =' $dom'";
-    $result = doQuery($link, $sql, 'Error getting file count');
-    $row = goFetch($result);
-    $where = $row['dom'] > 0 ? " WHERE user.email='$email'" : " WHERE user.id=$key"; //user
-    $sql = "SELECT employer.id, employer.name  FROM user INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer ON $domain = employer.domain $where";
-    $result = doQuery($link, $sql, 'Database error fetching clients.');
-    $users = array(); //resets user array to display users of current client
-    $users = doProcess($result, 'id', 'name');
-    if ($row['dom'] <= 1)
-    { //SELECT MENU in SEARCH for only more than one "employee"
-        $users = array();
-        $zero = true;
-    }
-    $client = array();
 }
 
 function calculatePages($db, $display, $sql){
@@ -585,7 +425,7 @@ function doSelected($pred){
     return '';
 }
 
-function getUserList($db, $domain, $user_int, $clientname){
+function populateList($db, $domain, $user_int, $clientname){
     include $db;
     $sql = "SELECT user.id, user.name FROM user LEFT JOIN client ON user.client_id = client.id";
     $users = array();
@@ -625,7 +465,7 @@ function doUpdate($db)
     header('Location: . ');
     exit();
 }
-function getClientName($db, $domain, $email){
+function getClientNameFromEmail($db, $domain, $email){
     //bit confusing as $domain can either be a mysql formula to extract a portion of an email OR that actual portion
      include $db;
     if(isset($email)){
@@ -639,11 +479,62 @@ function getClientName($db, $domain, $email){
     return goFetch($res, MYSQLI_ASSOC);
 }
 
-function getUserName($db, $email){
+function getNameFromEmail($db, $email){
      include $db;
 	$key = doSanitize($link, $email);
     $res = doQuery($link, "SELECT user.name from user WHERE user.email='$email'", 'Db error retrieving user name');
     return goFetch($res)[0];
+}
+
+function userDetailsFromDomain($db, $key, $domain){
+    include $db;
+    $sql = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
+    $res = doQuery($link, $sql, 'Database error fetching users.');
+    return doProcess($res, 'user_id', 'user_name');
+}
+
+function testDomain($db, $key){
+    include $db;
+	$key = doSanitize($link, $key);
+	$res = doQuery($link, "SELECT domain, name FROM client WHERE domain = '$key' ", 'Database error fetching clients.');
+	return goFetch($res);
+}
+
+function getUserNameFromID($db, $key){
+        include $db;
+        $res = doQuery($link, "SELECT id, name FROM user where id ='$key' ORDER BY name", "Error retrieving users from the database!");
+        return doProcess($res, 'id', 'name');
+}
+
+function chooseAdmin($db, $key, $user, $domain){
+	$row = testDomain($db,  $user);
+    $client = null;
+    include $db;
+	if (isset($row))
+	{
+        $c = getClientNameFromEmail($db, $user, null)['name'];
+        $manage = "Manage users of $c";
+        $users = userDetailsFromDomain($db, $user, $domain);
+	}
+    else {
+        $manage = "Edit details";
+        $users = getUserNameFromID($db, $user);
+    }
+    return array('users' => $users, 'manage' => $manage, 'ret' => '.', 'page' => 'list', 'client' => $client);
+}
+
+function chooseClient($db, $key, $user, $domain){
+    include $db;
+    $client = null;
+    $user = domainFromUserID($link, $key);//list of members
+    if($user){
+        $users = userDetailsFromDomain($db, $user, $domain);
+        $client = true;
+    }
+    else {
+        $users = getUserNameFromID($db, $key);
+    }
+    return array('users' => $users, 'manage' => 'Edit Details', 'ret' => '..', 'page' => 'uploads', 'client' => $client);
 }
 
 function asAdmin($p, $clientname){

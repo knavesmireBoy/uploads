@@ -50,12 +50,12 @@ $prepareUserList = doWhen($isPriv, partial('prepUpdateUser'));
 //doWhen expects an argument
 $doDelete(null);
 $doUpdate(null);
-$clientdetails = getClientName($db, $domain, "{$_SESSION['email']}");
+$clientdetails = getClientNameFromEmail($db, $domain, "{$_SESSION['email']}");
 $clientname = $clientdetails['name'];
 $client_id = $clientdetails['id'];
 $client_domain = $clientdetails['domain'];
 
-$username = getUserName($db, "{$_SESSION['email']}");
+$username = getNameFromEmail($db, "{$_SESSION['email']}");
 
 $isSingleUser = partial('equals', 'Client', $priv);
 
