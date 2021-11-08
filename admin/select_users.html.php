@@ -1,4 +1,3 @@
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php'; ?>
 <!DOCTYPE html>
 <html>
     <head>

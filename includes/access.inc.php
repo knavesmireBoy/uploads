@@ -2,32 +2,20 @@
 function databaseContainsUser($email, $password)
 {
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-    $email = mysqli_real_escape_string($link, $email);
-    $password = mysqli_real_escape_string($link, $password);
-    $sql = "SELECT COUNT(*) FROM user INNER JOIN userrole ON user.id=userrole.userid WHERE email='$email' AND password='$password' ";
-    $result = mysqli_query($link, $sql);
-    if (!$result)
-    {
-        $error = 'Error searching for user.';
-        include 'error.html.php';
-        exit();
-    }
-    $row = mysqli_fetch_array($result);
-    if ($row[0] > 0)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    $email = doSanitize($link, $email);
+    $password = doSanitize($link, $password);
+    $sql = "SELECT COUNT(*) FROM user INNER JOIN userrole ON user.id = userrole.userid WHERE email='$email' AND password='$password' ";
+    $result = doQuery($link, $sql, 'Error searching for user.');
+    $row = goFetch($result);
+    return ($row[0] > 0) ? true : false;
 }
 
 function userIsLoggedIn()
 {
-    if (isset($_POST['action']) and $_POST['action'] == 'login')
+    
+    if (isset($_POST['action']) &&  $_POST['action'] == 'login')
     {
-        if (!isset($_POST['email']) or $_POST['email'] == '' or !isset($_POST['password']) or $_POST['password'] == '')
+        if (!isset($_POST['email']) || $_POST['email'] == '' || !isset($_POST['password']) or $_POST['password'] == '')
         {
             $GLOBALS['loginError'] = 'Please fill in both fields';
             return false;
@@ -37,17 +25,15 @@ function userIsLoggedIn()
         if (databaseContainsUser($_POST['email'], $password))
         {
             session_start();
-            $_SESSION['loggedIn'] = true;
-            $_SESSION['email'] = $_POST['email'];
-            $_SESSION['password'] = $password;
+            $keys = array('loggedIn', 'email', 'password');
+            $values = array(true, $_POST['email'], $password);
+            array_map('setSessionBridge', array(array_combine($keys, $values)));
             return true;
         }
         else
         {
             session_start();
-            unset($_SESSION['loggedIn']);
-            unset($_SESSION['email']);
-            unset($_SESSION['password']);
+            array_map('unsetSession', array('loggedIn', 'email', 'password'));
             $GLOBALS['loginError'] = 'The specified email address or password was incorrect.';
             return false;
         }
@@ -55,9 +41,7 @@ function userIsLoggedIn()
     if (isset($_POST['action']) and $_POST['action'] == 'logout')
     {
         session_start();
-        unset($_SESSION['loggedIn']);
-        unset($_SESSION['email']);
-        unset($_SESSION['password']);
+        array_map('unsetSession', array('loggedIn', 'email', 'password'));
         header("Location: " . $_POST['goto']);
         exit();
     } //end of logout
@@ -67,7 +51,6 @@ function userIsLoggedIn()
         return databaseContainsUser($_SESSION['email'], $_SESSION['password']);
     }
 } // end of user check
-
 
 function userHasWhatRole()
 {
@@ -79,15 +62,6 @@ function userHasWhatRole()
     $row = goFetch($result, MYSQLI_ASSOC);
     return $row['total'] > 0 ? $row : false;
 }
-/*
-function email($em, $id) {
-$email = html($em);
-$body = "Before I answer that question, lets look at the alternative method your printer is suggesting. In InDesign and all the Creative Suite applications, it s easy to create a PostScript file from the Print dialog box. Just select PostScript from the Printer menu at the top of the dialog box. Then you can choose a PPD file (I d suggest selecting your Adobe PDF printer if you have Acrobat) or Device Independent (removing any printer dependencies, useful for some postprocessing workflows like imposition). Make your choices in the Print dialog box, and then click Save instead of Print to create a PostScript file. You process that PostScript file in Distiller using the PDF settings file your printer suggests.";
-$body = wordwrap($body, 70);
-return mail($email, 'File upload complete', $body, "From: {$_SESSION['email']}");
-}
-*/
-
 function email($em, $id)
 {
     echo $em;
@@ -103,5 +77,3 @@ function validateAccess(){
 }
 return $roleplay;
 }
-
-?>

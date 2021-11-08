@@ -1,4 +1,3 @@
-<?php include_once $_SERVER['DOCUMENT_ROOT'].'/uploads/includes/helpers.inc.php'; ?>
 <h1>Search Files</h1>
 <form action="?" method="get" name="searchFiles">
     <p>View files satisfying the following criteria:</p>
@@ -36,5 +35,4 @@
 	
 </form>
 <p><a href=".">Return</a></p>
-</body>
-</html>
+<?php echo '</body></html>';

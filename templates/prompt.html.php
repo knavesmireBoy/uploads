@@ -1,5 +1,4 @@
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
-
+<?php
 $confirmed = ($call === 'confirmed') ? 'confirmed' : '';
 if(!isset($prompt)){
     $prompt = ($call === 'confirm') ? "Choose <b>yes</b> for deletion options and <b>no</b> for editing options" : "Select the extent of deletions";
