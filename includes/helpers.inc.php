@@ -213,7 +213,7 @@ function getInitialKey($conn, $privilege, $user, $dom)
 
     function assignInitialUser($id, $dom)
     {
-        return "SELECT employer.name, employer.id FROM (SELECT user.name, user.id, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer WHERE employer.domain='$id' LIMIT 1";
+        return "SELECT employer.name, employer.id FROM (SELECT user.name, user.id, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer WHERE employer.domain = '$id' LIMIT 1";
     }
 
     if (/*$privilege == 'Admin' and*/ !empty($user))
@@ -558,3 +558,4 @@ elseif(!isset($pages))
 } //end of IF NOT PAGES SET
     return $pages;
 }
+$doFile = curry3('concatCB')('f');

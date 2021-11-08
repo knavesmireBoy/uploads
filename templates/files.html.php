@@ -11,7 +11,6 @@ $span = 2;
         <tr><td><label for="uploadfiles">Upload File:</label></td><td><input id="uploadfiles" type="file" name="upload"/></td></tr>
         <tr><td><label for="desc">File Description: </label></td><td><input id="desc" type="text" name="desc" maxlength="255"/></td></tr>
 <?php
-    
     if($isPriv() || $isTrueClient()) : ?>
 <tr><td><label for="user">User:</label></td><td>
 <select id="user" name="user">
@@ -34,15 +33,16 @@ $span = 2;
 <tr><td><input type="submit" value="Upload"/></td><td>&nbsp;</td></tr></table>
 </form>
 	<?php endif; //Browser
+$qry = $query_string . $sort;
 if (count($files) > 0): ?>
 <p>The following files are stored in the database:</p>
 <table>
     <thead>
         <tr>
-            <th><a href="<?php echo $query_string . $sort . 'f'; ?>">File name</a></th>
-            <?php $choice = isset($admin_status) && count($client) > 1 ? 'User' : 'Description'  ?>
-            <th><a href="<?php echo $query_string . $sort . 'u'; ?>"><?php echo $choice; ?></a></th>
-            <th><a href="<?php echo $query_string . $sort . 't'; ?>">Time</a></th>
+            <th><a href="<?php echo $qry . 'f'; ?>">File name</a></th>
+            <?php $choice = isset($admin_status) && count($client) > 1 ? 'User' : 'Description'; ?>
+            <th><a href="<?php echo $qry . 'u'; ?>"><?php echo $choice; ?></a></th>
+            <th><a href="<?php echo $qry . 't'; ?>">Time</a></th>
             <?php $span = ($nonBrowser() ? '2' : '1')  ?>
             <th colspan="<?php echo($span) ?>" class="control">Control<?php ?></th>
         </tr>

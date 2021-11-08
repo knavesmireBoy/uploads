@@ -27,12 +27,12 @@ $isClient = partial('equals', 'Client', $priv);
 
 $notPriv = negate($isPriv);
 
-$clientdetails = getClientName($db, $domain, "{$_SESSION['email']}");
+$clientdetails = getClientNameFromEmail($db, $domain, "{$_SESSION['email']}");
 $clientname = $clientdetails['name'];
 $client_id = $clientdetails['id'];
 $client_domain = $clientdetails['domain'];
 
-$username = getUserName($db, "{$_SESSION['email']}");
+$username = getNameFromEmail($db, "{$_SESSION['email']}");
 $admin_status = asAdmin($priv, $clientname);
 $isSingleUser = partial('array_reduce', [$isClient, negate(partial('iSet', $clientname))], 'every', true);
 
@@ -217,7 +217,7 @@ if ($priv == "Admin")
     $users = doProcess($res, 'id', 'name');
     $userid = -1;
     $equals = partial(equality(true), $userid);
-    $doSelected = $compose('optionOpenTag', curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
+    $doSelected = $compose(partial('completeTag', 'option', 'value'), curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
     $doOpt = getBestArgs(negate(partial('isEmpty', $users)))('optGroupOpen', $always(""));
     $doOptEnd = getBestArgs(negate(partial('isEmpty', $users)))('optGroupClose', $always(""));
     include 'select_users.html.php';

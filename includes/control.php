@@ -152,7 +152,8 @@ while ($row = mysqli_fetch_array($result))
     );
 }
 
-$doSelected = $compose('optionOpenTag', curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
+//$doSelected = $compose('optionOpenTag', curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
+$doSelected = $compose(partial('completeTag', 'option', 'value'), curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
 $doOpt = getBestArgs(negate(partial('isEmpty', $users)))('optGroupOpen', $always(""));
 $doOptEnd = getBestArgs(negate(partial('isEmpty', $users)))('optGroupClose', $always(""));
 $isTrueClient = partial('array_reduce', [$isClient, $compose(partial('count', $client), curry2('greaterThan')(1))], 'every', true);
