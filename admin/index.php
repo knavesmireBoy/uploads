@@ -67,18 +67,19 @@ if (isset($_GET['editform']))
     $isName = $f('/^[\w.]{2,20}\s[\w]{2,20}$/');//need to fix number of ags in callback
     $eq = equality(true);
     $msgs = array();
-    $is_empty = $always('This is a required field');
-    $is_name = $always('Please supply name in expected format');
+    $is_empty = $always('name;This is a required field');
+    $is_name = $always('name;Please supply name in expected format');
     $push = function(&$grp){
-        return function($v) use(&$grp) {
-            $grp[] = $v;
+        return function($v) use (&$grp) {
+            $res = explode(';', $v);
+            $grp[$res[0]] = $res[1];
     };
     };
     $pusher = $push($msgs);
     $dopush = curry2($compose)($pusher);
     $beEmpty = array('isEmpty', $dopush($is_empty));
     $beBadName = array($isName, $dopush($is_name));
-    $cbs = array('name' => array($beEmpty, $beBadName));    
+    $cbs = array('name' => array($beBadName, $beEmpty));    
     $once = getBestArgs(doOne())($always('danger'), $always('warning'));
     $walk = function($grp) {
         foreach ($grp as $k => $gang){
