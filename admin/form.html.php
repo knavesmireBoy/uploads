@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<?php $error = isset($_GET['error']) ? $_GET['error'] : ''; ?>
 <html lang="en">
     <head>
         <meta charset="utf-8" />
@@ -10,7 +11,7 @@
     <body><div>
         <h1><?php htmlout($pagetitle); ?></h1>
         <form action="?<?php htmlout($action); ?>" method="post" name="usersform" class="editclient">
-            <fieldset class="<?php echo $doWarning(); ?>"><legend><?php echo $warning; ?></legend></fieldset>
+            <fieldset class=""><legend><?php echo $error; ?></legend></fieldset>
             <ul>
                 <li>
                     <label for="name">Name:</label><input id="name" name="name" value="<?php htmlout($name); ?>" size="32"/></li>

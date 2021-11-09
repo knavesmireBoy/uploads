@@ -62,36 +62,44 @@ if (isset($_GET['addform']))
 
 if (isset($_GET['editform']))
 {
-    
-    /*
-    $cb = function (&$item, $i) {
-        $item = isset($item[1]) && andNotEmpty($item[1], $i);
-};
-*/
-    
+    $warning = "Please supply a valid email address innit";
+    $isName = negate(curryLeft2('preg_match'))('/^[\w.]{2,20}\s[\w]{2,20}$/');
     $eq = equality(true);
     $msgs = array();
-    $isEmpty = $always('This is a required field');
+    $is_empty = $always('This is a required field');
+    $is_name = $always('Please supply name in expected format');
     $push = function(&$grp){
-        return function($arg) use(&$grp) {
-            $grp[] = $arg;
+        return function($v) use(&$grp) {
+            dump($v);
+            $grp[] = $v;
     };
     };
     $pusher = $push($msgs);
-    $cbs = array('name' => array('isEmpty', $compose($isEmpty, $pusher)));
-    //$cbs = array('name' => array('isEmpty', $always('fra')));
-    
+    $dopush = curry2($compose)($pusher);
+    $beEmpty = array('isEmpty', $dopush($is_empty));
+    $beBadName = array($isName, $dopush($is_name));
+    $cbs = array('name' => array($beEmpty));    
     $once = getBestArgs(doOne())($always('danger'), $always('warning'));
     $walk = function($grp) {
-        array_walk($grp, function($v, $k) use($grp) {
-            call_user_func_array('doWhen', $v)($_POST["$k"]);
-                 });
+        foreach ($grp as $k => $gang){
+            foreach($gang as $pair){
+                call_user_func_array('doWhen', $pair)($_POST["$k"]); 
+            }
+        }
     };
-                 
     $walk($cbs);
-   dump($msgs);
-    $warning = "Please supply a valid email address innit";
-    updateUser($db, $priv);
+    dump([$msgs]);
+    if(empty($msgs)){
+      updateUser($db, $priv);  
+    }
+    else {
+        $warning = $msgs[0];
+        $doWarning = getBestArgs($always($warning))($always('warning'), $always(''));
+        $id = $_POST['id'];
+        //$location = "?id=$id&error=true&name=";
+        doExit($location);
+    }
+    
 }
 
 if (isset($_POST['confirm']))
@@ -167,7 +175,7 @@ if (isset($_GET['add']))
 }
 
 
-if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || isset($pwderror))
+if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || isset($pwderror) || isset($_GET['error']))
 {
     $pagetitle = 'Edit User';
 	$action = 'editform';
