@@ -63,14 +63,14 @@ if (isset($_GET['addform']))
 if (isset($_GET['editform']))
 {
     $warning = "Please supply a valid email address innit";
-    $isName = negate(curryLeft2('preg_match'))('/^[\w.]{2,20}\s[\w]{2,20}$/');
+    $f = curryLeft2('preg_match', true);
+    $isName = $f('/^[\w.]{2,20}\s[\w]{2,20}$/');//need to fix number of ags in callback
     $eq = equality(true);
     $msgs = array();
     $is_empty = $always('This is a required field');
     $is_name = $always('Please supply name in expected format');
     $push = function(&$grp){
         return function($v) use(&$grp) {
-            dump($v);
             $grp[] = $v;
     };
     };
@@ -78,7 +78,7 @@ if (isset($_GET['editform']))
     $dopush = curry2($compose)($pusher);
     $beEmpty = array('isEmpty', $dopush($is_empty));
     $beBadName = array($isName, $dopush($is_name));
-    $cbs = array('name' => array($beEmpty));    
+    $cbs = array('name' => array($beEmpty, $beBadName));    
     $once = getBestArgs(doOne())($always('danger'), $always('warning'));
     $walk = function($grp) {
         foreach ($grp as $k => $gang){
