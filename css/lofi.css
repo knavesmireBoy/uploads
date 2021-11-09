@@ -204,3 +204,14 @@ h1.manager a {
 h1.browser a{
     color: slategray;
 }
+
+.editclient fieldset {
+    position: absolute;
+    left: -9999px;
+}
+
+fieldset.warning {
+    border: solid 1px red;
+    position: relative;
+    left: 0;
+}

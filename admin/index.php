@@ -10,6 +10,10 @@ $id = '';
 $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 $manage = "Manage User";
 
+//$doWarning = doWhen($always(true), $always('warning'));
+$doWarning = getBestArgs($always(true))($always('warning'), $always(''));
+$warning = '';
+
 if (!userIsLoggedIn())
 {
 	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/login.html.php';
@@ -58,6 +62,35 @@ if (isset($_GET['addform']))
 
 if (isset($_GET['editform']))
 {
+    
+    /*
+    $cb = function (&$item, $i) {
+        $item = isset($item[1]) && andNotEmpty($item[1], $i);
+};
+*/
+    
+    $eq = equality(true);
+    $msgs = array();
+    $isEmpty = $always('This is a required field');
+    $push = function(&$grp){
+        return function($arg) use(&$grp) {
+            $grp[] = $arg;
+    };
+    };
+    $pusher = $push($msgs);
+    $cbs = array('name' => array('isEmpty', $compose($isEmpty, $pusher)));
+    //$cbs = array('name' => array('isEmpty', $always('fra')));
+    
+    $once = getBestArgs(doOne())($always('danger'), $always('warning'));
+    $walk = function($grp) {
+        array_walk($grp, function($v, $k) use($grp) {
+            call_user_func_array('doWhen', $v)($_POST["$k"]);
+                 });
+    };
+                 
+    $walk($cbs);
+   dump($msgs);
+    $warning = "Please supply a valid email address innit";
     updateUser($db, $priv);
 }
 
@@ -229,3 +262,4 @@ else {
     $id = $row['id'];
     doExit("?act=Choose&user=$id");//bypass drop down for non-admin users
 }
+
