@@ -12,6 +12,7 @@ $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 $id = '';
 $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 $manage = "Manage User";
+setcookie('eemail', "", time() -1, "/");
 
 //$doWarning = doWhen($always(true), $always('warning'));
 $doWarning = getBestArgs($always(true))($always('warning'), $always(''));
@@ -62,12 +63,12 @@ $pwderror = 'Password must contain at least 5 characters';
 
 if (isset($_GET['addform']))
 {
-	addUser($db);
+    validateUser($db, null);
 }
 
 if (isset($_GET['editform']))
 {
-    validateUser($db, $priv);
+    validateUser($db, $priv, 'edit');
 }
 
 if (isset($_POST['confirm']))
@@ -86,13 +87,15 @@ if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'Choose' && isset($_REQUEST[
     
 } ///CHOOSE________________________________________________________________________
 
-if (isset($_GET['add']))
+if (isset($_GET['add']) || (isset($_GET['action']) && $_GET['action'] === 'add'))
 {
-	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
+    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 	$pagetitle = 'New User';
 	$action = 'addform';
-	$name = '';
-	$email = '';
+	$name = isset($_GET['name']) ? $_GET['name'] : '';
+	$email = isset($_COOKIE['eemail']) ? $_COOKIE['eemail'] : '!';
+    //setcookie('eemail', "", time() -1);
+    //dump($_COOKIE);
     $cid;
 	$button = 'Add User';
     $roles = array();
@@ -118,12 +121,11 @@ if (isset($_GET['add']))
 	{
 		$id = doSanitize($link, $_POST['employer']);
         $res = doQuery($link, "SELECT id, domain FROM client WHERE id = $id", "Error retrieving clients from database!");
+        $row = goFetch($res);
+        $cid = $row['id'];
+        $email = $row['domain'];
 	}
-    
-	$row = goFetch($res);
-	$cid = $row['id'];
-	$email = $row['domain'];
-    
+        
     $res = doQuery($link, "SELECT id, name FROM client ORDER BY name", "Error retrieving clients from database!");
     $clientlist = doProcess($res, 'id', 'name');//for assigning to client
     
@@ -143,7 +145,7 @@ if (isset($_GET['add']))
 }
 
 
-if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || isset($pwderror) || isset($_GET['error']))
+if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || isset($pwderror) || (isset($_GET['action']) && $_GET['action'] === 'edit'))
 {
     $pagetitle = 'Edit User';
 	$action = 'editform';

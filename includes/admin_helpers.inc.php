@@ -35,7 +35,7 @@ function addUser($db){
 	{
         setPassword($link, $_POST['password'], $id);
 	}
-	if (isset($_POST['employer']) && $_POST['employer'] != '')
+	if (isset($_POST['employer']) && !empty($_POST['employer']))
 	{
         assignClient($link, doSanitize($link, $_POST['employer']), $id, $email);
 	}
@@ -46,17 +46,13 @@ function addUser($db){
 			assignRole($link, $role, $id);
 		}
 	}
+    setcookie('success', 'User succesfully added', time() + 7200, "/");
 	doExit();
 }
 
-
-function post(){
-    dump($_POST);
-}
-
-function validateUser($db, $priv){
-    //dump($_POST);
+function validateUser($db, $priv, $edit = false){
     $msgs = array();
+    $location = '.';
     $f = curryLeft2('preg_match', 'negate');
     //need to fix number of ags in callback otherwise preg_match receives an invalid third argument
     //Actually changed signature, but IF we wanted to curryLeft is the way to go, negate flag (equates to true) to reverse predicate
@@ -89,17 +85,33 @@ function validateUser($db, $priv){
     };
     $walk($cbs);
     if(empty($msgs)){
-        updateUser($db, $priv);  
+        if(!empty($edit)){
+            updateUser($db, $priv);
+        }
+        else {
+            addUser($db);
+        }
     }
     else {
         $error = array_values($msgs)[0];
         $warning = implode(' ', array_keys($msgs));
         $warning .= " warning";
         $warning .= " editclient";
-        $id = $_POST['id'];
-        $location = "?xid=$id&error=$error&warning=$warning";
-        doExit($location);
+        $id = isset($_POST['id']) ? $_POST['id'] : null;
+        $action = !empty($edit) ? 'edit' : 'add';
+        $location = "?xid=$id&action=$action&error=$error&warning=$warning";
+        if($action === 'add'){
+            if(!inString('xname', $warning)){
+                $name = $_POST['name'];
+                $location .= "&name=$name";
+            }
+            if(!inString('xemail', $warning)){
+                $email = $_POST['email'];
+                setcookie('eemail', $email, time() + 7200, '/');
+            }
+        }
     }
+    doExit($location);
 }
 
 function updateUser($db, $priv){
@@ -120,9 +132,8 @@ function updateUser($db, $priv){
         else {
             $pwd = 'fail';
         }
-	}
-
-		$sql = "DELETE FROM userrole WHERE userid='$id'";
+    }
+    $sql = "DELETE FROM userrole WHERE userid='$id'";
         //clear existing before - optionally - re-assigning
         doQuery($link, $sql, 'Error setting user password.', 'Error removing obsolete user role entries.');
 	

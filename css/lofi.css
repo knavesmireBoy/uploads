@@ -224,6 +224,6 @@ fieldset {
     border: solid 1px red;
 }
 
-.xname.xemail #name, .xname.xemail #email {
+.xname.xemail #email {
     border: solid 1px orange;
 }
