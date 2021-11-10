@@ -13,7 +13,6 @@ $id = '';
 $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 $manage = "Manage User";
 setcookie('eemail', "", time() -1, "/");
-
 //$doWarning = doWhen($always(true), $always('warning'));
 $doWarning = getBestArgs($always(true))($always('warning'), $always(''));
 $warning = 'editclient';
