@@ -49,6 +49,53 @@ function addUser($db){
 	doExit();
 }
 
+function validate($db, $priv){
+    $msgs = array();
+    $f = curryLeft2('preg_match', 'negate');
+    //need to fix number of ags in callback otherwise preg_match receives an invalid third argument
+    //Actually changed signature, but IF we wanted to curryLeft is the way to go, negate flag (equates to true) to reverse predicate
+    $isName = $f('/^[\w.]{2,20}(\s[\w]{2,20})?$/');
+    $isEmail = $f('/^[\w][\w.-]+@[\w][\w.-]+\.[A-Za-z]{2,6}$/');
+    
+    $is_empty = $always('xname;NAME is a required field');
+    $is_empty_email = $always('xemail;EMAIL is a required field');
+    $is_name = $always('xname;Please supply name in expected format');
+    $is_email = $always('xemail;Please supply a valid email address');
+    
+    $push = function(&$grp){
+        return function($v) use (&$grp) {
+            $res = explode(';', $v);
+            $grp[$res[0]] = $res[1];
+        };
+    };
+    $dopush = curry2($compose)($push($msgs));
+    $beEmpty = array('isEmpty', $dopush($is_empty));
+    $beEmptyEmail = array('isEmpty', $dopush($is_empty_email));
+    $beBadName = array($isName, $dopush($is_name));
+    $beBadEmail = array($isEmail, $dopush($is_email));
+    $cbs = array('name' => array($beBadName, $beEmpty), 'email' => array($beBadEmail, $beEmptyEmail));    
+    $walk = function($grp) {
+        foreach ($grp as $k => $gang){
+            foreach($gang as $pair){
+                call_user_func_array('doWhen', $pair)($_POST["$k"]); 
+            }
+        }
+    };
+    $walk($cbs);
+    if(empty($msgs)){
+        updateUser($db, $priv);  
+    }
+    else {
+        $error = array_values($msgs)[0];
+        $warning = implode(' ', array_keys($msgs));
+        $warning .= " warning";
+        $warning .= " editclient";
+        $id = $_POST['id'];
+        $location = "?xid=$id&error=$error&warning=$warning";
+        doExit($location);
+    }
+}
+
 function updateUser($db, $priv){
     
     include $db;

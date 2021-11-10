@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <?php
-$error = isset($_GET['error']) ? $_GET['error'] : '';
+$error = isset($_GET['error']) ? $_GET['error'] : $error;
 $warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
 ?>
 <html lang="en">
@@ -15,16 +15,16 @@ $warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
         <h1><?php htmlout($pagetitle); ?></h1>
         <form action="?<?php htmlout($action); ?>" method="post" name="usersform" class="<?php echo $warning; ?>">
             <fieldset><legend><?php echo $error; ?></legend>
-                </fieldset>
+                
             <ul>
                 <li>
                     <label for="name">Name:</label><input id="name" name="name" value="<?php htmlout($name); ?>" size="32" /></li>
-			<li><label for="email">Email:</label><input id="email"  name="email" value="<?php htmlout($email); ?>" size="32"/></li>
+			<li><label for="email">Email:</label><input id="email" placeholder="eg@eg.com" name="email" value="<?php htmlout($email); ?>" size="32"/></li>
                 <?php if(isset($pwderror)) : ?>
                 <li><?php echo $pwderror; endif; ?></li>
                 <li><label for="password">Set password:</label><input id="password" type="password" name="password"/><input type="hidden" name="employer" value="<?php if(isset($cid)) { htmlout($cid); } ?>" size="32"/></li>
             </ul>
-                
+                </fieldset>
             <?php if(!$isSingleUser()) : ?>
             <fieldset>
                 <legend>Roles:</legend> <?php for ($i = 0; $i < count($roles); $i++): ?>

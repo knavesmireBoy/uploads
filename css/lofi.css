@@ -204,22 +204,26 @@ h1.manager a {
 h1.browser a{
     color: slategray;
 }
-
+/*
 .editclient fieldset {
     position: absolute;
     left: -9999px;
 }
-
-.warning fieldset{
+*/
+fieldset {
+   border: solid 1px black;
+    margin: 0 0 1em;
+}
+.warning fieldset:first-child {
     border: solid 1px red;
     position: relative;
     left: 0;
 }
 
 .xname #name, .xemail #email {
-    background-color: red;
+    border: solid 1px red;
 }
 
-.xname #email {
-    background-color: orange;
+.xname.xemail #name, .xname.xemail #email {
+    border: solid 1px orange;
 }

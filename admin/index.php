@@ -13,6 +13,7 @@ $manage = "Manage User";
 //$doWarning = doWhen($always(true), $always('warning'));
 $doWarning = getBestArgs($always(true))($always('warning'), $always(''));
 $warning = 'editclient';
+$error = 'User Details';
 
 if (!userIsLoggedIn())
 {
@@ -69,8 +70,8 @@ if (isset($_GET['editform']))
     $isEmail = curryLeft2('preg_match', 'negate')('/^[\w][\w.-]+@[\w][\w.-]+\.[A-Za-z]{2,6}$/');
     $eq = equality(true);
     $msgs = array();
-    $is_empty = $always('xname;This is a required field');
-    $is_empty_email = $always('xemail;This is a required field');
+    $is_empty = $always('xname;NAME is a required field');
+    $is_empty_email = $always('xemail;EMAIL is a required field');
     $is_name = $always('xname;Please supply name in expected format');
     $is_email = $always('xemail;Please supply a valid email address');
     $push = function(&$grp){
@@ -96,11 +97,10 @@ if (isset($_GET['editform']))
     };
     $walk($cbs);
     if(empty($msgs)){
-      updateUser($db, $priv);  
+       
     }
     else {
         $error = array_values($msgs)[0];
-        
         $messages = array_keys($msgs);
         $warning = implode(' ', $messages);
         $warning .= " warning";
@@ -191,21 +191,38 @@ if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || isset($pwderro
     $pagetitle = 'Edit User';
 	$action = 'editform';
     $button = 'Update User';
-    $name;
-    $email;
+    $name = '!';
+    $email = '!';
     $clientlist;
     $job;
+    $selects = array("SELECT id, name, email ", "SELECT id, name ", "SELECT id, email ");
+    $select = $selects[0];
     $roles = array();
-    $id = isset($_GET['id']) ? $_GET['id'] : $_POST['id'];
-   
-    include $db;
+    $id = isset($_POST['id']) ? $_POST['id'] : null;
+    if(isset($_GET['error'])){
+        $n = strpos($_GET['warning'], 'xname');
+        $e = strpos($_GET['warning'], 'xemail');
+        if(is_int($n) && is_int($e)){
+            $select = null;
+        }
+        elseif(is_int($e)){
+            $select = $selects[1];
+        }
+         elseif(is_int($n)){
+            $select = $selects[2];
+        }
+        $id = $_GET['xid'];
+    }
+   include $db;
+  
+    if($select){
 	$id = doSanitize($link, $id);
-    $res = doQuery($link, "SELECT id, name, email FROM user WHERE id = $id", 'Error fetching user details.');
+    $res = doQuery($link, $select .= "FROM user WHERE id = $id", 'Error fetching user details.');
 	$row = goFetch($res);
-	$name = $row['name'];
-	$email = $row['email'];
+	$name = isset($row['name']) ? $row['name'] : '!';
+	$email = isset($row['email']) ? $row['email'] : '!';
 	$id = $row['id'];
-	
+    }
 	// Get list of roles assigned to this user
 	$res = doQuery($link, "SELECT roleid FROM userrole WHERE userid = '$id'", 'Error fetching list of assigned roles.');
     $selectedRoles = doBuild($res, 'roleid');
@@ -219,6 +236,7 @@ if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || isset($pwderro
 			'selected' => in_array($row['id'], $selectedRoles)
 		);
 	}
+    
      if(!$isAdmin()){
         array_shift($roles);
     }
@@ -281,4 +299,3 @@ else {
     $id = $row['id'];
     doExit("?act=Choose&user=$id");//bypass drop down for non-admin users
 }
-
