@@ -25,6 +25,30 @@ function setPassword($link, $pwd, $id){
     doQuery($link,  "UPDATE user SET password = '$password'  WHERE id = '$id'", 'Error setting user password.');
 }
 
+function addUser($db){
+    include $db;
+	$name = doSanitize($link, $_POST['name']);
+	$email = doSanitize($link, $_POST['email']);
+	doQuery($link, "INSERT INTO user SET name='$name', email='$email' ", 'Error adding user.');
+	$id = mysqli_insert_id($link);
+	if (isset($_POST['password']) && !empty($_POST['password']))
+	{
+        setPassword($link, $_POST['password'], $id);
+	}
+	if (isset($_POST['employer']) && $_POST['employer'] != '')
+	{
+        assignClient($link, doSanitize($link, $_POST['employer']), $id, $email);
+	}
+	if (isset($_POST['roles']))
+	{
+		foreach ($_POST['roles'] as $role)
+		{
+			assignRole($link, $role, $id);
+		}
+	}
+	doExit();
+}
+
 function updateUser($db, $priv){
     
     include $db;
@@ -63,28 +87,4 @@ function updateUser($db, $priv){
 	}
     $location = (isset($pwd)) ? "?pwdlen&id=$id" : ($priv == 'Client' ? '..' : '.');
 	doExit($location);
-}
-
-function addUser($db){
-    include $db;
-	$name = doSanitize($link, $_POST['name']);
-	$email = doSanitize($link, $_POST['email']);
-	doQuery($link, "INSERT INTO user SET name='$name', email='$email' ", 'Error adding user.');
-	$id = mysqli_insert_id($link);
-	if (isset($_POST['password']) && !empty($_POST['password']))
-	{
-        setPassword($link, $_POST['password'], $id);
-	}
-	if (isset($_POST['employer']) && $_POST['employer'] != '')
-	{
-        assignClient($link, doSanitize($link, $_POST['employer']), $id, $email);
-	}
-	if (isset($_POST['roles']))
-	{
-		foreach ($_POST['roles'] as $role)
-		{
-			assignRole($link, $role, $id);
-		}
-	}
-	doExit();
 }

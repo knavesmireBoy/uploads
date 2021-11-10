@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<?php $error = isset($_GET['error']) ? $_GET['error'] : ''; ?>
+<?php
+$error = isset($_GET['error']) ? $_GET['error'] : '';
+$warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
+?>
 <html lang="en">
     <head>
         <meta charset="utf-8" />
@@ -10,16 +13,18 @@
     </head>
     <body><div>
         <h1><?php htmlout($pagetitle); ?></h1>
-        <form action="?<?php htmlout($action); ?>" method="post" name="usersform" class="editclient">
-            <fieldset class=""><legend><?php echo $error; ?></legend></fieldset>
+        <form action="?<?php htmlout($action); ?>" method="post" name="usersform" class="<?php echo $warning; ?>">
+            <fieldset><legend><?php echo $error; ?></legend>
+                </fieldset>
             <ul>
                 <li>
-                    <label for="name">Name:</label><input id="name" name="name" value="<?php htmlout($name); ?>" size="32"/></li>
-			<li><label for="email">Email:</label><input type=email id="email"  name="email" value="<?php htmlout($email); ?>" size="32"/></li>
+                    <label for="name">Name:</label><input id="name" name="name" value="<?php htmlout($name); ?>" size="32" /></li>
+			<li><label for="email">Email:</label><input id="email"  name="email" value="<?php htmlout($email); ?>" size="32"/></li>
                 <?php if(isset($pwderror)) : ?>
                 <li><?php echo $pwderror; endif; ?></li>
                 <li><label for="password">Set password:</label><input id="password" type="password" name="password"/><input type="hidden" name="employer" value="<?php if(isset($cid)) { htmlout($cid); } ?>" size="32"/></li>
             </ul>
+                
             <?php if(!$isSingleUser()) : ?>
             <fieldset>
                 <legend>Roles:</legend> <?php for ($i = 0; $i < count($roles); $i++): ?>

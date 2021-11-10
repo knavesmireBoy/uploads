@@ -210,8 +210,16 @@ h1.browser a{
     left: -9999px;
 }
 
-fieldset.warning {
+.warning fieldset{
     border: solid 1px red;
     position: relative;
     left: 0;
+}
+
+.xname #name, .xemail #email {
+    background-color: red;
+}
+
+.xname #email {
+    background-color: orange;
 }

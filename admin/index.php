@@ -12,7 +12,7 @@ $manage = "Manage User";
 
 //$doWarning = doWhen($always(true), $always('warning'));
 $doWarning = getBestArgs($always(true))($always('warning'), $always(''));
-$warning = '';
+$warning = 'editclient';
 
 if (!userIsLoggedIn())
 {
@@ -62,13 +62,17 @@ if (isset($_GET['addform']))
 
 if (isset($_GET['editform']))
 {
-    $warning = "Please supply a valid email address innit";
-    $f = curryLeft2('preg_match', true);
-    $isName = $f('/^[\w.]{2,20}\s[\w]{2,20}$/');//need to fix number of ags in callback
+    $f = curryLeft2('preg_match', 'negate');
+    //need to fix number of ags in callback otherwise preg_match receives an invalid third argument
+    //Actually changed signature, but IF we wanted to curryLeft is the way to go, negate flag (equates to true) to reverse predicate
+    $isName = $f('/^[\w.]{2,20}(\s[\w]{2,20})?$/');
+    $isEmail = curryLeft2('preg_match', 'negate')('/^[\w][\w.-]+@[\w][\w.-]+\.[A-Za-z]{2,6}$/');
     $eq = equality(true);
     $msgs = array();
-    $is_empty = $always('name;This is a required field');
-    $is_name = $always('name;Please supply name in expected format');
+    $is_empty = $always('xname;This is a required field');
+    $is_empty_email = $always('xemail;This is a required field');
+    $is_name = $always('xname;Please supply name in expected format');
+    $is_email = $always('xemail;Please supply a valid email address');
     $push = function(&$grp){
         return function($v) use (&$grp) {
             $res = explode(';', $v);
@@ -78,8 +82,10 @@ if (isset($_GET['editform']))
     $pusher = $push($msgs);
     $dopush = curry2($compose)($pusher);
     $beEmpty = array('isEmpty', $dopush($is_empty));
+    $beEmptyEmail = array('isEmpty', $dopush($is_empty_email));
     $beBadName = array($isName, $dopush($is_name));
-    $cbs = array('name' => array($beBadName, $beEmpty));    
+    $beBadEmail = array($isEmail, $dopush($is_email));
+    $cbs = array('name' => array($beBadName, $beEmpty), 'email' => array($beBadEmail, $beEmptyEmail));    
     $once = getBestArgs(doOne())($always('danger'), $always('warning'));
     $walk = function($grp) {
         foreach ($grp as $k => $gang){
@@ -89,18 +95,22 @@ if (isset($_GET['editform']))
         }
     };
     $walk($cbs);
-    dump([$msgs]);
     if(empty($msgs)){
       updateUser($db, $priv);  
     }
     else {
-        $warning = $msgs[0];
+        $error = array_values($msgs)[0];
+        
+        $messages = array_keys($msgs);
+        $warning = implode(' ', $messages);
+        $warning .= " warning";
+        $warning .= " editclient";
+        
         $doWarning = getBestArgs($always($warning))($always('warning'), $always(''));
         $id = $_POST['id'];
-        //$location = "?id=$id&error=true&name=";
+        $location = "?xid=$id&error=$error&warning=$warning";
         doExit($location);
     }
-    
 }
 
 if (isset($_POST['confirm']))
