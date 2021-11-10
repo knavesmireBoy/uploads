@@ -50,6 +50,45 @@ function addUser($db){
 	doExit();
 }
 
+function prepareChecks(){
+    
+    $compose = curry2(compose('reduce'));
+    $f = curryLeft2('preg_match', 'negate');
+    //need to fix number of ags in callback otherwise preg_match receives an invalid third argument
+    //Actually changed signature, but IF we wanted to curryLeft is the way to go, negate flag (equates to true) to reverse predicate
+    $isName = $f('/^[\w.]{2,20}(\s[\w]{2,20})?$/');
+    $isEmail = $f('/^[\w][\w.-]+@[\w][\w.-]+\.[A-Za-z]{2,6}$/');
+    $isPwd = compose('reduce')('strlen', curry2('lesserThan')(3));
+            
+    $is_empty = partial('doAlways','xname;NAME is a required field');
+    $is_empty_email = partial('doAlways','xemail;EMAIL is a required field');
+    $is_empty_pwd = partial('doAlways','xpassword;a PASSWORD is required to login');
+    $is_password = partial('doAlways','xpassword;PASSWORD should be at least three characters in length');
+    $is_name = partial('doAlways','xname;Please supply name in expected format');
+    $is_email = partial('doAlways','xemail;Please supply a valid email address');
+    
+    $push = function(&$grp){
+        return function($v) use (&$grp) {
+            $res = explode(';', $v);
+            $grp[$res[0]] = $res[1];
+        };
+    };
+    $dopush = $compose($push($msgs));
+    $beEmpty = array('isEmpty', $dopush($is_empty));
+    $beEmptyEmail = array('isEmpty', $dopush($is_empty_email));
+    $beEmptyPwd = array('isEmpty', $dopush($is_empty_pwd));
+    $beBadName = array($isName, $dopush($is_name));
+    $beBadEmail = array($isEmail, $dopush($is_email));
+    $beBadPwd = array($isPwd, $dopush($is_password));
+    $name_checks = array($beBadName, $beEmpty);
+    $email_checks = array($beBadEmail, $beEmptyEmail);
+    $password_checks = array($beBadPwd, $beEmptyPwd);
+    //leave password AS IS if field not set
+    $password_checks = empty($_POST['password'] && !empty($edit)) ? array() : $password_checks;
+    return array('name' => $name_checks, 'email' => $email_checks, 'password' => $password_checks);
+    
+}
+
 function validateUser($db, $priv, $edit = false){
     $msgs = array();
     $location = '.';
@@ -63,7 +102,7 @@ function validateUser($db, $priv, $edit = false){
             
     $is_empty = partial('doAlways','xname;NAME is a required field');
     $is_empty_email = partial('doAlways','xemail;EMAIL is a required field');
-    $is_empty_pwd = partial('doAlways','xpassword;a PASSWORD is a required to login');
+    $is_empty_pwd = partial('doAlways','xpassword;a PASSWORD is required to login');
     $is_password = partial('doAlways','xpassword;PASSWORD should be at least three characters in length');
     $is_name = partial('doAlways','xname;Please supply name in expected format');
     $is_email = partial('doAlways','xemail;Please supply a valid email address');
@@ -84,7 +123,10 @@ function validateUser($db, $priv, $edit = false){
     $password_checks = array($beBadPwd, $beEmptyPwd);
     //leave password AS IS if field not set
     $password_checks = empty($_POST['password'] && !empty($edit)) ? array() : $password_checks;
-    $cbs = array('name' => array($beBadName, $beEmpty), 'email' => array($beBadEmail, $beEmptyEmail), 'password' =>($password_checks));    
+    
+    //$checks = prepareChecks();
+    $cbs = array('name' => array($beBadName, $beEmpty), 'email' => array($beBadEmail, $beEmptyEmail), 'password' => $password_checks);    
+    //$cbs = array('name' => $checks['name'], 'email' => $checks['email'], 'password' => $checks['password']);    
     $walk = function($grp) {
         foreach ($grp as $k => $gang){
             foreach($gang as $pair){
