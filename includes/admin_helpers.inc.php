@@ -49,7 +49,13 @@ function addUser($db){
 	doExit();
 }
 
-function validate($db, $priv){
+
+function post(){
+    dump($_POST);
+}
+
+function validateUser($db, $priv){
+    //dump($_POST);
     $msgs = array();
     $f = curryLeft2('preg_match', 'negate');
     //need to fix number of ags in callback otherwise preg_match receives an invalid third argument
@@ -57,10 +63,10 @@ function validate($db, $priv){
     $isName = $f('/^[\w.]{2,20}(\s[\w]{2,20})?$/');
     $isEmail = $f('/^[\w][\w.-]+@[\w][\w.-]+\.[A-Za-z]{2,6}$/');
     
-    $is_empty = $always('xname;NAME is a required field');
-    $is_empty_email = $always('xemail;EMAIL is a required field');
-    $is_name = $always('xname;Please supply name in expected format');
-    $is_email = $always('xemail;Please supply a valid email address');
+    $is_empty = partial('doAlways','xname;NAME is a required field');
+    $is_empty_email = partial('doAlways','xemail;EMAIL is a required field');
+    $is_name = partial('doAlways','xname;Please supply name in expected format');
+    $is_email = partial('doAlways','xemail;Please supply a valid email address');
     
     $push = function(&$grp){
         return function($v) use (&$grp) {
@@ -68,7 +74,7 @@ function validate($db, $priv){
             $grp[$res[0]] = $res[1];
         };
     };
-    $dopush = curry2($compose)($push($msgs));
+    $dopush = curry2(compose('reduce'))($push($msgs));
     $beEmpty = array('isEmpty', $dopush($is_empty));
     $beEmptyEmail = array('isEmpty', $dopush($is_empty_email));
     $beBadName = array($isName, $dopush($is_name));
@@ -97,7 +103,7 @@ function validate($db, $priv){
 }
 
 function updateUser($db, $priv){
-    
+    //dump($_POST);
     include $db;
     $id = doSanitize($link, $_POST['id']);
 	$name = doSanitize($link, $_POST['name']);
@@ -133,5 +139,6 @@ function updateUser($db, $priv){
         assignClient($link, doSanitize($link, $_POST['employer']), $id, $email);
 	}
     $location = (isset($pwd)) ? "?pwdlen&id=$id" : ($priv == 'Client' ? '..' : '.');
+    setcookie('success', 'Details successfully updated', time() + 7200, "/");
 	doExit($location);
 }

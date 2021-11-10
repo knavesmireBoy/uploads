@@ -4,15 +4,21 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
 $tmplt = $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/';
 $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+$css = 'css/lofi.css';
 $base = 'Log In';
 $error = '';
 $tmpl_error = '/uploads/includes/error.html.php';
 $doError = function (){};
 
+setcookie('success', "", time() -1, '/');
+unset($_COOKIE['success']); 
+
+//dump($_COOKIE['success']);
 if (!userIsLoggedIn())
 {
+    $inc_login = true;
     include $tmplt . 'base.html.php';
-    include $tmplt . 'login.html.php';
+    //include $tmplt . 'login.html.php';
     exit();
 }
 $roleplay = userHasWhatRole();

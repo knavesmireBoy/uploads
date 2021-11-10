@@ -7,6 +7,8 @@
 </head>
     <body>
         <div>
+            <?php
+            if(isset($_COOKIE['success'])) { echo "<h2>{$_COOKIE['success']}</h2>"; } ?>
             <h1><?php echo $manage; ?></h1>
             <p><a href="?add">Add New User</a></p>
             <form action="" id="userform" method="post" name="userform">

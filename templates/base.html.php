@@ -6,7 +6,11 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title><?php echo $base; ?></title>
-<link href="css/lofi.css" type="text/css" rel="stylesheet" media="all"/>
+<link href="<?php echo $css; ?>" type="text/css" rel="stylesheet" media="all"/>
 </head>
 <body>
+   <?php if(isset($inc_login)){
+    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/login.html.php';
+    }
+    ?>
 <div id="upload">

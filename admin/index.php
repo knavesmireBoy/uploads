@@ -5,6 +5,9 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/magicquotes.inc.php'
 require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/admin_helpers.inc.php';
+$tmplt = $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/';
+$base = 'Log In';
+$css = '../css/lofi.css';
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 $id = '';
 $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
@@ -17,7 +20,8 @@ $error = 'User Details';
 
 if (!userIsLoggedIn())
 {
-	include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/login.html.php';
+    $inc_login = true;
+    include $tmplt . 'base.html.php';
 	exit();
 }
 
@@ -63,54 +67,7 @@ if (isset($_GET['addform']))
 
 if (isset($_GET['editform']))
 {
-    $f = curryLeft2('preg_match', 'negate');
-    //need to fix number of ags in callback otherwise preg_match receives an invalid third argument
-    //Actually changed signature, but IF we wanted to curryLeft is the way to go, negate flag (equates to true) to reverse predicate
-    $isName = $f('/^[\w.]{2,20}(\s[\w]{2,20})?$/');
-    $isEmail = curryLeft2('preg_match', 'negate')('/^[\w][\w.-]+@[\w][\w.-]+\.[A-Za-z]{2,6}$/');
-    $eq = equality(true);
-    $msgs = array();
-    $is_empty = $always('xname;NAME is a required field');
-    $is_empty_email = $always('xemail;EMAIL is a required field');
-    $is_name = $always('xname;Please supply name in expected format');
-    $is_email = $always('xemail;Please supply a valid email address');
-    $push = function(&$grp){
-        return function($v) use (&$grp) {
-            $res = explode(';', $v);
-            $grp[$res[0]] = $res[1];
-    };
-    };
-    $pusher = $push($msgs);
-    $dopush = curry2($compose)($pusher);
-    $beEmpty = array('isEmpty', $dopush($is_empty));
-    $beEmptyEmail = array('isEmpty', $dopush($is_empty_email));
-    $beBadName = array($isName, $dopush($is_name));
-    $beBadEmail = array($isEmail, $dopush($is_email));
-    $cbs = array('name' => array($beBadName, $beEmpty), 'email' => array($beBadEmail, $beEmptyEmail));    
-    $once = getBestArgs(doOne())($always('danger'), $always('warning'));
-    $walk = function($grp) {
-        foreach ($grp as $k => $gang){
-            foreach($gang as $pair){
-                call_user_func_array('doWhen', $pair)($_POST["$k"]); 
-            }
-        }
-    };
-    $walk($cbs);
-    if(empty($msgs)){
-       
-    }
-    else {
-        $error = array_values($msgs)[0];
-        $messages = array_keys($msgs);
-        $warning = implode(' ', $messages);
-        $warning .= " warning";
-        $warning .= " editclient";
-        
-        $doWarning = getBestArgs($always($warning))($always('warning'), $always(''));
-        $id = $_POST['id'];
-        $location = "?xid=$id&error=$error&warning=$warning";
-        doExit($location);
-    }
+    validateUser($db, $priv);
 }
 
 if (isset($_POST['confirm']))

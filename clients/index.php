@@ -2,11 +2,15 @@
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/client_helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/magicquotes.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
+$tmplt = $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/';
+$base = 'Log In';
+$css = '../css/lofi.css';
 
 if (!userIsLoggedIn())
 {
-    include $_SERVER['DOCUMENT_ROOT'] . '/uploads/login.html.php';
-    exit();
+    $inc_login = true;
+    include $tmplt . 'base.html.php';
+	exit();
 }
 $roleplay = validateAccess('Admin');
 $key = $roleplay['id'];
