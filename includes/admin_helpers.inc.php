@@ -53,14 +53,18 @@ function addUser($db){
 function validateUser($db, $priv, $edit = false){
     $msgs = array();
     $location = '.';
+    $compose = curry2(compose('reduce'));
     $f = curryLeft2('preg_match', 'negate');
     //need to fix number of ags in callback otherwise preg_match receives an invalid third argument
     //Actually changed signature, but IF we wanted to curryLeft is the way to go, negate flag (equates to true) to reverse predicate
     $isName = $f('/^[\w.]{2,20}(\s[\w]{2,20})?$/');
     $isEmail = $f('/^[\w][\w.-]+@[\w][\w.-]+\.[A-Za-z]{2,6}$/');
-    
+    $isPwd = compose('reduce')('strlen', curry2('lesserThan')(3));
+            
     $is_empty = partial('doAlways','xname;NAME is a required field');
     $is_empty_email = partial('doAlways','xemail;EMAIL is a required field');
+    $is_empty_pwd = partial('doAlways','xpassword;a PASSWORD is a required to login');
+    $is_password = partial('doAlways','xpassword;PASSWORD should be at least three characters in length');
     $is_name = partial('doAlways','xname;Please supply name in expected format');
     $is_email = partial('doAlways','xemail;Please supply a valid email address');
     
@@ -70,12 +74,17 @@ function validateUser($db, $priv, $edit = false){
             $grp[$res[0]] = $res[1];
         };
     };
-    $dopush = curry2(compose('reduce'))($push($msgs));
+    $dopush = $compose($push($msgs));
     $beEmpty = array('isEmpty', $dopush($is_empty));
     $beEmptyEmail = array('isEmpty', $dopush($is_empty_email));
+    $beEmptyPwd = array('isEmpty', $dopush($is_empty_pwd));
     $beBadName = array($isName, $dopush($is_name));
     $beBadEmail = array($isEmail, $dopush($is_email));
-    $cbs = array('name' => array($beBadName, $beEmpty), 'email' => array($beBadEmail, $beEmptyEmail));    
+    $beBadPwd = array($isPwd, $dopush($is_password));
+    $password_checks = array($beBadPwd, $beEmptyPwd);
+    //leave password AS IS if field not set
+    $password_checks = empty($_POST['password'] && !empty($edit)) ? array() : $password_checks;
+    $cbs = array('name' => array($beBadName, $beEmpty), 'email' => array($beBadEmail, $beEmptyEmail), 'password' =>($password_checks));    
     $walk = function($grp) {
         foreach ($grp as $k => $gang){
             foreach($gang as $pair){
@@ -126,12 +135,7 @@ function updateUser($db, $priv){
     doQuery($link, $sql, 'Error setting user details.');
 	if (isset($_POST['password']) && !empty($_POST['password']))
 	{
-		if(strlen($_POST['password']) >= 5) {
-            setPassword($link, $_POST['password'], $id);
-        }
-        else {
-            $pwd = 'fail';
-        }
+		setPassword($link, $_POST['password'], $id);
     }
     $sql = "DELETE FROM userrole WHERE userid='$id'";
         //clear existing before - optionally - re-assigning
@@ -149,7 +153,8 @@ function updateUser($db, $priv){
 	{
         assignClient($link, doSanitize($link, $_POST['employer']), $id, $email);
 	}
-    $location = (isset($pwd)) ? "?pwdlen&id=$id" : ($priv == 'Client' ? '..' : '.');
+    //$location = (isset($pwd)) ? "?pwdlen&id=$id" : ($priv == 'Client' ? '..' : '.');
+    $location = $priv == 'Client' ? '..' : '.';
     setcookie('success', 'Details successfully updated', time() + 7200, "/");
 	doExit($location);
 }
