@@ -22,6 +22,7 @@ define( "VALIDATE_PWD", "xpassword;PASSWORD should be at least three characters 
 
 define( "REQUIRED_DOMAIN", "xdomain;DOMAIN is a required field");
 define( "VALIDATE_DOMAIN", "xdomain;Please supply a valid DOMAIN");
+define( "VALIDATE_UNIQUE_DOMAIN", "xdomain;DOMAIN already exists");
 define( "VALIDATE_PHONE", "xphone;Please supply a valid PHONE NUMBER");
 //preg_match('/^[1-9][0-9 -]{0,15}$/', $arg);
 

@@ -38,14 +38,15 @@ if (isset($_GET['editform']))
     validateClient($db, 'edit');
 }
 
-if (isset($_GET['add']))
+if (isset($_GET['add']) || (isset($_GET['action']) && $_GET['action'] === 'Add'))
 {
     //include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
+    //dump(999);
     $id = '';
     $pagetitle = 'New Client';
     $action = 'addform';
     $name = isset($_GET['name']) ? $_GET['name'] : '';
-    $domain = isset($_GET['domain']) ? 'domain already in DB' : '';
+    $domain = isset($_GET['domain']) ? $_GET['domain'] : '';
     $tel = isset($_GET['tel']) ? $_GET['tel'] : '';
     $button = 'Add Client';
     include 'form.html.php';
