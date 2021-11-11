@@ -20,28 +20,17 @@ $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 
-$doCreate = doWhen(partial('goGet', 'addform'), partial('validateClient', $db));
-//$doUpdate = doWhen(partial('goGet', 'editform'), partial('validateClient', $db, 'edit'));
+$doCreate = doWhen(partial('goGet', 'addform'), partial('validateClient', $db, null));
+$doUpdate = doWhen(partial('goGet', 'editform'), partial('validateClient', $db, 'edit'));
 $doDelete = doWhen(partial('goPost', 'confirm'), partial('deleteClient', $db));
 
-//$doCreate(null);
+$doCreate(null);
 $doDelete(null);
-//$doUpdate(null);
-
-if (isset($_GET['addform']))
-{
-    validateClient($db, null);
-}
-
-if (isset($_GET['editform']))
-{
-    validateClient($db, 'edit');
-}
+$doUpdate(null);
 
 if (isset($_GET['add']) || (isset($_GET['action']) && $_GET['action'] === 'Add'))
 {
-    //include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
-    //dump(999);
+    //if submission fails form is reloaded with validated variables
     $id = '';
     $pagetitle = 'New Client';
     $action = 'addform';

@@ -18,15 +18,6 @@ function createClient($db){
     foreach($vars as $k => $v) {
         ${$k} = $v;
     }
-    
-    $sql = "SELECT domain FROM client";
-    $res = doQuery($link, $sql, 'Error retrieving domain from clients.');
-    while($row = mysqli_fetch_array($res, MYSQLI_ASSOC)){
-        $gang [] = $row['domain'];
-    }
-    if(in_array($domain, $gang)){
-        doExit("?add=true&name=$name&domain=true&tel=$tel");
-    }
     $sql = "INSERT INTO client SET name='$name', domain='$domain', tel='$tel'";
     //$sql = "INSERT INTO client VALUES ('?', '$name', '$domain', '$tel')";
     //alert required for non unique domains. I attempted to enter uni.com
@@ -95,7 +86,7 @@ function prepareChecks($dom){
 
 function validateClient($db, $edit = false){
     $location = '.';
-    $domain_exists = checkExistingDomain($db);
+    $domain_exists = $edit ? false : checkExistingDomain($db);
     $constant = $domain_exists ? "xdomain;DOMAIN <b>{$_POST['domain']}</b> already exists" : VALIDATE_DOMAIN;
     $msgs = prepareChecks($domain_exists)(REQUIRED_NAME, VALIDATE_NAME, REQUIRED_DOMAIN, $constant, VALIDATE_PHONE);   
     
@@ -132,7 +123,7 @@ function validateClient($db, $edit = false){
             }
         }
         else {
-            $location = "xid=$default";
+            $location = "?xid=$id&$default";
         }
         
     }
