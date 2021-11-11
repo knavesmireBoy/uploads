@@ -304,11 +304,39 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     return calculatePages($db, $display, $sql);
 }
 
+function validateDescription($d = "description"){
+    $msgs = array();
+    $negate = curryLeft2('preg_match', 'negate');
+    $compose = curry2(compose('reduce'));
+    $dopush = $compose(populateArray($msgs, ';'));    
+    $isDesc = getBestArgs('isEmpty')(partial('doAlways', false), $negate('/^[\w]+[\w\s]{2,29}/'));
+    $check = ALWAYS(VALIDATE_DESCRIPTION);
+    $beBad = array($isDesc, $dopush($check));
+    $cbs = array($d => array($beBad));
+    doWhenLoop($cbs);
+    return $msgs;
+}
+
+function reLoad($msgs){
+    $error = array_values($msgs)[0];
+    $warning = implode(' ', array_keys($msgs));
+    $warning .= " warning";
+    $warning .= " upload";
+    return "?error=$error&warning=$warning";
+}
+
 function doUpload($db, $priv, $key, $domain)
 {
     //Bail out if the file isn't really an upload
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
     $doError = partialDefer('errorHandler', 'There was no file uploaded!', $terror);
+    $uploaddesc = isset($_POST['description']) ? $_POST['description'] : '';
+    $msgs = validateDescription();
+    
+    if(!empty($msgs)){
+        doExit(reLoad($msgs));
+    }
+    
     doWhen(partial('doAlways', !is_uploaded_file($_FILES['upload']['tmp_name'])) , $doError) (null);
 
     $realname = uploadedfile('name');
@@ -324,12 +352,13 @@ function doUpload($db, $priv, $key, $domain)
     $mykey = $theKey ? $theKey : $key;
     // Prepare user-submitted values for safe database insert
     include $db;
-    $uploaddesc = isset($_POST['desc']) ? $_POST['desc'] : '';
+    
+    
     $doInsert = doInsert($link); //older versions of php may need to capture closure in a variable as opposed to func()();
     $sql = $doInsert($realname, uploadedfile('type') , $uploaddesc, $path, $uploadname, uploadedfile('size') , $mykey);
     doFetch($link, $sql, 'Database error storing file information!' . $sql);
 
-    doEmail($link, mysqli_insert_id($link));
+    //doEmail($link, mysqli_insert_id($link));
     header('Location: .');
     exit();
 }
@@ -450,6 +479,16 @@ function doUpdate($db)
 {
     include $db;
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+    
+     $msgs = validateDescription('desc');
+    
+    if(!empty($msgs)){
+        $location = reLoad($msgs);
+        $id = $_POST['user'];
+        $location .= "&id=$id&swap=No";
+        doExit($location);
+    }
+    
     $fid = doSanitize($link, $_POST['fileid']);
     $orig = doSanitize($link, $_POST['update']);
     $user = isset($_POST['user']) ? doSanitize($link, $_POST['user']) : null;

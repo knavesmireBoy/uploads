@@ -227,3 +227,7 @@ fieldset {
 .xname.xemail #email {
     border: solid 1px orange;
 }
+
+.upload {
+    display: inline-block;
+}

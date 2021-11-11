@@ -5,6 +5,26 @@
 
 //$doUpload(null);
 //$doView(null);
+if (isset($_REQUEST['swap']))
+{ //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (FILE AMEND BLOCK)
+    $button = "Update";
+    include $db;
+    $id = doSanitize($link, $_REQUEST['id']);
+
+    $answer = $_REQUEST['swap']; //$answer used as conditional to load update.html.php
+    $email = "{$_SESSION['email']}";
+    $row = prepUpdate($db, $id);
+    $filename = $row['filename'];
+    $diz = $row['description'];
+    $userid = $row['userid'];
+    $colleagues = doGetColleagues($link, $id, $domain);
+    $extent = count($colleagues);
+    if (!$extent)
+    {
+        $colleagues = $prepareUserList($db);
+    }
+    $equals = partial(equality(true), $userid);
+} ///
 
 if (isset($_POST['action']) && $_POST['action'] === 'upload')
 {
@@ -49,26 +69,7 @@ if (isset($_POST['confirm']) and $_POST['confirm'] === 'No')
     $prompt = !$extent ? "$prompt1 user $prompt2" : $prompt;
     $call = "swap";
 }
-if (isset($_REQUEST['swap']))
-{ //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (FILE AMEND BLOCK)
-    $button = "Update";
-    include $db;
-   
-    $id = doSanitize($link, $_REQUEST['id']);
-    $answer = $_REQUEST['swap']; //$answer used as conditional to load update.html.php
-    $email = "{$_SESSION['email']}";
-    $row = prepUpdate($db, $id);
-    $filename = $row['filename'];
-    $diz = $row['description'];
-    $userid = $row['userid'];
-    $colleagues = doGetColleagues($link, $id, $domain);
-    $extent = count($colleagues);
-    if (!$extent)
-    {
-        $colleagues = $prepareUserList($db);
-    }
-    $equals = partial(equality(true), $userid);
-} ///
+
 
 ///////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
 ///Present list of users for administrators

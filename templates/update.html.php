@@ -1,7 +1,14 @@
-<form action="." method="post" name="updateFileInfo">
 <?php
+$error = isset($_GET['error']) ? $_GET['error'] : 'Edit file details';
+$warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
+?>
+
+<form action="." method="post" name="updateFileInfo" class="<?php echo $warning; ?>">
+<?php
+    
     if($_REQUEST['swap'] == 'No'): ?>
-	<div><label for="filename">Name: <input id="filename" type="text" name="filename" value="<?php htmlout($filename); ?>"/></label></div><div><label for="description">Description: <input id="description" type="text" name="description" value="<?php htmlout($diz); ?>"/></label></div><div>
+    <fieldset><legend><?php echo $error; ?></legend>
+        <div><label for="filename">Name: <input id="filename" type="text" name="filename" value="<?php htmlout($filename); ?>"/></label></div><div><label for="desc">Description: <input id="desc" type="text" name="desc" value="<?php htmlout($diz); ?>"/></label></div><div>
 	<?php endif; 
     //allows Admin to associate a single USER to a single file, USER may optionally belong to a client
     if(($extent < 1) && ($priv === 'Admin')) : ?>
@@ -32,4 +39,4 @@
                 <input type="hidden" name="answer" value="<?php htmlout($answer); ?>"/>
                 <input type="hidden" name="update" value="<?php htmlout($userid); ?>"/>
                 <input type="submit" value="<?php htmlout($button); ?>"/></div>
-            <?php echo '</form>';
+            <?php echo '</fieldset></form>';

@@ -2,11 +2,13 @@
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/magicquotes.inc.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
+include_once 'myconfig.php';
 $tmplt = $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/';
 $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 $css = 'css/lofi.css';
 $base = 'Log In';
-$error = '';
+$error = 'Select a file to upload';
+$warning = 'upload';
 $tmpl_error = '/uploads/includes/error.html.php';
 $doError = function (){};
 

@@ -1,15 +1,18 @@
 <?php include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
 //ob_start('ob_postprocess');
 //ob_start('ob_gzhandler');
+$error = isset($_GET['error']) ? $_GET['error'] : $error;
+$warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
 $span = 2;
 ?>
 <h1 class="<?php echo strtolower($priv); ?>"><a href="?"><?php echo "$base | $name"; ?></a></h1>
 <h2><?php echo date('l F j, Y'); ?></h2>
 <?php if($nonBrowser()) : ?>
-<form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="uploadform" enctype="multipart/form-data">
+<form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="uploadform" enctype="multipart/form-data" class="<?php echo $warning; ?>">
+    <fieldset><legend><?php echo $error; ?></legend>
     <table class="up">
         <tr><td><label for="uploadfiles">Upload File:</label></td><td><input id="uploadfiles" type="file" name="upload"/></td></tr>
-        <tr><td><label for="desc">File Description: </label></td><td><input id="desc" type="text" name="desc" maxlength="255"/></td></tr>
+        <tr><td><label for="description">File Description: </label></td><td><input id="description" name="description" maxlength="30"/></td></tr>
 <?php
     if($isPriv() || $isTrueClient()) : ?>
 <tr><td><label for="user">User:</label></td><td>
@@ -31,7 +34,7 @@ $span = 2;
 <?php endif; ?>
 <input type="hidden" name="action" value="upload"/>
 <tr><td><input type="submit" value="Upload"/></td><td>&nbsp;</td></tr></table>
-</form>
+</fieldset></form>
 	<?php endif; //Browser
 $qry = $query_string . $sort;
 if (count($files) > 0): ?>
