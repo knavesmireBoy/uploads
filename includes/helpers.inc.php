@@ -481,9 +481,14 @@ function doUpdate($db)
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
     
      $msgs = validateDescription('desc');
+
     
-    if(!empty($msgs)){
-        $location = reLoad($msgs);
+    if(!empty($msgs)){        
+           $error = array_values($msgs)[0];
+    $warning = implode(' ', array_keys($msgs));
+    $warning .= " warning";
+    $warning .= " upload";
+        $location = "?uerror=$error&uwarning=$warning";
         $id = $_POST['user'];
         $location .= "&id=$id&swap=No";
         doExit($location);
