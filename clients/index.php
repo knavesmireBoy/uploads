@@ -17,8 +17,8 @@ $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
 $db = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 
-$doCreate = doWhen(partial('goGet', 'addform'), partial('createClient', $db));
-$doUpdate = doWhen(partial('goGet', 'editform'), partial('updateClient', $db));
+$doCreate = doWhen(partial('goGet', 'addform'), partial('validateClient', $db));
+$doUpdate = doWhen(partial('goGet', 'editform'), partial('validateClient', $db, 'edit'));
 $doDelete = doWhen(partial('goPost', 'confirm'), partial('deleteClient', $db));
 
 $doCreate(null);
@@ -39,15 +39,16 @@ if (isset($_GET['add']))
     exit();
 } 
 
-if (isset($_POST['action']) and $_POST['action'] == 'Edit')
+if (isset($_REQUEST['action']) and $_REQUEST['action'] == 'Edit')
 {
     include $db;
+    //$id = isset($_POST['id']) ? $_POST['id'] : null;
+    $selects = array("SELECT id, name, domain, tel ", "SELECT id, name, tel ", "SELECT id, domain, tel ");
+    $select = $selects[0];
     $id = doSanitize($link, $_POST['id']);
-    
-    $vars = array_map(partial('doSanitize', $link), $_POST);
-    
-    $sql = "SELECT id, name, domain, tel FROM client WHERE id = $id";
-    $result = doQuery($link, "SELECT id, name, domain, tel FROM client WHERE id = $id", 'Error fetching user details.');
+    $from = "FROM client WHERE id = $id";
+    $vars = array_map(partial('doSanitize', $link), $_POST);    
+    $result = doQuery($link, $select .= $from, 'Error fetching user details.');
 
     $row = goFetch($result);
     $pagetitle = 'Edit Client';

@@ -5,6 +5,7 @@ include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/magicquotes.inc.php'
 require_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/access.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
 include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/admin_helpers.inc.php';
+include_once '../myconfig.php';
 $tmplt = $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/';
 $base = 'Log In';
 $css = '../css/lofi.css';
@@ -144,7 +145,7 @@ if (isset($_GET['add']) || (isset($_GET['action']) && $_GET['action'] === 'add')
 }
 
 
-if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || isset($pwderror) || (isset($_GET['action']) && $_GET['action'] === 'edit'))
+if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || (isset($_GET['action']) && $_GET['action'] === 'edit'))
 {
     $pagetitle = 'Edit User';
 	$action = 'editform';
