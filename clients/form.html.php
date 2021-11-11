@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<?php
+$error = isset($_GET['error']) ? $_GET['error'] : $error;
+$warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
+?>
 <html lang="en">
     <head>
         <meta charset="utf-8" />

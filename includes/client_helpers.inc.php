@@ -48,7 +48,9 @@ function deleteClient($db){
 function prepareChecks(){
     $msgs = array();
     $compose = curry2(compose('reduce'));
-    $f = curryLeft2('preg_match', 'negate');
+    $match = curryLeft2('preg_match', 'negate');
+    $match2 = curryLeft2('preg_match');
+    $replace = partial('preg_replace', '/[^0-9]/', '');
     $always = function($arg){
         return function() use($arg) {
             return $arg;
@@ -58,27 +60,29 @@ function prepareChecks(){
     //Actually changed signature, but IF we wanted to curryLeft is the way to go, negate flag (equates to true) to reverse predicat    
     $dopush = $compose(populateArray($msgs, ';'));
     //predicates...
-    $isName = $f('/^[\w.]{2,20}(\s[\w]{2,20}){,4}$/');
-    //$isEmail = $f('/^[\w][\w.-]+@[\w][\w.-]+\.[A-Za-z]{2,6}$/');
-    $isDomain = $f('/^[\w][\w.-]+\.[A-Za-z]{2,6}$/');
-    //$isPwd = compose('reduce')('strlen', curry2('lesserThan')(3));
+    //allows for a word of 2 to 15 characters, followed by up to four words of 1(eg: ampersand) to 15 characters, ie Tom Dick & Harry
+    $isName = $match('/^[\w.]{2,15}(\s[\w&.]{1,15}){0,4}$/');
+    $isDomain = $match('/^[^.]+\.[^.]*\.?[A-Za-z]{2,6}$/');
+    $phone_reg = compose('reduce')($replace, $match("/^[0-9]{10,15}$/"));
+    $isPhone = getBestArgs('isEmpty')(partial('doAlways', false), $phone_reg);
     //messages..CONSTANTS supplied as arguments ORDER is critical    
     $checks = array_map($always, func_get_args());
     $beEmpty = array('isEmpty', $dopush($checks[0]));
     $beBadName = array($isName, $dopush($checks[1]));
     $beEmptyDomain = array('isEmpty', $dopush($checks[2]));
-    $beBadDomain = array($isEmail, $dopush($checks[3]));
+    $beBadDomain = array($isDomain, $dopush($checks[3]));
+    $beBadPhone = array($isPhone, $dopush($checks[4]));
     
     $name_checks = array($beBadName, $beEmpty);
     $domain_checks = array($beBadDomain, $beEmptyDomain);
-    $cbs = array('name' => $name_checks, 'email' => $email_checks, 'password' => $password_checks);
+    $cbs = array('name' => $name_checks, 'domain' => $domain_checks, 'tel' => array($beBadPhone));
     doWhenLoop($cbs);
     return $msgs;
 }
 
 function validateClient($db, $edit = false){
     $location = '.';
-    $msgs = prepareChecks(REQUIRED_NAME, VALIDATE_NAME, REQUIRED_DOMAIN, VALIDATE_DOMAIN);
+    $msgs = prepareChecks(REQUIRED_NAME, VALIDATE_NAME, REQUIRED_DOMAIN, VALIDATE_DOMAIN, VALIDATE_PHONE);
     if(empty($msgs)){
         if(!empty($edit)){
             updateClient($db, $priv);
@@ -93,18 +97,20 @@ function validateClient($db, $edit = false){
         $warning .= " warning";
         $warning .= " editclient";
         $id = isset($_POST['id']) ? $_POST['id'] : null;
-        $action = !empty($edit) ? 'edit' : 'add';
+        $action = !empty($edit) ? 'Edit' : 'Add';
         $location = "?xid=$id&action=$action&error=$error&warning=$warning";
+        
         if($action === 'add'){
             if(!inString('xname', $warning)){
                 $name = $_POST['name'];
                 $location .= "&name=$name";
             }
-            if(!inString('xemail', $warning)){
+            if(!inString('xdomain', $warning)){
                 $domain = $_POST['domain'];
-                setcookie('ddomain', $domain, time() + 7200, '/');
+                $location .= "&domain=$domain";
             }
         }
+        
     }
     doExit($location);
 }
