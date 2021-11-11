@@ -55,11 +55,13 @@ function checkExistingDomain($db){
     return in_array($_POST['domain'], $gang);
 }
 
-function prepareChecks(){
+function prepareChecks($dom){
+    return function() use($dom) {
     $msgs = array();
     $compose = curry2(compose('reduce'));
-    $match = curryLeft2('preg_match', 'negate');
-    $match2 = curryLeft2('preg_match');
+        $dom_reg = '/^[^.]+\.[^.]*\.?[A-Za-z]{2,6}$/';
+    $negate = curryLeft2('preg_match', 'negate');
+    $match = curryLeft2('preg_match');
     $replace = partial('preg_replace', '/[^0-9]/', '');
     $always = function($arg){
         return function() use($arg) {
@@ -71,9 +73,9 @@ function prepareChecks(){
     $dopush = $compose(populateArray($msgs, ';'));
     //predicates...
     //allows for a word of 2 to 15 characters, followed by up to four words of 1(eg: ampersand) to 15 characters, ie Tom Dick & Harry
-    $isName = $match('/^[\w.]{2,15}(\s[\w&.]{1,15}){0,4}$/');
-    $isDomain = $match2('/^[^.]+\.[^.]*\.?[A-Za-z]{2,6}$/');
-    $phone_reg = compose('reduce')($replace, $match("/^[0-9]{10,15}$/"));
+    $isName = $negate('/^[\w.]{2,15}(\s[\w&.]{1,15}){0,4}$/');
+    $isDomain = $dom ? $match($dom_reg) : $negate($dom_reg);
+    $phone_reg = compose('reduce')($replace, $negate("/^[0-9]{10,15}$/"));
     $isPhone = getBestArgs('isEmpty')(partial('doAlways', false), $phone_reg);
     //messages..CONSTANTS supplied as arguments ORDER is critical    
     $checks = array_map($always, func_get_args());
@@ -88,15 +90,14 @@ function prepareChecks(){
     $cbs = array('name' => $name_checks, 'domain' => $domain_checks, 'tel' => array($beBadPhone));
     doWhenLoop($cbs);
     return $msgs;
+};
 }
 
 function validateClient($db, $edit = false){
     $location = '.';
     $domain_exists = checkExistingDomain($db);
-    $constant = $domain_exists ? "xdomain;DOMAIN {$_POST['domain']} already exists" : VALIDATE_DOMAIN;
-    $msgs = prepareChecks(REQUIRED_NAME, VALIDATE_NAME, REQUIRED_DOMAIN, $constant, VALIDATE_PHONE);
-    
-   
+    $constant = $domain_exists ? "xdomain;DOMAIN <b>{$_POST['domain']}</b> already exists" : VALIDATE_DOMAIN;
+    $msgs = prepareChecks($domain_exists)(REQUIRED_NAME, VALIDATE_NAME, REQUIRED_DOMAIN, $constant, VALIDATE_PHONE);   
     
     if(empty($msgs)){
         if(!empty($edit)){
