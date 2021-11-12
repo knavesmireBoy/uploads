@@ -17,7 +17,7 @@ if (isset($_REQUEST['swap']))
     
     $row = prepUpdate($db, $id);
     //preserves potentially updated filename on description error, cute
-    $filename = isset($_GET['filename']) ? $_GET['filename'] : $row['filename'];
+    $filename = !empty($_GET['filename']) ? $_GET['filename'] : $row['filename'];
     $diz = $row['description'];
     $userid = $row['userid'];
     

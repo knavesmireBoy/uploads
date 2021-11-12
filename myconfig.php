@@ -17,6 +17,7 @@ define("REQUIRED_NAME", "xname;NAME is a required field");
 define("REQUIRED_EMAIL", "xemail;EMAIL is a required field");
 define("REQUIRED_PWD", "xpassword;a PASSWORD is required to login");
 define("REQUIRED_FILENAME", "xfilename;FILENAME is a required field");
+define("VALIDATE_FILENAME", "xfilename;FILENAME can't exceed 50 characters");
 define("VALIDATE_NAME", "xname;Please supply NAME in expected format");
 define("VALIDATE_EMAIL", "xemail;Please supply a valid EMAIL address");
 define("VALIDATE_PWD", "xpassword;PASSWORD should be at least three characters in length");
@@ -28,7 +29,7 @@ define("VALIDATE_UNIQUE_DOMAIN", "xdomain;DOMAIN already exists");
 define("VALIDATE_PHONE", "xphone;Please supply a valid PHONE NUMBER");
 define("VALIDATE_DESCRIPTION", "xdesc;DESCRIPTION is optional but should be between 3 and 30 word characters");
 define("SANITIZE_DESCRIPTION", "xdesc;Description contains invalid characters");
-define("VALIDATE_FILENAME", "xfilename;FILENAME should be between 1 and 50 word characters");
+define("VALIDATE_FILESIZE", "xfilesize;FILESIZE allows for a leading < or > and a trailing kb or mb");
 define("VALIDATE_SEARCH", "xsearch;SEARCH TEXT should be between 1 and 20 word characters");
 
 // Or, using an anonymous function as of PHP 5.3.0

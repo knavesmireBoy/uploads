@@ -28,7 +28,7 @@
         <label for="text">Containing text:&nbsp;</label><input maxlength="300" type="search" id="text" name="text"/></div>
     <div>
         <div>
-        <label for="text">File size:&nbsp;</label><input id="size" name="size"/></div>
+        <label for="size">File size:&nbsp;</label><input title="defaults to kb and greater than, override with < or mb" id="size" name="size" maxlength="20" placeholder="> 100mb"/></div>
         <div>
             <label for="suffix">Suffix:&nbsp;</label>
             <select id="suffix" name="suffix">

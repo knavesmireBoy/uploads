@@ -6,7 +6,8 @@ function seek($flag =  false)
     $arr = array(
         'suffix',
         'user',
-        'text'
+        'text',
+        'size'
     );
     $i = count($arr);
     while ($i--)
@@ -260,9 +261,17 @@ function massSanitize($db, $src){
     return $export;
 }
 
+
 function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $display)
 {
     include $db;
+    
+    
+    $msgs = validateSearch();
+    if(!empty($msgs)){
+        doExit(reLoad($msgs, '&find'));
+        
+    }
     $email = $_SESSION['email'];
     $select = "SELECT COUNT(upload.id) as total ";
     $from = getBaseFrom();
@@ -324,18 +333,36 @@ function validateFileDetails($d = "description"){
     $compose = curry2(compose('reduce'));
     $dopush = $compose(populateArray($msgs, ';'));    
     $isDesc = getBestArgs('isEmpty')(partial('doAlways', false), $negate('/^[\w]+[\w\s]{2,29}/'));
-    $isFileName = getBestArgs('isEmpty')(partial('doAlways', false), $negate('/^[\w-][\w-]{0,49}/'));
+    $isFileName = $negate('/^[\w][\w-]{0,49}\.[\w]{2,4}/');
     $checks = array_map('ALWAYS', $messages);
     $beBadDiz = array($isDesc, $dopush($checks[0]));
     $beEmpty = array('isEmpty', $dopush($checks[1]));
     $beBadFileName = array($isFileName, $dopush($checks[2]));
     $cbs = array($d => array($beBadDiz));
-    if(!isset($_POST['action'])){
+    if(!isset($_POST['action'])){//upload
           $cbs = array($d => array($beBadDiz), 'filename' => array($beBadFileName, $beEmpty));
     }
     doWhenLoop($cbs);
     return $msgs;
 }
+
+function validateSearch(){
+    $msgs = array();
+    $messages = array(VALIDATE_SEARCH, VALIDATE_FILESIZE);
+    $match = curryLeft2('preg_match');
+    $negate = curryLeft2('preg_match', 'negate');
+    $compose = curry2(compose('reduce'));
+    $dopush = $compose(populateArray($msgs, ';')); 
+    $isFileSize = $negate('/^[<>]?\d+[km]?b?/');
+    $isSearchTerm = getBestArgs('isEmpty')(partial('doAlways', false), $negate('/^[\w]+[\w\s-]{2,4}/'));
+    $checks = array_map('ALWAYS', $messages);
+    $beBadSearch = array($isSearchTerm, $dopush($checks[0]));
+    $beBadFileSize = array($isFileSize, $dopush($checks[1]));
+    $cbs = array('text' => array($beBadSearch), 'size' => array($beBadFileSize));
+    doWhenLoop($cbs);
+    return $msgs;
+}
+
 
 function reLoad($msgs, $q=''){
     $error = array_values($msgs)[0];
@@ -356,9 +383,7 @@ function doUpload($db, $priv, $key, $domain)
     if(!empty($msgs)){
         doExit(reLoad($msgs, '&onupload=true'));
     }
-    
     doWhen(partial('doAlways', !is_uploaded_file($_FILES['upload']['tmp_name'])) , $doError)(null);
-
     $realname = uploadedfile('name');
     $ext = strchr($realname, '.');
     $uploadname = time() . getRemoteAddr() . $ext;
