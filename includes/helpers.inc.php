@@ -268,13 +268,21 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     $from = getBaseFrom();
     $order = getBaseOrder($order_by, $start, $display);
     $isAdmin = partial('equals', $user_int, 0);
-    //we need fallbacks for FROM and WHERE clauses in case a user isn't selected in our serach box
+    //we need fallbacks for FROM and WHERE clauses in case a user isn't selected in our search box
     $fallback_where = [' WHERE TRUE', ' ', " WHERE user.email = '$email'"];
     $fallback_from = [partial('doAlways', ''), partial('fileCountByUser', $dom, $domain), partial('doAlways', '')];
     $vars = massSanitize($db, $_GET);
+    
     foreach($vars as $k => $v) { ${$k} = $v; }
+       
+    //$mod = preg_split('/(<|>)/', $size);
+    $mod = preg_split('/(?=<|>)/', $size);
+    $mod = isset($mod[1]) ? $mod[1] . ' ' : null;
+    $size = isset($mod) ? $mod : "> $size";
+    
     
     $emptyText = partial('isEmpty', $text);
+    $emptySize = partial('isEmpty', $size);
     $active_where = [' ', " WHERE user.id = $user", " WHERE user.email = '$email'"];
     $haveUser = partial(negate('isEmpty') , $user);
     $andUser = curry2('concatString') (" AND user.id = $user");
@@ -296,8 +304,11 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
         $queryUser = getBestPred($isAdmin)(partial('doAlways'), $andUser);
     }
     $likeText = curry2('concatString')(" AND upload.filename LIKE '%$text%' ");
-    $queryText = getBestPred($emptyText)(partial('doAlways'), $likeText);    
-    $decorate = $compose($queryUser, curry2('getFileTypeQuery')($suffix), $queryText);
+    $andSize = curry2('concatString') (" AND size $size");
+    $queryText = getBestPred($emptyText)(partial('doAlways'), $likeText);
+    $querySize = getBestPred($emptySize)(partial('doAlways'), $andSize);
+    
+    $decorate = $compose($queryUser, curry2('getFileTypeQuery')($suffix), $queryText, $querySize);
     $where = $decorate($where);
     $sql = $select . $from . $where . $order;
     //dump($sql);

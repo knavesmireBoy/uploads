@@ -1,8 +1,13 @@
+<?php
+    $error = isset($_GET['error']) ? $_GET['error'] : "View files satisfying the following criteria:";
+    $warning = isset($_GET['warning'])  ? $_GET['warning'] : "searcher";
+?>
+
 <h1>Search Files</h1>
-<form action="?" method="get" name="searchFiles">
-    <p>View files satisfying the following criteria:</p>
+<form action="?" method="get" name="searchFiles" class="<?php echo $warning; ?>">
+    <fieldset><legend><?php echo $error; ?></legend>
     <?php if(!isset($zero)) :?>
-    <div><label for="user">By user: </label>
+    <div><label for="user">By user:&nbsp;</label>
         <select id="user" name="user">
             <option value="">Any User</option>
             <?php 
@@ -20,10 +25,12 @@
     </div>
     <?php endif; ?>
     <div>
-        <label for="text">Containing text:</label><input maxlength="300" type="search" id="text" name="text"/></div>
+        <label for="text">Containing text:&nbsp;</label><input maxlength="300" type="search" id="text" name="text"/></div>
     <div>
         <div>
-            <label for="suffix">Suffix: </label>
+        <label for="text">File size:&nbsp;</label><input id="size" name="size"/></div>
+        <div>
+            <label for="suffix">Suffix:&nbsp;</label>
             <select id="suffix" name="suffix">
                 <option value="">Search files</option>
                 <option value="pdf">pdf</option>
@@ -33,6 +40,6 @@
         <input type="hidden" name="action" value="search"/>
         <input type="submit" value="Search"/></div>
 	
-</form>
+    </fieldset></form>
 <p><a href=".">Return</a></p>
 <?php echo '</body></html>';

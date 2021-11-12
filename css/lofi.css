@@ -228,6 +228,14 @@ fieldset {
     border: solid 1px orange;
 }
 
-.upload, .update {
+.upload, .update, .searcher {
     display: inline-block;
+}
+
+.searcher fieldset {
+    background-color: beige;
+}
+.searcher legend {
+    padding: .4em;
+    background-color: rgb(224, 224, 200);
 }
