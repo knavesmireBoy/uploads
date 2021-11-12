@@ -14,10 +14,16 @@ if (isset($_REQUEST['swap']))
 
     $answer = $_REQUEST['swap']; //$answer used as conditional to load update.html.php
     $email = "{$_SESSION['email']}";
+    
+    //dump($_GET);
+    
+    //SELECT upload.id, filename, description, upload.userid, user.name
+   // dump($id);
     $row = prepUpdate($db, $id);
     $filename = $row['filename'];
     $diz = $row['description'];
     $userid = $row['userid'];
+    
     $colleagues = doGetColleagues($link, $id, $domain);
     $extent = count($colleagues);
     if (!$extent)

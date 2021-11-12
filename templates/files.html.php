@@ -1,7 +1,7 @@
 <?php
 //ob_start('ob_postprocess');
 //ob_start('ob_gzhandler');
-if(!empty($_GET) && !isset($_GET['id']) && !isset($_GET['start'])){
+if(isset($_GET['onupload'])){
     $error = $_GET['error'];
     $warning = $_GET['warning'];  
 }

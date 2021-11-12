@@ -304,29 +304,34 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     return calculatePages($db, $display, $sql);
 }
 
-function validateDescription($d = "description"){
+function validateFileDetails($d = "description"){
+    
     $msgs = array();
+    $messages = array(VALIDATE_DESCRIPTION, REQUIRED_FILENAME, VALIDATE_FILENAME);
+  
     $negate = curryLeft2('preg_match', 'negate');
     $compose = curry2(compose('reduce'));
     $dopush = $compose(populateArray($msgs, ';'));    
     $isDesc = getBestArgs('isEmpty')(partial('doAlways', false), $negate('/^[\w]+[\w\s]{2,29}/'));
-    $isFileName = getBestArgs('isEmpty')(partial('doAlways', false), $negate('/^[\w][\w]{0,49}/'));
-    //$check = ALWAYS(VALIDATE_DESCRIPTION);
-    $checks = array_map(ALWAYS, [REQUIRED_FILENAME, VALIDATE_FILENAME, VALIDATE_DESCRIPTION]);
-    $beEmpty = array('isEmpty', $dopush($checks[0]));
-    $beBadFileName = array($isFileName, $dopush($checks[1]));
-    $beBadDiz = array($isDesc, $dopush($checks[2]));
-    $cbs = array($d => array($beBadDiz), 'filename' => array($beBadFileName, $beEmpty));
+    $isFileName = getBestArgs('isEmpty')(partial('doAlways', false), $negate('/^[\w-][\w-]{0,49}/'));
+    $checks = array_map('ALWAYS', $messages);
+    $beBadDiz = array($isDesc, $dopush($checks[0]));
+    $beEmpty = array('isEmpty', $dopush($checks[1]));
+    $beBadFileName = array($isFileName, $dopush($checks[2]));
+    $cbs = array($d => array($beBadDiz));
+    if(!isset($_POST['action'])){
+          $cbs = array($d => array($beBadDiz), 'filename' => array($beBadFileName, $beEmpty));
+    }
     doWhenLoop($cbs);
     return $msgs;
 }
 
-function reLoad($msgs){
+function reLoad($msgs, $q=''){
     $error = array_values($msgs)[0];
     $warning = implode(' ', array_keys($msgs));
     $warning .= " warning";
     $warning .= " upload";
-    return "?error=$error&warning=$warning";
+    return "?error=$error&warning=$warning$q";
 }
 
 function doUpload($db, $priv, $key, $domain)
@@ -335,10 +340,10 @@ function doUpload($db, $priv, $key, $domain)
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
     $doError = partialDefer('errorHandler', 'There was no file uploaded!', $terror);
     $uploaddesc = isset($_POST['description']) ? $_POST['description'] : '';
-    $msgs = validateDescription(null);
+    $msgs = validateFileDetails();
     
     if(!empty($msgs)){
-        doExit(reLoad($msgs));
+        doExit(reLoad($msgs, '&onupload=true'));
     }
     
     doWhen(partial('doAlways', !is_uploaded_file($_FILES['upload']['tmp_name'])) , $doError)(null);
@@ -488,16 +493,13 @@ function doUpdate($db)
     }
     $replacement = "$1$ext";
     $filename = preg_replace('/^([\w]+)(\.[\w]+)/', $replacement, $_POST['filename']);
-    
-    $msgs = validateDescription('desc');
-    
+    $msgs = validateFileDetails('desc');
     if(!empty($msgs)){        
         $location = reLoad($msgs);
-        $id = $_POST['user'];
-        $location .= "&id=$id&swap=No";
+        $id = $_POST['fileid'];
+        $location = reLoad($msgs, "&id=$id&swap=No");
         doExit($location);
-    }
-    
+    }            
     $fid = doSanitize($link, $_POST['fileid']);
     $orig = doSanitize($link, $_POST['update']);
     $user = isset($_POST['user']) ? doSanitize($link, $_POST['user']) : null;
@@ -508,6 +510,7 @@ function doUpdate($db)
     $single = "UPDATE upload SET userid ='$user', description ='$diz', filename ='$fname' WHERE id ='$fid'";
     $extent = isset($_POST['blanket']) ? assignColleague($fid, $user) : "UPDATE upload SET userid='$user' WHERE userid='$orig'";
     $sql = $_POST['answer'] === "Yes" ? $extent : $single;
+    
     doQuery($link, $sql, 'error updating details');
     header('Location: . ');
     exit();
