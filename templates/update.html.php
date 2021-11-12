@@ -9,12 +9,12 @@ else {
     $warning = 'update'; 
 }
 ?>
-<form action="." method="post" name="updateFileInfo" class="<?php echo $warning; ?>">
+<form action="" method="post" name="updateFileInfo" class="<?php echo $warning; ?>">
 <?php
     
     if($_REQUEST['swap'] == 'No'): ?>
     <fieldset><legend><?php echo $error; ?></legend>
-        <div><label for="filename">Name: <input id="filename" type="text" name="filename" value="<?php htmlout($filename); ?>"/></label></div><div><label for="desc">Description: <input id="desc" type="text" name="desc" value="<?php htmlout($diz); ?>"/></label></div><div>
+        <div><label for="filename">Name: <input id="filename" maxlength="50" name="filename" value="<?php htmlout($filename); ?>"/></label></div><div><label for="desc">Description: <input id="desc" maxlength="30" name="desc" value="<?php htmlout($diz); ?>"/></label></div><div>
 	<?php endif; 
     //allows Admin to associate a single USER to a single file, USER may optionally belong to a client
     if(($extent < 1) && ($isPriv())) : ?>

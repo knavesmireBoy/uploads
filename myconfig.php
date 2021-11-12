@@ -29,6 +29,7 @@ define("VALIDATE_PHONE", "xphone;Please supply a valid PHONE NUMBER");
 define("VALIDATE_DESCRIPTION", "xdesc;DESCRIPTION is optional but should be between 3 and 30 word characters");
 define("SANITIZE_DESCRIPTION", "xdesc;Description contains invalid characters");
 define("VALIDATE_FILENAME", "xfilename;FILENAME should be between 1 and 50 word characters");
+define("VALIDATE_SEARCH", "xsearch;SEARCH TEXT should be between 1 and 20 word characters");
 
 
 // Or, using an anonymous function as of PHP 5.3.0

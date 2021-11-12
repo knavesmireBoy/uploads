@@ -498,21 +498,27 @@ function doUpdate($db)
         $location = reLoad($msgs);
         $id = $_POST['fileid'];
         $location = reLoad($msgs, "&id=$id&swap=No");
+          if(!inString('xname', $warning)){
+                $n = $_POST['filename'];
+                $location .= "&filename=$n";
+            }
         doExit($location);
     }            
     $fid = doSanitize($link, $_POST['fileid']);
     $orig = doSanitize($link, $_POST['update']);
     $user = isset($_POST['user']) ? doSanitize($link, $_POST['user']) : null;
     $user = isset($_POST['colleagues']) ? doSanitize($link, $_POST['colleagues']) : $user;
-    $diz = isset($_POST['description']) ? doSanitize($link, $_POST['description']) : null;
+    $diz = isset($_POST['desc']) ? doSanitize($link, $_POST['desc']) : null;
     $fname = isset($_POST['filename']) ? doSanitize($link, $filename) : null;
     $user = !(isset($user)) ? $orig : $user;
     $single = "UPDATE upload SET userid ='$user', description ='$diz', filename ='$fname' WHERE id ='$fid'";
     $extent = isset($_POST['blanket']) ? assignColleague($fid, $user) : "UPDATE upload SET userid='$user' WHERE userid='$orig'";
     $sql = $_POST['answer'] === "Yes" ? $extent : $single;
-    
     doQuery($link, $sql, 'error updating details');
-    header('Location: . ');
+    //navigates back to selected page, remove query string from swap onwards to prevent loading update.html.php
+    $qs = explode('swap', $_SERVER['QUERY_STRING'])[0];
+    $qs = "?$qs";
+    header("Location: $qs");
     exit();
 }
 function getClientNameFromEmail($db, $domain, $email){

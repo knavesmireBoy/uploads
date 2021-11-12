@@ -4,7 +4,7 @@ if(!isset($prompt)){
     $prompt = ($call === 'confirm') ? "Choose <b>yes</b> for deletion options and <b>no</b> for editing options" : "Select the extent of deletions";
 }
 if(!$confirmed) : ?>
-<form action="." method="post" name="choice" class="predicate">
+<form action="" method="post" name="choice" class="predicate">
     <input type="hidden" name="id" value="<?php echo $id; ?>"/>
     <p><?php echo $prompt; ?></p>
     <p><label>Yes<input type="radio" name="<?php echo $call; ?>" value="Yes"/></label></p>

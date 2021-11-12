@@ -15,12 +15,9 @@ if (isset($_REQUEST['swap']))
     $answer = $_REQUEST['swap']; //$answer used as conditional to load update.html.php
     $email = "{$_SESSION['email']}";
     
-    //dump($_GET);
-    
-    //SELECT upload.id, filename, description, upload.userid, user.name
-   // dump($id);
     $row = prepUpdate($db, $id);
-    $filename = $row['filename'];
+    //preserves potentially updated filename on description error, cute
+    $filename = isset($_GET['filename']) ? $_GET['filename'] : $row['filename'];
     $diz = $row['description'];
     $userid = $row['userid'];
     
@@ -64,11 +61,22 @@ if (isset($_POST['confirm']) and $_POST['confirm'] === 'Yes')
 if (isset($_POST['confirm']) and $_POST['confirm'] === 'No')
 { //swap
     include $db;
+    
     $id = doSanitize($link, $_POST['id']);
+    $qs = "id=$id&swap=No";
+    $query_string = $_SERVER['QUERY_STRING'];
+    if(!empty($query_string)){
+        $query_string = preg_replace('/(\?[a-z0-9=&]*)(&sort)([a-z]*)/', '$1$2', '?' . $query_string);
+        $query_string .= "&$qs";
+    }
+    else {
+        $query_string .= "?$qs";
+    }
     $colleagues = doGetColleagues($link, $id, $domain);
     $extent = count($colleagues);
+    
     if($extent <= 1){
-        header("Location: ?id=$id&swap=No");
+        header("Location: $query_string");
         exit();
     }
     $prompt1 = "Choose <b>yes</b> to select assign a new owner to all ";
@@ -77,8 +85,6 @@ if (isset($_POST['confirm']) and $_POST['confirm'] === 'No')
     $prompt = !$extent ? "$prompt1 user $prompt2" : $prompt;
     $call = "swap";
 }
-
-
 ///////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
 ///Present list of users for administrators
 $vars = populateList($db, $domain, $user_int, $clientname);

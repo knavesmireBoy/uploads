@@ -20,7 +20,7 @@
     </div>
     <?php endif; ?>
     <div>
-        <label for="text">Containing text:</label> <input id="text" type="search" name="text"/></div>
+        <label for="text">Containing text:</label><input maxlength="300" type="search" id="text" name="text"/></div>
     <div>
         <div>
             <label for="suffix">Suffix: </label>
