@@ -337,10 +337,10 @@ function doUpload($db, $priv, $key, $domain)
         doExit(reLoad($msgs));
     }
     
-    doWhen(partial('doAlways', !is_uploaded_file($_FILES['upload']['tmp_name'])) , $doError) (null);
+    doWhen(partial('doAlways', !is_uploaded_file($_FILES['upload']['tmp_name'])) , $doError)(null);
 
     $realname = uploadedfile('name');
-    $ext = preg_replace('/(.*)(\.[^0-9.]+$)/i', '$2', $realname);
+    $ext = strchr($realname, '.');
     $uploadname = time() . getRemoteAddr() . $ext;
     $path = '../../filestore/';
     $filedname = $path . $uploadname;
@@ -481,14 +481,9 @@ function doUpdate($db)
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
     
      $msgs = validateDescription('desc');
-
     
     if(!empty($msgs)){        
-           $error = array_values($msgs)[0];
-    $warning = implode(' ', array_keys($msgs));
-    $warning .= " warning";
-    $warning .= " upload";
-        $location = "?uerror=$error&uwarning=$warning";
+        $location = reLoad($msgs);
         $id = $_POST['user'];
         $location .= "&id=$id&swap=No";
         doExit($location);

@@ -1,13 +1,20 @@
 <?php
-$uerror = isset($_GET['uerror']) ? $_GET['uerror'] : 'Edit file details';
-$uwarning = isset($_GET['uwarning']) ? $_GET['uwarning'] : $warning;
-?>
 
-<form action="." method="post" name="updateFileInfo" class="<?php echo $uwarning; ?>">
+//dump($_REQUEST);
+if(isset($_GET['error'])){
+    $error = $_GET['error'];
+    $warning = $_GET['warning'];  
+}
+else {
+    $error = "Amend File Details";
+    $warning = 'update'; 
+}
+?>
+<form action="." method="post" name="updateFileInfo" class="<?php echo $warning; ?>">
 <?php
     
     if($_REQUEST['swap'] == 'No'): ?>
-    <fieldset><legend><?php echo $uerror; ?></legend>
+    <fieldset><legend><?php echo $error; ?></legend>
         <div><label for="filename">Name: <input id="filename" type="text" name="filename" value="<?php htmlout($filename); ?>"/></label></div><div><label for="desc">Description: <input id="desc" type="text" name="desc" value="<?php htmlout($diz); ?>"/></label></div><div>
 	<?php endif; 
     //allows Admin to associate a single USER to a single file, USER may optionally belong to a client

@@ -228,6 +228,6 @@ fieldset {
     border: solid 1px orange;
 }
 
-.upload {
+.upload, .update {
     display: inline-block;
 }

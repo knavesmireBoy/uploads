@@ -1,8 +1,11 @@
-<?php include_once $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/helpers.inc.php';
+<?php
 //ob_start('ob_postprocess');
 //ob_start('ob_gzhandler');
-$error = isset($_GET['error']) ? $_GET['error'] : $error;
-$warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
+if(!empty($_GET) && !isset($_GET['id'])){
+    $error = $_GET['error'];
+    $warning = $_GET['warning'];  
+}
+
 $span = 2;
 ?>
 <h1 class="<?php echo strtolower($priv); ?>"><a href="?"><?php echo "$base | $name"; ?></a></h1>
