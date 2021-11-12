@@ -5,6 +5,7 @@
 
 //$doUpload(null);
 //$doView(null);
+setcookie('filename', "", time() -1, "/");
 if (isset($_REQUEST['swap']))
 { //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (FILE AMEND BLOCK)
     $button = "Update";
@@ -24,6 +25,7 @@ if (isset($_REQUEST['swap']))
         $colleagues = $prepareUserList($db);
     }
     $equals = partial(equality(true), $userid);
+    setcookie('filename', $filename, time() + 7200, '/');
 } ///
 
 if (isset($_POST['action']) && $_POST['action'] === 'upload')

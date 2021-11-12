@@ -1,5 +1,4 @@
 <?php
-
 //dump($_REQUEST);
 if(isset($_GET['error'])){
     $error = $_GET['error'];
@@ -18,7 +17,7 @@ else {
         <div><label for="filename">Name: <input id="filename" type="text" name="filename" value="<?php htmlout($filename); ?>"/></label></div><div><label for="desc">Description: <input id="desc" type="text" name="desc" value="<?php htmlout($diz); ?>"/></label></div><div>
 	<?php endif; 
     //allows Admin to associate a single USER to a single file, USER may optionally belong to a client
-    if(($extent < 1) && ($priv === 'Admin')) : ?>
+    if(($extent < 1) && ($isPriv())) : ?>
     <div><label for="user">User:&nbsp;</label>
         <select id="user" name="user">
             <?php
