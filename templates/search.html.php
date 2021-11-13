@@ -1,6 +1,8 @@
 <?php
     $error = isset($_GET['error']) ? $_GET['error'] : "View files satisfying the following criteria:";
     $warning = isset($_GET['warning'])  ? $_GET['warning'] : "searcher";
+$text = isset($_GET['text'])  ? $_GET['text']  : '';
+$size = isset($_GET['size'])  ? $_GET['size']  : '';
 ?>
 
 <h1>Search Files</h1>
@@ -25,10 +27,10 @@
     </div>
     <?php endif; ?>
     <div>
-        <label for="text">Containing text:&nbsp;</label><input maxlength="300" type="search" id="text" name="text"/></div>
+        <label for="text">Containing text:&nbsp;</label><input value="<?php htmlout($text); ?>" maxlength="300" type="search" id="text" name="text"/></div>
     <div>
         <div>
-        <label for="size">File size:&nbsp;</label><input title="defaults to kb and greater than, override with < or mb" id="size" name="size" maxlength="20" placeholder="> 100mb"/></div>
+        <label for="size">File size:&nbsp;</label><input value="<?php htmlout($size); ?>"title="defaults to kb and >, override with < or mb" id="size" name="size" maxlength="20" placeholder="> 100mb"/></div>
         <div>
             <label for="suffix">Suffix:&nbsp;</label>
             <select id="suffix" name="suffix">
