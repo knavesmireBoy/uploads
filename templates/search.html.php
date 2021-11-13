@@ -30,7 +30,7 @@ $size = isset($_GET['size'])  ? $_GET['size']  : '';
         <label for="text">Containing text:&nbsp;</label><input value="<?php htmlout($text); ?>" maxlength="300" type="search" id="text" name="text"/></div>
     <div>
         <div>
-        <label for="size">File size:&nbsp;</label><input value="<?php htmlout($size); ?>"title="defaults to kb and >, override with < or mb" id="size" name="size" maxlength="20" placeholder="> 100mb"/></div>
+        <label for="size">File size:&nbsp;</label><input value="<?php htmlout($size); ?>"title="defaults to kb and >, override with < or m" id="size" name="size" maxlength="20" placeholder="<2m"/></div>
         <div>
             <label for="suffix">Suffix:&nbsp;</label>
             <select id="suffix" name="suffix">

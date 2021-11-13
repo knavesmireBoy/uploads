@@ -29,7 +29,7 @@ define("VALIDATE_UNIQUE_DOMAIN", "xdomain;DOMAIN already exists");
 define("VALIDATE_PHONE", "xphone;Please supply a valid PHONE NUMBER");
 define("VALIDATE_DESCRIPTION", "xdesc;DESCRIPTION is optional but should be between 3 and 30 word characters");
 define("SANITIZE_DESCRIPTION", "xdesc;Description contains invalid characters");
-define("VALIDATE_FILESIZE", "xsize;FILESIZE allows for a leading < or > and a trailing kb or mb");
+define("VALIDATE_FILESIZE", "xsize;FILESIZE allows for a leading < and a trailing m");
 define("VALIDATE_SEARCH", "xtext;SEARCH TEXT should be between 2 and 20 word characters");
 
 // Or, using an anonymous function as of PHP 5.3.0

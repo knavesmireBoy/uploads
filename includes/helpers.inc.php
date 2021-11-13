@@ -285,13 +285,12 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     if (!empty($msgs))
     {
         $location = reLoad($msgs, '&find');
+        $doLocation = partial('concatString', $location);
         if (!inString('xtext', $location)){
-            $t = $_GET['text'];
-            $location .= "&text=$t";
+            $location = $doLocation("&text={$_GET['text']}");
              }
          if (!inString('xsize', $location)){
-            $t = $_GET['size'];
-            $location .= "&size=$t";
+             $location = $doLocation("&size={$_GET['size']}");
              }
         doExit($location);
     }
@@ -310,19 +309,25 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
         ${$k} = $v;
     }
    
-    //$mod = preg_split('/(<|>)/', $size);
-    $mod = preg_split('/(?=<|>)/', $size);
-    $mod = isset($mod[1]) ? $mod[1] . ' ' : null;
-    $size = isset($mod) ? $mod : "> $size";
+    if(!empty($size)){
+    $m = explode('m', $size);
+    $size = $m[0];
+    $mod = preg_split('/</', $size);
+    $size = isset($mod[1]) ? $mod[1] : $mod[0];
+    if(isset($m[1])){
+        $size *= 1000;
+    }
+    $size = isset($mod[1]) ? "< $size" : "> $size";
+    }
 
     $emptyText = partial('isEmpty', $text);
     $emptySize = partial('isEmpty', $size);
     $active_where = [' ', " WHERE user.id = $user", " WHERE user.email = '$email'"];
     $haveUser = partial(negate('isEmpty') , $user);
-    $andUser = curry2('concatString') (" AND user.id = $user");
+    $andUser = curry2('concatString')(" AND user.id = $user");
     $queryUser = getBestPred($isAdmin) ($andUser, partial('doAlways'));
     $where = $active_where[$user_int];
-    $active_from = [partial('fileCountByUser', $user, $domain) , partial('doAlways', '') , partial('doAlways', '') ];
+    $active_from = [partial('fileCountByUser', $user, $domain) , partial('doAlways', '') , partial('doAlways', '') ];   
 
     if (empty($user))
     {
@@ -341,10 +346,10 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
         $from .= $active_from[$user_int]();
         $queryUser = getBestPred($isAdmin) (partial('doAlways') , $andUser);
     }
-    $likeText = curry2('concatString') (" AND upload.filename LIKE '%$text%' ");
-    $andSize = curry2('concatString') (" AND size $size");
-    $queryText = getBestPred($emptyText) (partial('doAlways') , $likeText);
-    $querySize = getBestPred($emptySize) (partial('doAlways') , $andSize);
+    $likeText = curry2('concatString')(" AND upload.filename LIKE '%$text%' ");
+    $andSize = curry2('concatString')(" AND size $size");
+    $queryText = getBestPred($emptyText)(partial('doAlways'), $likeText);
+    $querySize = getBestPred($emptySize)(partial('doAlways'), $andSize);
 
     $decorate = $compose($queryUser, curry2('getFileTypeQuery') ($suffix) , $queryText, $querySize);
     $where = $decorate($where);
@@ -413,7 +418,7 @@ function validateSearch()
     $negate = curryLeft2('preg_match', 'negate');
     $compose = curry2(compose('reduce'));
     $dopush = $compose(populateArray($msgs, ';'));
-    $isFileSize = $negate('/^[<>]?\d+[km]?b?/');
+    $isFileSize = getBestArgs('isEmpty') (partial('doAlways', false) , $negate('/^[<>]?\d{1,4}m{0,1}/'));
     $isSearchTerm = getBestArgs('isEmpty') (partial('doAlways', false) , $negate('/^[\w]+[\w\s-]{1,4}/'));
     $checks = array_map('ALWAYS', $messages);
     $beBadSearch = array(
