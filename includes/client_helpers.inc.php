@@ -102,38 +102,13 @@ function validateClient($db, $edit = false){
         }
     }
     else {
-        /*
-        $error = array_values($msgs)[0];
-        $warning = implode(' ', array_keys($msgs));
-        $warning .= " warning";
-        $warning .= " editclient";
-        $id = isset($_POST['id']) ? $_POST['id'] : null;
-        $action = !empty($edit) ? 'Edit' : 'Add';
-        $default = "action=$action&error=$error&warning=$warning";
-        */     
-        
         if($action === 'Add'){
-            //$location = "?$default";
             $location = reLoad($msgs, "editclient", "&action=$action");
             $helper = preserveValidFormValues($location, '&', 'x', '=');
             $location = $helper("&name={$_POST['name']}", "&domain={$_POST['domain']}", "&tel={$_POST['tel']}");
-            /*
-            if(!inString('xname', $warning) && $_POST['name']){
-                $name = $_POST['name'];
-                $location .= "&name=$name";
-            }
-            if(!inString('xdomain', $warning) && $_POST['domain']){
-                $domain = $_POST['domain'];
-                $location .= "&domain=$domain";
-            }
-            if(!inString('xphone', $warning) && isset($_POST['tel'])){
-                $tel = $_POST['tel'];
-                $location .= "&tel=$tel";
-            }
-            */
+
         }
         else {
-            //$location = "?xid=$id&$default";
             $location = reLoad($msgs, "", "&xid={$_POST['id']}&action=$action");
         }
         
