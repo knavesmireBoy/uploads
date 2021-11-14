@@ -97,21 +97,14 @@ function validateUser($db, $priv, $edit = false){
         }
     }
     else {
-        $error = array_values($msgs)[0];
-        $warning = implode(' ', array_keys($msgs));
-        $warning .= " warning";
-        $warning .= " editclient";
         $id = isset($_POST['id']) ? $_POST['id'] : null;
         $action = !empty($edit) ? 'Edit' : 'add';
-        $location = "?xid=$id&action=$action&error=$error&warning=$warning";
+        $location = reLoad($msgs, "editclient", "&xid=$id&action=$action");
         if($action === 'add'){
-            if(!inString('xname', $warning)){
-                $name = $_POST['name'];
-                $location .= "&name=$name";
-            }
-            if(!inString('xemail', $warning)){
-                $email = $_POST['email'];
-                setcookie('eemail', $email, time() + 7200, '/');
+            $helper = preserveValidFormValues($location, '&', 'x', '=');
+            $location = $helper("&name={$_POST['name']}");
+            if(!empty($_POST['email'])){
+              setcookie('eemail', $_POST['email'], time() + 7200, '/');  
             }
         }
     }
@@ -148,7 +141,6 @@ function updateUser($db, $priv){
 	{
         assignClient($link, doSanitize($link, $_POST['employer']), $id, $email);
 	}
-    //$location = (isset($pwd)) ? "?pwdlen&id=$id" : ($priv == 'Client' ? '..' : '.');
     $location = $priv == 'Client' ? '..' : '.';
     setcookie('success', 'Details successfully updated', time() + 7200, "/");
 	doExit($location);

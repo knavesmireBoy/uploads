@@ -37,13 +37,15 @@ function deleteClient($db){
 }
 
 function checkExistingDomain($db){
-     include $db;
+    include $db;
     $sql = "SELECT domain FROM client";
+    $dom = isset($_POST['domain']) ? $_POST['domain'] : null;
     $res = doQuery($link, $sql, 'Error retrieving domain from clients.');
-    while($row = mysqli_fetch_array($res, MYSQLI_ASSOC)){
+    while($row = mysqli_fetch_array($res, MYSQLI_ASSOC))
+    {
         $gang [] = $row['domain'];
     }
-    return in_array($_POST['domain'], $gang);
+    return $dom ? in_array($_POST['domain'], $gang) : false;
 }
 
 function prepareChecks($dom){
@@ -89,6 +91,7 @@ function validateClient($db, $edit = false){
     $domain_exists = $edit ? false : checkExistingDomain($db);
     $constant = $domain_exists ? "xdomain;DOMAIN <b>{$_POST['domain']}</b> already exists" : VALIDATE_DOMAIN;
     $msgs = prepareChecks($domain_exists)(REQUIRED_NAME, VALIDATE_NAME, REQUIRED_DOMAIN, $constant, VALIDATE_PHONE);   
+    $action = !empty($edit) ? 'Edit' : 'Add';
     
     if(empty($msgs)){
         if(!empty($edit)){
@@ -99,6 +102,7 @@ function validateClient($db, $edit = false){
         }
     }
     else {
+        /*
         $error = array_values($msgs)[0];
         $warning = implode(' ', array_keys($msgs));
         $warning .= " warning";
@@ -106,9 +110,14 @@ function validateClient($db, $edit = false){
         $id = isset($_POST['id']) ? $_POST['id'] : null;
         $action = !empty($edit) ? 'Edit' : 'Add';
         $default = "action=$action&error=$error&warning=$warning";
+        */     
         
         if($action === 'Add'){
-            $location = "?$default";
+            //$location = "?$default";
+            $location = reLoad($msgs, "editclient", "&action=$action");
+            $helper = preserveValidFormValues($location, '&', 'x', '=');
+            $location = $helper("&name={$_POST['name']}", "&domain={$_POST['domain']}", "&tel={$_POST['tel']}");
+            /*
             if(!inString('xname', $warning) && $_POST['name']){
                 $name = $_POST['name'];
                 $location .= "&name=$name";
@@ -121,11 +130,15 @@ function validateClient($db, $edit = false){
                 $tel = $_POST['tel'];
                 $location .= "&tel=$tel";
             }
+            */
         }
         else {
-            $location = "?xid=$id&$default";
+            //$location = "?xid=$id&$default";
+            $location = reLoad($msgs, "", "&xid={$_POST['id']}&action=$action");
         }
         
+        doExit($location);
+        
     }
-    doExit($location);
+    
 }

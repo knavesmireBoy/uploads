@@ -31,6 +31,7 @@ $doUpdate(null);
 if (isset($_GET['add']) || (isset($_GET['action']) && $_GET['action'] === 'Add'))
 {
     //if submission fails form is reloaded with validated variables
+    //dump($_GET['action']);
     $id = '';
     $pagetitle = 'New Client';
     $action = 'addform';

@@ -13,7 +13,7 @@ $warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
     </head>
     <body>
         <div>
-            <h1><?php htmlout($pagetitle); ?></h1>
+            <h1><?php htmlout($pagetitle) ; ?></h1>
             <form action="?<?php htmlout($action); ?>" method="post" name="clientform" class="<?php echo $warning; ?>">
                 <fieldset><legend><?php echo $error; ?></legend>
                 <div>

@@ -284,23 +284,10 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     $msgs = validateSearch();
     if (!empty($msgs))
     {
-        $location = reLoad($msgs, '&find');
+        $location = reLoad($msgs, '', '&find');
         $helper = preserveValidFormValues($location, '&', 'x', '=');
         $location = $helper("&text={$_GET['text']}", "&size={$_GET['size']}");
-        doExit($location);
-        
-        $doLocation = partial('concatString', $location);
-        $notInString = curry2(negate('inString'))($location);
-        $mapped = array_map($notInString, array('xtext', 'xsize'));
-        $decorators = array("&text={$_GET['text']}", "&size={$_GET['size']}");
-        
-        foreach($mapped as $k => $v){
-            if($mapped[$k]){
-              $location = $doLocation($decorators[$k]);
-            }
-        }
-        
-        
+        doExit($location);        
     }
     $email = $_SESSION['email'];
     $select = "SELECT COUNT(upload.id) as total ";
@@ -449,15 +436,6 @@ function validateSearch()
     return $msgs;
 }
 
-function reLoad($msgs, $q = '')
-{
-    $error = array_values($msgs) [0];
-    $warning = implode(' ', array_keys($msgs));
-    $warning .= " warning";
-    $warning .= " upload";
-    return "?error=$error&warning=$warning$q";
-}
-
 function doUpload($db, $priv, $key, $domain)
 {
     //Bail out if the file isn't really an upload
@@ -468,7 +446,7 @@ function doUpload($db, $priv, $key, $domain)
 
     if (!empty($msgs))
     {
-        doExit(reLoad($msgs, '&onupload=true'));
+        doExit(reLoad($msgs, 'upload', '&onupload=true'));
     }
     doWhen(partial('doAlways', !is_uploaded_file($_FILES['upload']['tmp_name'])) , $doError) (null);
     $realname = uploadedfile('name');
@@ -626,14 +604,11 @@ function doUpdate($db)
     $msgs = validateFileDetails('desc');
     if (!empty($msgs))
     {
-        $location = reLoad($msgs);
+        //$location = reLoad($msgs);
         $id = $_POST['fileid'];
         $location = reLoad($msgs, "&id=$id&swap=No");
-        if (!inString('xname', $_GET['warning']))
-        {
-            $n = $_POST['filename'];
-            $location .= "&filename=$n";
-        }
+        $helper = preserveValidFormValues($location, '&', 'x', '=');
+        $location = $helper("&filename={$_POST['filename']}");
         doExit($location);
     }
     $fid = doSanitize($link, $_POST['fileid']);
