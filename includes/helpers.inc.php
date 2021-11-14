@@ -285,14 +285,22 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     if (!empty($msgs))
     {
         $location = reLoad($msgs, '&find');
-        $doLocation = partial('concatString', $location);
-        if (!inString('xtext', $location)){
-            $location = $doLocation("&text={$_GET['text']}");
-             }
-         if (!inString('xsize', $location)){
-             $location = $doLocation("&size={$_GET['size']}");
-             }
+        $helper = preserveValidFormValues($location, '&', 'x', '=');
+        $location = $helper("&text={$_GET['text']}", "&size={$_GET['size']}");
         doExit($location);
+        
+        $doLocation = partial('concatString', $location);
+        $notInString = curry2(negate('inString'))($location);
+        $mapped = array_map($notInString, array('xtext', 'xsize'));
+        $decorators = array("&text={$_GET['text']}", "&size={$_GET['size']}");
+        
+        foreach($mapped as $k => $v){
+            if($mapped[$k]){
+              $location = $doLocation($decorators[$k]);
+            }
+        }
+        
+        
     }
     $email = $_SESSION['email'];
     $select = "SELECT COUNT(upload.id) as total ";
