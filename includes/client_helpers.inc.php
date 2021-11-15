@@ -109,11 +109,9 @@ function validateClient($db, $edit = false){
 
         }
         else {
-            $location = reLoad($msgs, "", "&xid={$_POST['id']}&action=$action");
+            $location = reLoad($msgs, "editclient", "&xid={$_POST['id']}&action=$action");
         }
-        
         doExit($location);
-        
     }
     
 }

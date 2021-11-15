@@ -3,7 +3,7 @@
 function doConfirm($db, $action){
     if($action === 'Yes'){
         include $db;
-        $id = mysqli_real_escape_string($link, $_POST['id']);
+        $id = doSanitize($link, $_POST['id']);
         $result = doQuery($link, "DELETE FROM user WHERE id = $id", 'Error deleting user.');
     }
 }

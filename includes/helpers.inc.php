@@ -515,6 +515,47 @@ function doDelete($db, $compose)
         "SELECT file FROM upload WHERE id=$id"
     );
     $getRoute = partial('getProperty', $routes);
+    
+    $sql = $compose($findIndex, $getRoute) ($_POST['extent']);
+    if (!$sql)
+    {
+        header('Location: .');
+    }
+    $result = mysqli_query($link, $sql);
+    $doError = partialDefer('errorHandler', 'Database error fetching stored files.', $terror);
+    doWhen(partial('doAlways', !$result) , $doError) (null);
+
+    while ($row = mysqli_fetch_array($result))
+    {
+        $file = $row['file'];
+        $sql = "DELETE FROM upload WHERE file = '$file'";
+        $doError = partialDefer('errorHandler', 'Error deleting file.', $terror);
+        doWhen(partial('doAlways', !mysqli_query($link, $sql)) , $doError) (null);
+
+        unlink('../../filestore/' . $file);
+    }
+    header('Location: .');
+    exit();
+}
+
+function doDeleteJoin($db, $compose)
+{
+    include $db;
+    $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+    $findIndex = curry2('array_search') (array(
+        "c",
+        "u",
+        "f"
+    ));
+    $id = doSanitize($link, $_POST['id']);
+    $routes = array(
+        "SELECT c.file FROM user INNER JOIN client ON user.client_id = client.id INNER JOIN upload AS c ON user.id = c.userid  INNER JOIN upload AS d ON d.userid=user.id WHERE d.id=$id",
+        
+        "DELETE FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN upload ON upload.userid = d.userid WHERE upload.id = $id",
+        
+        "DELETE FROM upload WHERE id = $id"
+    );
+    $getRoute = partial('getProperty', $routes);
     $sql = $compose($findIndex, $getRoute) ($_POST['extent']);
     if (!$sql)
     {
