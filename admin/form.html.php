@@ -15,8 +15,7 @@ $warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
         <h1><?php htmlout($pagetitle); ?></h1>
         <form action="?<?php htmlout($action); ?>" method="post" name="usersform" class="<?php echo $warning; ?>">
             <fieldset><legend><?php echo $error; ?></legend>
-                
-            <ul>
+                <ul>
                 <li>
                     <label for="name">Name:</label><input id="name" name="name" value="<?php htmlout($name); ?>" size="32" /></li>
 			<li><label for="email">Email:</label><input id="email" placeholder="eg@eg.com" name="email" value="<?php htmlout($email); ?>" size="32"/></li>

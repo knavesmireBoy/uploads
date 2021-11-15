@@ -11,7 +11,7 @@
             if(isset($_COOKIE['success'])) { echo "<h2>{$_COOKIE['success']}</h2>"; } ?>
             <h1><?php echo $manage; ?></h1>
             <p><a href="?add">Add New User</a></p>
-            <form action="" id="userform" method="post" name="userform">
+            <form action="" id="userform" method="post" name="userform" class="select">
                 <ul>
                     <li><label for="user">User:</label> <select id="user" name="user">
                         <option value="">Select one</option>

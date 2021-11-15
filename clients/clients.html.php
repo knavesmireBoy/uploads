@@ -38,11 +38,12 @@
             endforeach;
             endif;
             ?>
+             <?php if(isset($prompt)) :
+            include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
+            endif; ?>
             <p><a href="../admin/">Return to users</a></p>
             <p><a href="..">Return to uploads</a></p>
-            <?php if(isset($prompt)) :
-            include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
-            endif; 
+            <?php
             include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/logout.inc.html.php';
             exit(); 
             ?>

@@ -8,7 +8,7 @@
 setcookie('filename', "", time() -1, "/");
 if (isset($_REQUEST['swap']))
 { //SWITCH OWNER OF FILE OR JUST UPDATE DESCRIPTION (FILE AMEND BLOCK)
-    $button = "Update";
+    $button = "update";
     include $db;
     $id = doSanitize($link, $_REQUEST['id']);
 
@@ -45,6 +45,7 @@ if (isset($_POST['action']) and $_POST['action'] === 'delete')
 {
     $id = $_POST['id'];
     $call = "confirm";
+    $submit = "choose";
 }
 if (isset($_POST['confirm']) and $_POST['confirm'] === 'Yes')
 {
@@ -56,6 +57,7 @@ if (isset($_POST['confirm']) and $_POST['confirm'] === 'Yes')
     $res = doQuery($link, getColleagues($id, $domain), 'Database error fetching list of users.');
     $colleagues = doProcess($res, 'id', 'name');//for assigning to client
     $extent = count($colleagues);
+    $submit = "delete innit";
 }
 
 if (isset($_POST['confirm']) and $_POST['confirm'] === 'No')
@@ -79,11 +81,12 @@ if (isset($_POST['confirm']) and $_POST['confirm'] === 'No')
         header("Location: $query_string");
         exit();
     }
-    $prompt1 = "Choose <b>yes</b> to select assign a new owner to all ";
-    $prompt2 = " files. Choose <b>no</b> to edit a single file";
+    $prompt1 = "Choose <b>YES</b> to select assign a new owner to all ";
+    $prompt2 = " files. Choose <b>NO</b> to edit a single file";
     $prompt = "$prompt1 client $prompt2";
     $prompt = !$extent ? "$prompt1 user $prompt2" : $prompt;
     $call = "swap";
+    $submit = "choose";
 }
 ///////// WILD ////////////// WILD ////////////// WILD ////////////// WILD ///////
 ///Present list of users for administrators

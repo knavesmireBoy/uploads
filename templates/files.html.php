@@ -41,7 +41,7 @@ $span = 2;
 	<?php endif; //Browser
 $qry = $query_string . $sort;
 if (count($files) > 0): ?>
-<p>The following files are stored in the database:</p>
+<p class="info">The following files are stored in the database:</p>
 <table>
     <thead>
         <tr>

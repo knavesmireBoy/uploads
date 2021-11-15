@@ -7,7 +7,7 @@
         <title>Manage Users</title>
 </head>
     <body>
-        <div>
+        <div class="clientlist">
             <h1><?php echo $manage; ?></h1><?php if ($priv =='Admin') : ?>
             <p><a href="?add">Add New User</a></p>
             <?php endif; ?><?php if ($priv =='Admin' && !isset($_POST['act'])): ?>
@@ -34,7 +34,7 @@
             <?php 
             elseif($priv == 'Client' || (isset($_POST['act']) and $_POST['act'] == 'Choose')):
             foreach ($users as $k => $v):?>
-            <form action="" class="clientlist" id="edituserform" method="post" name="edituserform">
+            <form action="" id="edituserform" method="post" name="edituserform">
                 <ul>
                     <li class="name"><label><?php htmlout($v); ?></label></li>
                     <li><label>edit<input name="action" type="radio" value="Edit"></label>
