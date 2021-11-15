@@ -8,7 +8,7 @@
         <link href="../css/lofi.css" type="text/css" rel="stylesheet" media="all"/>
     </head>
 <body>
-	<div class="clientlist" >
+	<div class="clientlist">
 		<h1><?php echo $data['manage']; ?></h1>
         <!-- A flag, clients forego select page which includes an "add user link" so we put that here for them-->
         <?php if(isset($data['client'])): ?>

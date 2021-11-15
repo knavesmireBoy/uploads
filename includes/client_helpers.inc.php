@@ -103,13 +103,13 @@ function validateClient($db, $edit = false){
     }
     else {
         if($action === 'Add'){
-            $location = reLoad($msgs, "editclient", "&action=$action");
+            $location = reLoad($msgs, "commit", "&action=$action");
             $helper = preserveValidFormValues($location, '&', 'x', '=');
             $location = $helper("&name={$_POST['name']}", "&domain={$_POST['domain']}", "&tel={$_POST['tel']}");
 
         }
         else {
-            $location = reLoad($msgs, "editclient", "&xid={$_POST['id']}&action=$action");
+            $location = reLoad($msgs, "commit", "&xid={$_POST['id']}&action=$action");
         }
         doExit($location);
     }

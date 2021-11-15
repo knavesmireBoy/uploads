@@ -584,19 +584,24 @@ function populateList($db, $domain, $user_int, $clientname)
 }
 
 function doUpdate($db)
-{
+{ //could be updating file details OR assigning ownership
     include $db;
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
     if (isset($_COOKIE['filename']))
     {
         $ext = strchr($_COOKIE['filename'], '.');
     }
-    $replacement = "$1$ext";
-    $filename = preg_replace('/^([\w]+)(\.[\w]+)/', $replacement, $_POST['filename']);
-    $msgs = validateFileDetails('desc');
+    $msgs = array();
+    
+    //dump($_POST);
+    if(isset($_POST['filename'])){
+        $replacement = "$1$ext";
+        $filename = preg_replace('/^([\w]+)(\.[\w]+)/', $replacement, $_POST['filename']);
+        $msgs = validateFileDetails('desc');
+    }
+    //no filename, desc     
     if (!empty($msgs))
     {
-        //$location = reLoad($msgs);
         $id = $_POST['fileid'];
         $location = reLoad($msgs, "&id=$id&swap=No");
         $helper = preserveValidFormValues($location, '&', 'x', '=');
@@ -607,8 +612,10 @@ function doUpdate($db)
     $orig = doSanitize($link, $_POST['update']);
     $user = isset($_POST['user']) ? doSanitize($link, $_POST['user']) : null;
     $user = isset($_POST['colleagues']) ? doSanitize($link, $_POST['colleagues']) : $user;
+    
     $diz = isset($_POST['desc']) ? doSanitize($link, $_POST['desc']) : null;
     $fname = isset($_POST['filename']) ? doSanitize($link, $filename) : null;
+    
     $user = !(isset($user)) ? $orig : $user;
     $single = "UPDATE upload SET userid ='$user', description ='$diz', filename ='$fname' WHERE id ='$fid'";
     $extent = isset($_POST['blanket']) ? assignColleague($fid, $user) : "UPDATE upload SET userid='$user' WHERE userid='$orig'";
@@ -676,7 +683,7 @@ function chooseAdmin($db, $key, $user, $domain)
     if (isset($row))
     {
         $c = getClientNameFromEmail($db, $user, null) ['name'];
-        $manage = "Manage users of $c";
+        $manage = "Manage users of: <span>$c</span>";
         $users = userDetailsFromDomain($db, $user, $domain);
     }
     else

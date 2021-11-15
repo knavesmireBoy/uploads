@@ -36,7 +36,7 @@ $span = 2;
 </td></tr>
 <?php endif; ?>
 <input type="hidden" name="action" value="upload"/>
-<tr><td><input type="submit" value="Upload"/></td><td>&nbsp;</td></tr></table>
+<tr><td><input type="submit" value="upload"/></td><td>&nbsp;</td></tr></table>
 </fieldset></form>
 	<?php endif; //Browser
 $qry = $query_string . $sort;
@@ -81,7 +81,7 @@ if (count($files) > 0): ?>
                     <input type="hidden" name="id" value="<?php htmlout($f['id']); ?>"/>
                     <input type="submit" value="download"/></div></form></td>
             <?php if ($nonBrowser()) : ?>
-            <td><form action="<?php $_SERVER['PHP_SELF']?>" method="post" name="<?php htmlout($f['id']); ?>">
+            <td><form action="?" method="post" name="<?php htmlout($f['id']); ?>">
                 <div><input type="hidden" name="action" value="delete"/>
                     <input type="hidden" name="id" value="<?php htmlout($f['id']); ?>"/>
                     <input type="submit" value="edit"/></div>

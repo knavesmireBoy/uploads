@@ -18,10 +18,10 @@ ul.float {
 }
 a {
 	color: black;
-	text-decoration: none
+	text-decoration: none;
 }
 a:hover {
-	text-decoration: underline
+	text-decoration: underline;
 }
 h2 {
 	color: #9c3;
@@ -38,8 +38,8 @@ td {
 	border: solid 1px black
 }
 th {
-	font-size: 110%;
-	background-color: hsl(75, 100%, 40%)
+	font: bold 1.1em Georgia, sans-serif;
+	background-color: hsl(77, 100%, 40%)
 }
 th a {
 	background-color: transparent;
@@ -48,12 +48,12 @@ th a {
 	padding-bottom: 0.6em
 }
 td a {
-	color: black
+	color: black;
 }
 th a:hover {
 	color: white;
 	text-decoration: none;
-	background-color: #080;
+    background-color: hsl(77, 90%, 40%)
 }
 td {
 	padding: 0.2em 1em;
@@ -61,6 +61,10 @@ td {
 	border-style: none none solid;
 	border-width: 0 0 2px;
 	border-color: #9c0
+}
+
+h1 span {
+    display: block;
 }
 th.control {
 	vertical-align: middle;
@@ -154,7 +158,7 @@ table.up td:last-child {
 }
 
 .block {
-    background-color: hsl(80, 60%, 80%);
+    background-color: hsl(77, 60%, 80%);
     display: inline-block;
     padding: 1em;
     border: solid 1px black;
@@ -179,7 +183,7 @@ input[type=submit]{
      border:1px solid black;
     color: white;
      border-radius:20px;
-     background-color: hsl(80, 100%, 20%);
+     background-color: hsl(77, 100%, 20%);
     font: 1em Arial;
 }
 
@@ -192,7 +196,7 @@ input[type=submit]:hover {
 .editclient input[type=submit]:hover, .predicate input[type=submit]:hover {
      color: white;
 }
-.clientlist ul, .editclient {
+.editclient {
     display: inline-block;
 }
 .clientlist {
@@ -237,13 +241,13 @@ fieldset {
 }
 
 .searcher fieldset, .upload fieldset {
-    background-color: hsl(80, 60%, 80%);
+    background-color: hsl(77, 60%, 80%);
 }
-.searcher legend, .upload legend, .commit legend {
+.searcher legend, .upload legend, .commit legend, .edit legend {
     padding: .4em;
-    color: hsl(80, 60%, 70%);
+    color: hsl(77, 60%, 70%);
     background-color: black;
-    font: bold 1em Georgia, serif;
+    font: bold 1.1em Georgia, serif;
 }
 
 .info {
@@ -254,28 +258,59 @@ fieldset {
 .logout {
     margin: 0 0 1em;
 }
-p a {
-    font: bold 1.1em Georgia, serif;
-    color: hsl(75, 100%, 30%);
+p a, .logout input[type=submit] {
+    font: bold 1em Georgia, serif;
+    color: hsl(77, 100%, 30%);
+    border: solid 1px black;
+    border-radius: 10px;
+    padding: .1em .25em;
 }
-p b {
+.logout input[type=submit], .upload input[type=submit]{
+    padding: .2em .4em;
+    font: bold 1.1em Georgia, serif;
+    background: black;
+    color: white;
+}
+.logout input[type=submit]:hover, .upload input[type=submit]:hover {
+    color: hsl(77, 100%, 30%);
 }
 
-.update, .editclient, .fieldset, .commit, .select, .clientlist {
+.clientlist p a {
+    background: black;
+    color: white;
+}
+.clientlist p a:hover {
+    color: hsl(77, 100%, 30%);
+}
+p a:hover {
+    text-decoration: none;
+    background: black;
+    color: white;
+}
+
+.update, .editclient, .fieldset, .commit, .select, .clientlist, .edit .select+div {
     margin: 0 0 1em;
     display: inline-block;
 }
 
-.commit fieldset, .fieldset, .select,  .clientlist form {
-    background-color: hsl(80, 60%, 80%);
+.commit fieldset, .fieldset, .select, .edit fieldset, .edit .select+div{
+    background-color: hsl(77, 60%, 80%);
 }
-.fieldset, .select, .clientlist {
+.fieldset, .select, .clientlist{
     padding: 1em;
     border: solid 1px black;
+    
+}
+.clientlist form {
+    background-color: white;
 }
 .select {
     border-radius: 20px;
     padding: .7em;
+}
+
+.edit .select {
+    border-radius: 0;
 }
 .select select {
     font: bold 1em Arial, sans-serif;
@@ -287,5 +322,21 @@ p b {
 .clientlist form {
     margin: 0 0 1em;
     padding: .5em;
+    border: solid 1px black;
+border-radius: 5px;
 }
 
+.clientlist {
+    background-color: hsl(77, 60%, 80%);
+}
+.edit .select {
+    margin: 0;
+}
+.edit .select+div {
+    padding: .7em;
+    border: solid 1px black;
+}
+
+fieldset, legend {
+    border-radius: 10px;
+}

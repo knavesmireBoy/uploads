@@ -12,7 +12,7 @@ $warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
         <link href="../css/lofi.css" type="text/css" rel="stylesheet" media="all"/>
     </head>
     <body>
-        <div>
+        <div class="edit">
             <h1><?php htmlout("Edit $name"); ?></h1>
             <form action="?<?php htmlout($action); ?>" method="post" name="clientform" class="<?php echo $warning; ?>">
                 <fieldset><legend><?php echo $error; ?></legend>

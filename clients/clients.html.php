@@ -12,7 +12,7 @@
             <h1>Manage Clients</h1>
             <p><a href="./?add">Add New Client</a></p>
             <?php if (!isset($_POST['act']) && !isset($prompt)): ?>
-            <form action="" method="post" name="clientsform">
+            <form action="" method="post" name="clientsform" class="select">
                 <label for="the_client">Client: </label>
                 <select name="client" id="the_client"><option value="">Select one</option>
                     <?php foreach ($clients as $k => $v): ?>

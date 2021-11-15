@@ -11,7 +11,7 @@ $warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
         <title>Edit user details</title>
         <link href="../css/lofi.css" type="text/css" rel="stylesheet" media="all"/>
     </head>
-    <body><div>
+    <body><div class="edit">
         <h1><?php htmlout($pagetitle); ?></h1>
         <form action="?<?php htmlout($action); ?>" method="post" name="usersform" class="<?php echo $warning; ?>">
             <fieldset><legend><?php echo $error; ?></legend>
@@ -35,7 +35,7 @@ $warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
             </fieldset>
             <?php endif;
             if($isPriv()) { ?>
-            <div><label for="employer">Company: </label>
+            <div class="select"><label for="employer">Company: </label>
                 <select name="employer" id="employer">
                     <option value="">Assign to Client?</option>
                     <?php foreach ($clientlist as  $i => $client): ?>

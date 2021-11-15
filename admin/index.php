@@ -16,8 +16,8 @@ $manage = "Manage User";
 setcookie('eemail', "", time() -1, "/");
 //$doWarning = doWhen($always(true), $always('warning'));
 $doWarning = getBestArgs($always(true))($always('warning'), $always(''));
-$warning = 'editclient';
-$error = 'User Details';
+$warning = 'commit';
+$error = 'User Details:';
 
 if (!userIsLoggedIn())
 {
@@ -77,7 +77,7 @@ if (isset($_POST['confirm']))
 }
 
 //Admin uses $_POST Non-Admin $_GET
-if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'Choose' && isset($_REQUEST['user']))
+if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'choose' && isset($_REQUEST['user']))
 {
     $domain = strrpos($key, "@") ? " user.email" : $domain;
     $data = $testPriv($db, $key, $_REQUEST['user'], $domain);
@@ -97,7 +97,7 @@ if (isset($_GET['add']) || (isset($_GET['action']) && $_GET['action'] === 'add')
     //setcookie('eemail', "", time() -1);
     //dump($_COOKIE);
     $cid;
-	$button = 'Add User';
+	$button = 'add';
     $roles = array();
     $clientlist = array();
 
@@ -149,7 +149,7 @@ if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || (isset($_GET['
 {
     $pagetitle = 'Edit User';
 	$action = 'editform';
-    $button = 'Update User';
+    $button = 'update';
     $name = '!';
     $email = '!';
     $clientlist;
@@ -256,5 +256,5 @@ else {
     $res = doQuery($link, "SELECT id from user WHERE email = '$email'", 'Error getting id from email');
     $row = goFetch($res);
     $id = $row['id'];
-    doExit("?act=Choose&user=$id");//bypass drop down for non-admin users
+    doExit("?act=choose&user=$id");//bypass drop down for non-admin users
 }

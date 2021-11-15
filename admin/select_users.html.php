@@ -27,7 +27,7 @@
                         }
                         echo $doOptEnd(); ?>
                         </select>
-                        <input name="act" type="submit" value="Choose">
+                        <input name="act" type="submit" value="choose">
                     </li>
                 </ul>
             </form>

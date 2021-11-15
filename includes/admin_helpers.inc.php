@@ -99,7 +99,7 @@ function validateUser($db, $priv, $edit = false){
     else {
         $id = isset($_POST['id']) ? $_POST['id'] : null;
         $action = !empty($edit) ? 'Edit' : 'add';
-        $location = reLoad($msgs, "editclient", "&xid=$id&action=$action");
+        $location = reLoad($msgs, "commit", "&xid=$id&action=$action");
         if($action === 'add'){
             $helper = preserveValidFormValues($location, '&', 'x', '=');
             $location = $helper("&name={$_POST['name']}");
