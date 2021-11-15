@@ -8,6 +8,7 @@ $base = 'Log In';
 $css = '../css/lofi.css';
 $warning = 'editclient';
 $error = 'Client Details';
+$submit = "Delete";
 
 if (!userIsLoggedIn())
 {
@@ -37,7 +38,7 @@ if (isset($_GET['add']) || (isset($_GET['action']) && $_GET['action'] === 'Add')
     $name = isset($_GET['name']) ? $_GET['name'] : '';
     $domain = isset($_GET['domain']) ? $_GET['domain'] : '';
     $tel = isset($_GET['tel']) ? $_GET['tel'] : '';
-    $button = 'Add Client';
+    $button = 'add';
     include 'form.html.php';
     exit();
 } 
@@ -50,7 +51,7 @@ if (isset($_REQUEST['action']) and $_REQUEST['action'] == 'Edit')
     $tel = '';
         $pagetitle = 'Edit Client';
         $action = 'editform';
-        $button = 'Update Client';
+        $button = 'update';
     //$id = isset($_POST['id']) ? $_POST['id'] : null;
     $selects = array("SELECT id, name, domain, tel ", "SELECT id, name, tel ", "SELECT id, domain, tel ");
     $select = $selects[0];
@@ -96,7 +97,7 @@ if (isset($_POST['action']) and $_POST['action'] == 'Delete')
 
 include $db;
 $sql = "SELECT id, name, domain from client"; // THE DEFAULT QUERY
-if (isset($_POST['act']) and $_POST['act'] == 'Choose' && !empty($_POST['client']))
+if (isset($_POST['act']) and $_POST['act'] == 'choose' && !empty($_POST['client']))
 {
     $id = doSanitize($link, $_POST['client']);
     $sql .= " WHERE id = $id";

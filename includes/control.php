@@ -57,7 +57,7 @@ if (isset($_POST['confirm']) and $_POST['confirm'] === 'Yes')
     $res = doQuery($link, getColleagues($id, $domain), 'Database error fetching list of users.');
     $colleagues = doProcess($res, 'id', 'name');//for assigning to client
     $extent = count($colleagues);
-    $submit = "delete innit";
+    $submit = "delete";
 }
 
 if (isset($_POST['confirm']) and $_POST['confirm'] === 'No')

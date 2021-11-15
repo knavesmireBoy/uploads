@@ -20,9 +20,9 @@
                         <?php htmlout($v) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <input type="submit" name="act" value="Choose"/>
+                <input type="submit" name="act" value="choose"/>
             </form>
-            <?php  elseif(isset($_POST['act']) and $_POST['act'] == 'Choose'):
+            <?php  elseif(isset($_POST['act']) and $_POST['act'] == 'choose'):
 
             foreach ($clients as $k => $v):?>
             <form action="" method="post" name="editclientform" class="clientlist">
@@ -31,14 +31,14 @@
                         <label>delete<input type="radio" name="action" value="Delete"/></label></li>
                     <li>
                         <input type="hidden" name="id" value="<?php htmlout($k); ?>"/>
-                        <input type="submit" value = "Submit"/>
+                        <input type="submit" value = "submit"/>
                     </li>
                 </ul></form>
             <?php
             endforeach;
             endif;
             ?>
-             <?php if(isset($prompt)) :
+             <?php if(isset($prompt)):
             include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
             endif; ?>
             <p><a href="../admin/">Return to users</a></p>

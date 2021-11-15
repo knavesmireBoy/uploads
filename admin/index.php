@@ -18,6 +18,7 @@ setcookie('eemail', "", time() -1, "/");
 $doWarning = getBestArgs($always(true))($always('warning'), $always(''));
 $warning = 'commit';
 $error = 'User Details:';
+$submit = "Delete";
 
 if (!userIsLoggedIn())
 {
@@ -56,10 +57,6 @@ $isAdmin = partial('equals', $priv, 'Admin');
 $testPriv = getBestArgs($isAdmin)('chooseAdmin', 'chooseClient');
 $manage = $isAdmin() ? 'Manage User' : 'Edit Details';
 $data = ['manage' => $manage];//required for edit.html.php after delete is invoked
-
-if(isset($_GET['pwdlen'])) {
-$pwderror = 'Password must contain at least 5 characters';
-}
 
 if (isset($_GET['addform']))
 {
