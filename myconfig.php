@@ -1,5 +1,5 @@
 <?php
-////mysql -u root -p mypoloafrica < ../../../../../Users/user/__.sql
+////mysql -u root -p uploads < ../../../../../Users/user/theuploads.sql
 ini_set("display_errors", true);
 //https://www.airpair.com/php/fatal-error-allowed-memory-size
 ini_set('memory_limit', '1024M'); // or you could use 1G

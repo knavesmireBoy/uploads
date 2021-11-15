@@ -499,7 +499,7 @@ function doView($db)
     exit();
 }
 
-function doDelete($db, $compose)
+function doDelete1($db, $compose)
 {
     include $db;
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
@@ -538,10 +538,12 @@ function doDelete($db, $compose)
     exit();
 }
 
-function doDeleteJoin($db, $compose)
+function doDelete($db, $compose)
 {
     include $db;
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
+    $err = 'Error deleting ';
+    $outcomes = array("files for this client", "files for this user", "this.file");
     $findIndex = curry2('array_search') (array(
         "c",
         "u",
@@ -549,31 +551,19 @@ function doDeleteJoin($db, $compose)
     ));
     $id = doSanitize($link, $_POST['id']);
     $routes = array(
-        "SELECT c.file FROM user INNER JOIN client ON user.client_id = client.id INNER JOIN upload AS c ON user.id = c.userid  INNER JOIN upload AS d ON d.userid=user.id WHERE d.id=$id",
-        
-        "DELETE FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN upload ON upload.userid = d.userid WHERE upload.id = $id",
-        
+        "DELETE upload FROM user INNER JOIN client ON client.id = user.client_id INNER JOIN upload  ON user.id = upload.userid INNER JOIN (SELECT client.id FROM client INNER JOIN user on user.client_id = client.id  INNER JOIN (SELECT upload.userid FROM user INNER JOIN upload ON upload.userid = user.id WHERE upload.id=$id) AS tmp WHERE user.id = tmp.userid) AS T ON client.id = T.id WHERE client.id = T.id",
+        "DELETE upload FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT userid FROM upload  WHERE id = $id) AS owt ON user.id = owt.userid WHERE user.id = owt.userid",
         "DELETE FROM upload WHERE id = $id"
     );
     $getRoute = partial('getProperty', $routes);
-    $sql = $compose($findIndex, $getRoute) ($_POST['extent']);
+    $index = $findIndex($_POST['extent']);
+    $sql = $getRoute($index);
+    $err .= $outcomes[$index];
     if (!$sql)
     {
         header('Location: .');
     }
-    $result = mysqli_query($link, $sql);
-    $doError = partialDefer('errorHandler', 'Database error fetching stored files.', $terror);
-    doWhen(partial('doAlways', !$result) , $doError) (null);
-
-    while ($row = mysqli_fetch_array($result))
-    {
-        $file = $row['file'];
-        $sql = "DELETE FROM upload WHERE file = '$file'";
-        $doError = partialDefer('errorHandler', 'Error deleting file.', $terror);
-        doWhen(partial('doAlways', !mysqli_query($link, $sql)) , $doError) (null);
-
-        unlink('../../filestore/' . $file);
-    }
+    doQuery($link, $sql, 'Error deleting files');
     header('Location: .');
     exit();
 }
