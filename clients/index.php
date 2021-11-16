@@ -6,7 +6,7 @@ include_once "../myconfig.php";
 $tmplt = $_SERVER["DOCUMENT_ROOT"] . "/uploads/templates/";
 $base = "Log In";
 $css = "../css/lofi.css";
-$warning = "editclient";
+$warning = "commit";
 $error = "Client Details";
 $submit = "Delete";
 
@@ -20,6 +20,7 @@ $roleplay = validateAccess("Admin");
 $key = $roleplay["id"];
 $priv = $roleplay["roleid"];
 $db = $_SERVER["DOCUMENT_ROOT"] . "/uploads/includes/db.inc.php";
+$isPriv = partial('equals', 'Admin', $priv);
 
 $doCreate = doWhen(partial("goGet", "addform") , partial("validateClient", $db, null));
 $doUpdate = doWhen(partial("goGet", "editform") , partial("validateClient", $db, "edit"));
@@ -45,7 +46,7 @@ if (goGet('add') || getWhen('action', 'Add'))
 if (requestWhen('action', 'Edit') || postWhen('confirm', 'No'))
 {
     include $db;
-    $name = "!";
+    $name = "";
     $domain = "!";
     $tel = "";
     $pagetitle = "Edit Client";

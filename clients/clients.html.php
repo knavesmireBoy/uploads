@@ -7,7 +7,7 @@
         <title>Manage Clients</title>
         <link href="../css/lofi.css" type="text/css" rel="stylesheet" media="all"/>
     </head>
-    <body>
+    <body class="clients">
         <div>
             <h1>Manage Clients</h1>
             <p><a href="./?add">Add New Client</a></p>

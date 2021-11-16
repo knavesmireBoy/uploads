@@ -154,7 +154,7 @@ if (requestWhen('action', 'Edit') || postWhen('confirm', 'No'))
     $pagetitle = 'Edit User';
 	$action = 'editform';
     $button = 'update';
-    $name = '!';
+    $name = '';
     $email = '!';
     $clientlist;
     $job;

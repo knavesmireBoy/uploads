@@ -11,9 +11,9 @@ $warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
         <title>Edit Client</title>
         <link href="../css/lofi.css" type="text/css" rel="stylesheet" media="all"/>
     </head>
-    <body>
+    <body class="clients">
         <div class="edit">
-            <h1><?php htmlout("Edit $name"); ?></h1>
+            <h1><a href="."><?php htmlout("Edit $name"); ?></a></h1>
             <form action="?<?php htmlout($action); ?>" method="post" name="clientform" class="<?php echo $warning; ?>">
                 <fieldset><legend><?php echo $error; ?></legend>
                 <div>
