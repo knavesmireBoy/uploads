@@ -103,7 +103,7 @@ $wither = seek(true);
 $link = $wither == '.'  ? 'Clear search results' : 'Search files';
 ?>
 <p><a href="<?php echo $wither; ?>"><?php echo $link; ?></a></p>
-<p class="footer">
+
 <?php
     $check = explode('sort=', $_SERVER['QUERY_STRING']);
     if(isset($check[1])){
@@ -115,7 +115,9 @@ $link = $wither == '.'  ? 'Clear search results' : 'Search files';
     
     $q = "&page=$pages&user=$user&text=$text&suffix=$suffix&sort=$sort";
     
-    if ($pages > 1) {
+    if ($pages > 1) { ?>
+     <p class="footer">
+         <?php
         $current_page = ($start/$display) + 1;
         if ($current_page != 1) { ?>
     <a href="?start=<?php echo $start-$display; echo $q; ?>">Previous</a>

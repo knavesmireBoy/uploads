@@ -3,6 +3,7 @@ $confirmed = ($call === 'confirmed') ? 'confirmed' : '';
 if(!isset($prompt)){
     $prompt = ($call === 'confirm') ? "Choose <b>YES</b> for deletion options and <b>NO</b> for editing options" : "Select the extent of deletions:";
 }
+$delete = $isPriv() ? "Delete all files for this client" : "Delete all files your files";
 if(!$confirmed): ?>
 <form action="" method="post" name="choice" class="prompt">
     <input type="hidden" name="id" value="<?php echo $id; ?>"/>
@@ -13,17 +14,15 @@ if(!$confirmed): ?>
 </form>
 <?php else: ?>
 <p class="info"><?php echo $prompt; ?></p>
-<form action="." method="post" name="deletions" class="commit">
+<form action="." method="post" name="deletions" class="commit confirm">
     <div class="fieldset">
-    <p><label for="ext_nwf" title="<?php echo $extent; ?>">Delete this file only<input type="radio" id="ext_nwf" name="extent" value="f"/></label></p>
+    <p><label for="ext_nwf">Delete this file only<input type="radio" id="ext_nwf" name="extent" value="f"/></label></p>
     <?php if($extent): ?>
     <p><label for="ext_nwu">Delete all files for this user<input type="radio" id="ext_nwu" name="extent" value="u"/></label></p>
-    <?php endif;
-    if($isPriv() && $extent): ?>
-    <p><label for="ext_nwc">Delete all files for this client<input type="radio" id="ext_nwc" name="extent" value="c"/></label></p>
-    <?php endif; ?>
+    <p><label for="ext_nwc"><?php echo $delete; ?><input type="radio" id="ext_nwc" name="extent" value="c"/></label></p>
+        <?php endif; ?>
     <input type="hidden" name="<?php echo $confirmed; ?>" value="remove"/>
     <input type="hidden" name="id" value="<?php echo $id; ?>"/>
     <input type="submit" value="delete"/></div>
 </form>
-<?php endif; ?>
+<?php endif;

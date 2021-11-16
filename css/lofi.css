@@ -25,6 +25,7 @@ fieldset, legend {
 
 h2 {
 	color: #9c3;
+	color: #7a9f33;
 	font-size: 1.5em
 }
 label {
@@ -130,8 +131,11 @@ table.up td:last-child {
     display: inline-block;
     padding: 1em;
     border: solid 1px black;
-    margin: 1em 0;
     border-radius: 5px;
+}
+
+.footer + .prompt, .footer + .commit {
+    margin: 1em 0;
 }
 
 .prompt .info, .prompt p {
@@ -262,7 +266,6 @@ p a:hover {
 
 .select select {
     font: bold 1em Arial, sans-serif;
-    
 }
 .update input[type=submit]:hover, .commit input[type=submit]:hover, .prompt input[type=submit]:hover{
     color: red;
@@ -310,8 +313,10 @@ p.footer span.current {
 }
 
 .commit {
-    margin: 1em 0;
     padding: 1em;
+}
+.confirm {
+    padding: 0;
 }
 
 .warning {
