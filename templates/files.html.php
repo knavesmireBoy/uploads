@@ -76,7 +76,7 @@ if (count($files) > 0): ?>
             <td title="<?php echo $tel ?>">
                 <?php $stamp = html($f["time"]);
                 echo date("g:i a F j ", strtotime($stamp)); ?></td>
-            <td><form action="<?php $_SERVER['PHP_SELF']?>" method="get" name="downloads">
+            <td><form action="?" method="get" name="downloads">
                 <div><input type="hidden" name="action" value="download"/>
                     <input type="hidden" name="id" value="<?php htmlout($f['id']); ?>"/>
                     <input type="submit" value="download"/></div></form></td>
