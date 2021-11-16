@@ -11,35 +11,44 @@ ul {
 	padding: 0
 }
 p {
-    margin: 0 0 .5em;
+    margin: 0 0 1em;
 }
-ul.float {
-	width: 30%
+
+fieldset {
+    border: solid 1px black;
+    margin: 0 0 1em;
 }
-a {
-	color: black;
-	text-decoration: none;
+
+fieldset, legend {
+    border-radius: 10px;
 }
-a:hover {
-	text-decoration: underline;
-}
+
 h2 {
 	color: #9c3;
 	font-size: 1.5em
+}
+label {
+	font-size: 1em;
+	font-weight: bold;
+	padding-top: 0.3em;
+	padding-bottom: 0.3em
 }
 table {
 	margin-bottom: 1em;
 	border-collapse: collapse
 }
-.up {
-    margin: 0;
-}
+
 td {
-	border: solid 1px black
+	padding: 0.2em 1em;
+	vertical-align: middle;
+	border-style: none none solid;
+	border-width: 0 0 2px;
+	border-color: #9c0;
 }
 th {
 	font: bold 1.1em Georgia, sans-serif;
-	background-color: hsl(77, 100%, 40%)
+	background-color: #9c0;
+	background-color: hsl(77, 100%, 40%);
 }
 th a {
 	background-color: transparent;
@@ -47,20 +56,19 @@ th a {
 	padding-top: 0.6em;
 	padding-bottom: 0.6em
 }
-td a {
-	color: black;
-}
+
 th a:hover {
 	color: white;
 	text-decoration: none;
-    background-color: hsl(77, 90%, 40%)
+    background-color: hsl(77, 90%, 35%)
 }
-td {
-	padding: 0.2em 1em;
-	vertical-align: middle;
-	border-style: none none solid;
-	border-width: 0 0 2px;
-	border-color: #9c0
+
+a, td a {
+	color: black;
+	text-decoration: none;
+}
+a:hover {
+	text-decoration: underline;
 }
 
 h1 span {
@@ -72,26 +80,8 @@ th.control {
 tr.admin {
 	background-color: white
 }
-.footer a, .footer span
-/*  fix for ie  */
-
-	{
-	display: inline;
-	outline-style: solid;
-	outline-width: 1px
-}
-.footer a, .footer span {
-	display: inline-block;
-	margin-right: 0.5em;
-	padding: 0.5em 0.75em
-}
-.footer a:hover {
-	color: white;
-	text-decoration: none;
-	background-color: #99cc33
-}
-p.footer span.current {
-	background-color: #99cc33
+.up {
+    margin: 0;
 }
 
 ul input {
@@ -101,68 +91,64 @@ form li, form div {
 	padding-top: 0.2em;
 	padding-bottom: 0.2em
 }
-ul.float input, ul.float select {
-	margin-left: -72%;
-	position: relative;
-	left: 110%
-}
-ul.edit span {
-	margin-left: -50%;
-	position: relative;
-	left: 100%
-}
-ul.edit {
-	width: 25%
-}
-label {
-	font-size: 1em;
-	font-weight: bold;
-	padding-top: 0.3em;
-	padding-bottom: 0.3em
-}
-ul.float label {
-	text-align: right;
-	margin-right: 65%;
-	float: right;
-	vertical-align: middle
-}
-ul.edit label {
-	text-align: right;
-	margin-right: 50%;
-	float: right;
-	vertical-align: middle
-}
+
 input[type="text"] {
 	font-size: 1em;
 	height: 1.5em;
-	solid: -webkit-border-radius: .5em,
-}
-.blue {
-	border: solid 1px white
-}
-.sap td {
-	font-size: 110%;
-	line-height: 2;
-	text-align: right;
-	padding-right: 0.4em;
-	padding-left: 0
-}
-table.up td {
-	text-align: right;
-	padding-right: 0.3em;
-	padding-left: 0;
-	border-bottom: 0 none
-}
-table.up td:last-child {
-	text-align: left
 }
 
-.block {
+input[type=submit]{
+    border:1px solid black;
+    color: white;
+    border-radius:20px;
+    background-color: hsl(77, 100%, 20%);
+    font: 1em Arial;
+}
+
+input[type=submit]:hover {
+    background-color: black;
+}
+
+table.up td {
+	text-align: right;
+    padding: .25em 0.3em .25em 0;
+	border: 0px;
+}
+table.up td:last-child {
+	text-align: left;
+}
+
+.prompt {
     background-color: hsl(77, 60%, 80%);
     display: inline-block;
     padding: 1em;
     border: solid 1px black;
+    margin: 1em 0 0;
+    border-radius: 5px;
 }
+
+.clientlist {
+    margin: 0 0 1em;
+}
+
+.info {
+    font: 1.1em Georgia, serif;
+    font-style: italic;
+    margin: 1em 0 .5em;
+}
+
+.logout {
+    margin: 0 0 1em;
+}
+p a, .logout input[type=submit] {
+    font: bold 1em Georgia, serif;
+    color: #6e9900;
+    border: solid 1px black;
+    border-radius: 10px;
+    padding: .15em .3em;
+}
+
+
 
 .clientlist li {
     display: inline-block;
@@ -179,30 +165,6 @@ table.up td:last-child {
     font-size: 110%;
     border-bottom: dotted 1px;
 }
-input[type=submit]{
-     border:1px solid black;
-    color: white;
-     border-radius:20px;
-     background-color: hsl(77, 100%, 20%);
-    font: 1em Arial;
-}
-
-
-input[type=submit]:hover {
-    background-color: black;
-}
-.editclient input[type=submit], .predicate input[type=submit] {
-}
-.editclient input[type=submit]:hover, .predicate input[type=submit]:hover {
-     color: white;
-}
-.editclient {
-    display: inline-block;
-}
-.clientlist {
-    margin: 0 0 1em;
-}
-
 h1.admin a {
     color: navy;
 }
@@ -211,16 +173,6 @@ h1.manager a {
 }
 h1.browser a{
     color: slategray;
-}
-/*
-.editclient fieldset {
-    position: absolute;
-    left: -9999px;
-}
-*/
-fieldset {
-   border: solid 1px black;
-    margin: 0 0 1em;
 }
 .warning fieldset:first-child {
     border: solid 1px red;
@@ -241,47 +193,30 @@ fieldset {
 }
 
 .searcher fieldset, .upload fieldset {
-    background-color: hsl(77, 60%, 80%);
+    background-color: #d9ebad;
 }
 .searcher legend, .upload legend, .commit legend, .edit legend {
     padding: .4em;
-    color: hsl(77, 60%, 70%);
+    color: #c6e085;
     background-color: black;
     font: bold 1.1em Georgia, serif;
 }
 
-.info {
-    font: 1.1em Georgia, serif;
-    font-style: italic;
-}
-
-.logout {
-    margin: 0 0 1em;
-}
-p a, .logout input[type=submit] {
-    font: bold 1em Georgia, serif;
-    color: hsl(77, 100%, 30%);
-    border: solid 1px black;
-    border-radius: 10px;
-    padding: .1em .25em;
-}
 .logout input[type=submit], .upload input[type=submit]{
     padding: .2em .4em;
     font: bold 1.1em Georgia, serif;
     background: black;
     color: white;
 }
-.logout input[type=submit]:hover, .upload input[type=submit]:hover {
-    color: hsl(77, 100%, 30%);
+.logout input[type=submit]:hover, .upload input[type=submit]:hover, .clientlist p a:hover {
+    color: #6e9900;
 }
 
 .clientlist p a {
     background: black;
     color: white;
 }
-.clientlist p a:hover {
-    color: hsl(77, 100%, 30%);
-}
+
 p a:hover {
     text-decoration: none;
     background: black;
@@ -294,40 +229,37 @@ p a:hover {
 }
 
 .commit fieldset, .fieldset, .select, .edit fieldset, .edit .select+div{
-    background-color: hsl(77, 60%, 80%);
+    background-color: #d9ebad;
 }
-.fieldset, .select, .clientlist{
+.fieldset, .select, .clientlist {
     padding: 1em;
     border: solid 1px black;
-    
+}
+.fieldset {
+    border-radius: 5px;
 }
 .clientlist form {
     background-color: white;
+     margin: 0 0 1em;
+    padding: .5em;
+    border: solid 1px black;
+    border-radius: 5px;
 }
 .select {
     border-radius: 20px;
     padding: .7em;
 }
 
-.edit .select {
-}
 .select select {
     font: bold 1em Arial, sans-serif;
     
 }
-.update input[type=submit]:hover, .editclient input[type=submit]:hover, .commit input[type=submit]:hover{
+.update input[type=submit]:hover, .commit input[type=submit]:hover{
     color: red;
 }
 
-.clientlist form {
-    margin: 0 0 1em;
-    padding: .5em;
-    border: solid 1px black;
-border-radius: 5px;
-}
-
 .clientlist {
-    background-color: hsl(77, 60%, 80%);
+    background-color: #d9ebad;
 }
 .edit .select {
     margin: 0;
@@ -338,13 +270,35 @@ border-radius: 5px;
     border: solid 1px black;
     border-radius: 5px;
 }
-
-fieldset, legend {
-    border-radius: 10px;
-}
-
 p.footer a {
     border-width: 0;
     border-radius: 0;
     font: 1em Arial, sans-serif;
+    color: black;
+}
+p.footer {
+    margin: 1.5em 0 0;
+}
+
+/*  fix for ie  */
+.footer a, .footer span {
+    display: inline;
+    outline: 1px solid black;
+}
+.footer a, .footer span {
+	display: inline-block;
+	margin-right: 0.5em;
+	padding: 0.5em 0.75em
+}
+.footer a:hover {
+	color: white;
+	background-color: #9c0;
+}
+p.footer span.current {
+	background-color: #9c0;
+}
+
+.commit {
+    margin: 1em 0 0;
+    background-color: fuchsia;
 }
