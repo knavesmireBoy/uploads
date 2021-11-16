@@ -149,7 +149,7 @@ if (goGet('add') || getWhen('action', 'add'))
 	exit();
 }
 
-if (requestWhen('action', 'Edit'))
+if (requestWhen('action', 'Edit') || postWhen('confirm', 'No'))
 {
     $pagetitle = 'Edit User';
 	$action = 'editform';

@@ -84,6 +84,13 @@ tr.admin {
     margin: 0;
 }
 
+.name label {
+    font-family: Georgia, serif;
+    font-size: 1.3em;
+    color: hsl(77, 100%, 20%);
+}
+
+
 ul input {
 	margin-left: 0.5em
 }
