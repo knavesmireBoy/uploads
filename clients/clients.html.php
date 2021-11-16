@@ -11,19 +11,8 @@
         <div>
             <h1>Manage Clients</h1>
             <p><a href="./?add">Add New Client</a></p>
-            <?php if (!isset($_POST['act']) && !isset($prompt)): ?>
-            <form action="" method="post" name="clientsform" class="select">
-                <label for="the_client">Client: </label>
-                <select name="client" id="the_client"><option value="">Select one</option>
-                    <?php foreach ($clients as $k => $v): ?>
-                    <option value="<?php echo $k; ?>">
-                        <?php htmlout($v) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <input type="submit" name="act" value="choose"/>
-            </form>
-            <?php  elseif(isset($_POST['act']) and $_POST['act'] == 'choose'):
-
+            
+            <?php if(!empty($_POST['client'])):
             foreach ($clients as $k => $v):?>
             <form action="" method="post" name="editclientform" class="clientlist">
                 <ul><li class="name"><label><?php htmlout($v); ?></label></li>
@@ -36,11 +25,22 @@
                 </ul></form>
             <?php
             endforeach;
+            elseif(!isset($prompt)) : ?>            
+            <form action="" method="post" name="clientsform" class="select">
+                <label for="the_client">Client: </label>
+                <select name="client" id="the_client"><option value="">Select one</option>
+                    <?php foreach ($clients as $k => $v): ?>
+                    <option value="<?php echo $k; ?>">
+                        <?php htmlout($v) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <input type="submit" name="act" value="choose"/>
+            </form>
+            <?php endif;
+            if(isset($prompt)):
+            include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
             endif;
             ?>
-             <?php if(isset($prompt)):
-            include $_SERVER['DOCUMENT_ROOT'] . '/uploads/templates/prompt.html.php';
-            endif; ?>
             <p><a href="../admin/">Return to users</a></p>
             <p><a href="..">Return to uploads</a></p>
             <?php

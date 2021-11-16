@@ -123,8 +123,12 @@ table.up td:last-child {
     display: inline-block;
     padding: 1em;
     border: solid 1px black;
-    margin: 1em 0 0;
+    margin: 1em 0;
     border-radius: 5px;
+}
+
+.prompt .info, .prompt p {
+    margin: 0 0 .5em;
 }
 
 .clientlist {
@@ -254,12 +258,13 @@ p a:hover {
     font: bold 1em Arial, sans-serif;
     
 }
-.update input[type=submit]:hover, .commit input[type=submit]:hover{
+.update input[type=submit]:hover, .commit input[type=submit]:hover, .prompt input[type=submit]:hover{
     color: red;
 }
 
 .clientlist {
     background-color: #d9ebad;
+    border-radius: 5px;
 }
 .edit .select {
     margin: 0;
