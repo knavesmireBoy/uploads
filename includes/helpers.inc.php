@@ -182,7 +182,6 @@ function doGetColleagues($link, $id, $domain)
 {
     $res = doQuery($link, getColleagues($id, $domain) , 'Database error fetching list of users.');
     return doProcess($res, 'id', 'name'); //for assigning to client
-    
 }
 
 function assignColleague($upload_id, $user_id)
@@ -214,7 +213,6 @@ function doEmail($link, $id)
         $body = 'We have just uploaded the file' . $file . 'for checking.';
         $body = wordwrap($body, 70);
         //mail($email, $file, $body, "From: $name <{$_SESSION['email']}>");
-        
     }
 }
 
@@ -332,9 +330,7 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
         if ($isAdmin())
         { //only admin can have no constraints on user
             $queryUser = partial('doAlways', $where);
-        }
-        //$queryUser = partial('doAlways', '');
-        
+        }        
     }
     else
     {
@@ -440,23 +436,25 @@ function doUpload($db, $priv, $key, $domain)
 {
     //Bail out if the file isn't really an upload
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-    $doError = partialDefer('errorHandler', 'There was no file uploaded!', $terror);
+    $doError = partialDefer('errorHandler', '<a href=".">There was no file uploaded!</a>', $terror);
     $uploaddesc = isset($_POST['description']) ? $_POST['description'] : '';
     $msgs = validateFileDetails();
+    $noFile = negate(curry11('is_uploaded_file')(uploadedfile('tmp_name')));
+    $noCopy = negate(partial('copy', uploadedfile('tmp_name')));
 
     if (!empty($msgs))
     {
         doExit(reLoad($msgs, 'upload', '&onupload=true'));
     }
-    doWhen(partial('doAlways', !is_uploaded_file($_FILES['upload']['tmp_name'])) , $doError) (null);
+    doWhen($noFile, $doError)(null);
     $realname = uploadedfile('name');
     $ext = strchr($realname, '.');
     $uploadname = time() . getRemoteAddr() . $ext;
     $path = '../../filestore/';
     $filedname = $path . $uploadname;
     // Copy the file (if it is deemed safe)
-    $doError = partialDefer('errorHandler', "Could not  save file as $filedname!", $terror);
-    doWhen(partial('doAlways', !copy(uploadedfile('tmp_name') , $filedname)) , $doError) (null);
+    $doError = partialDefer('errorHandler', "<a href='.'>Could not  save file as $filedname!</a>", $terror);
+    doWhen($noCopy, $doError)($filedname);
 
     $theKey = getInitialKey($db, $priv, $_POST['user'], $domain);
     $mykey = $theKey ? $theKey : $key;
@@ -465,10 +463,7 @@ function doUpload($db, $priv, $key, $domain)
     $doInsert = doInsert($link); //older versions of php may need to capture closure in a variable as opposed to func()();
     $sql = $doInsert($realname, uploadedfile('type') , $uploaddesc, $path, $uploadname, uploadedfile('size') , $mykey);
     doFetch($link, $sql, 'Database error storing file information!' . $sql);
-
-    //doEmail($link, mysqli_insert_id($link));
-    header('Location: .');
-    exit();
+    doExit();
 }
 
 function doView($db)
@@ -476,11 +471,10 @@ function doView($db)
     include $db;
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
     $id = doSanitize($link, $_GET['id']);
-    $result = mysqli_query($link, "SELECT filename, mimetype, filepath, file, size FROM upload WHERE id = '$id'");
-    $doError = partialDefer('errorHandler', 'Database error fetching requested file.', $terror);
-    doWhen(partial('doAlways', !$result) , $doError) (null);
+    
+    $result = doQuery($link, "SELECT filename, mimetype, filepath, file, size FROM upload WHERE id = '$id'", 'Database error fetching requested file.');
 
-    $file = mysqli_fetch_array($result);
+    $file = goFetch($result);
     $doError = partialDefer('errorHandler', 'File with specified ID not found in the database!', $terror);
     doWhen(partial('doAlways', !$file) , $doError) (null);
 
@@ -512,6 +506,7 @@ function doDelete($db, $compose)
     ));
     $id = doSanitize($link, $_POST['id']);
     $routes = array(
+        /*doozy, obtain client id from file id to filter list of client files */
         "DELETE upload FROM user INNER JOIN client ON client.id = user.client_id INNER JOIN upload  ON user.id = upload.userid INNER JOIN (SELECT client.id FROM client INNER JOIN user on user.client_id = client.id  INNER JOIN (SELECT upload.userid FROM user INNER JOIN upload ON upload.userid = user.id WHERE upload.id=$id) AS tmp WHERE user.id = tmp.userid) AS T ON client.id = T.id WHERE client.id = T.id",
         "DELETE upload FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT userid FROM upload  WHERE id = $id) AS owt ON user.id = owt.userid WHERE user.id = owt.userid",
         "DELETE FROM upload WHERE id = $id"

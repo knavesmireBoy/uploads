@@ -24,7 +24,7 @@ else {
             endif;
             if($extent > 1) : 
             if(isset($answer) && $answer == 'Yes') : ?>
-            <div class="fieldset">
+            <div class="<?php echo "fieldset $answer"; ?>">
             <p class="info">Select checkbox to re-assign all client files to selected user.</p><p class="info">Leave unchecked to simply swap all instances of original owner to selected user</p>
             <p><label for="blanket">swap/re-assign</label><input type = "checkbox" name="blanket" id="blanket"></p>
             <?php endif; ?>

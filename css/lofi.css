@@ -301,9 +301,16 @@ p.footer span.current {
 .update input[type=submit]:hover, .commit input[type=submit]:hover, .prompt input[type=submit]:hover {
 	color: red;
 }
+#upload .confirm {
+    border-width: 0;
+}
 .xname #name, .xemail #email {
 	border: solid 1px red;
 }
 .xname.xemail #email {
 	border: solid 1px orange;
+}
+.Yes p, .Yes {
+    margin: 0;
+    border: 0;
 }
