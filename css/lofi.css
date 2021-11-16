@@ -141,18 +141,9 @@ table.up td:last-child {
     margin: 1em 0 .5em;
 }
 
-.logout {
+.log {
     margin: 0 0 1em;
 }
-p a, .logout input[type=submit] {
-    font: bold 1em Georgia, serif;
-    color: #6e9900;
-    border: solid 1px black;
-    border-radius: 10px;
-    padding: .15em .3em;
-}
-
-
 
 .clientlist li {
     display: inline-block;
@@ -179,7 +170,7 @@ h1.browser a{
     color: slategray;
 }
 .warning fieldset:first-child {
-    border: solid 1px red;
+    border: solid 1px white;
     position: relative;
     left: 0;
 }
@@ -206,13 +197,21 @@ h1.browser a{
     font: bold 1.1em Georgia, serif;
 }
 
-.logout input[type=submit], .upload input[type=submit]{
+p a, .log input[type=submit] {
+    font: bold 1em Georgia, serif;
+    color: #6e9900;
+    border: solid 1px black;
+    border-radius: 10px;
+    padding: .15em .3em;
+}
+
+.log input[type=submit], .upload input[type=submit]{
     padding: .2em .4em;
     font: bold 1.1em Georgia, serif;
     background: black;
     color: white;
 }
-.logout input[type=submit]:hover, .upload input[type=submit]:hover, .clientlist p a:hover {
+.log input[type=submit]:hover, .upload input[type=submit]:hover, .clientlist p a:hover {
     color: #6e9900;
 }
 
@@ -304,6 +303,13 @@ p.footer span.current {
 }
 
 .commit {
-    margin: 1em 0 0;
-    background-color: fuchsia;
+    margin: 1em 0;
+    padding: 1em;
+}
+
+.warning {
+    background-color: black;
+}
+.warning legend {
+    border: solid 1px white;
 }

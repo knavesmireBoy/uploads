@@ -5,7 +5,7 @@ $text = isset($_GET['text'])  ? $_GET['text']  : '';
 $size = isset($_GET['size'])  ? $_GET['size']  : '';
 ?>
 
-<h1>Search Files</h1>
+<h1></h1>
 <form action="?" method="get" name="searchFiles" class="<?php echo $warning; ?>">
     <fieldset><legend><?php echo $error; ?></legend>
     <?php if(!isset($zero)) :?>

@@ -7,7 +7,7 @@ if(!$confirmed): ?>
 <form action="" method="post" name="choice" class="prompt">
     <input type="hidden" name="id" value="<?php echo $id; ?>"/>
     <p class="info"><?php echo $prompt; ?></p>
-    <p><label>Yesx<input type="radio" name="<?php echo $call; ?>" value="Yes"/></label></p>
+    <p><label>Yes<input type="radio" name="<?php echo $call; ?>" value="Yes"/></label></p>
     <p><label>No<input type="radio" name="<?php echo $call; ?>" value="No"/></label></p>
     <input type="submit" value = "<?php echo $submit; ?>" >
 </form>

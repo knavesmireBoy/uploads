@@ -74,17 +74,25 @@ if (isset($_POST['confirm']))
 }
 
 //Admin uses $_POST Non-Admin $_GET
-if (isset($_REQUEST['act']) and $_REQUEST['act'] == 'choose' && isset($_REQUEST['user']))
+//if (isset($_REQUEST['act']) && $_REQUEST['act'] == 'choose' && isset($_REQUEST['user']))
+if (requestWhen('act', 'choose') && isset($_REQUEST['user']))
 {
     $domain = strrpos($key, "@") ? " user.email" : $domain;
     $data = $testPriv($db, $key, $_REQUEST['user'], $domain);
-    setcookie('extent', count($data['users']));
-    include 'edit_users.html.php';
-    exit();
+    $count = count($data['users']);
+    setcookie('extent', $count);
+    if($count > 0){
+        include 'edit_users.html.php';
+        exit();
+    }
+    else {
+        $location = "?extent=Client currently has no employees in the database";
+        doExit($location);
+    }    
     
 } ///CHOOSE________________________________________________________________________
 
-if (isset($_GET['add']) || (isset($_GET['action']) && $_GET['action'] === 'add'))
+if (goGet('add') || getWhen('action', 'add'))
 {
     include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/db.inc.php';
 	$pagetitle = 'New User';
@@ -113,8 +121,8 @@ if (isset($_GET['add']) || (isset($_GET['action']) && $_GET['action'] === 'add')
     if(!$isAdmin()){
         array_shift($roles);
     }
-
-	if (isset($_POST['employer']) && !empty($_POST['employer']))
+    
+    if (goPost('employer', true))
 	{
 		$id = doSanitize($link, $_POST['employer']);
         $res = doQuery($link, "SELECT id, domain FROM client WHERE id = $id", "Error retrieving clients from database!");
@@ -141,8 +149,7 @@ if (isset($_GET['add']) || (isset($_GET['action']) && $_GET['action'] === 'add')
 	exit();
 }
 
-
-if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || (isset($_GET['action']) && $_GET['action'] === 'edit'))
+if (requestWhen('action', 'Edit'))
 {
     $pagetitle = 'Edit User';
 	$action = 'editform';
@@ -169,7 +176,8 @@ if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || (isset($_GET['
         }
         $id = $_GET['xid'];
     }
-   include $db;
+    
+    include $db;
   
     if($select){
 	$id = doSanitize($link, $id);
@@ -217,7 +225,7 @@ if ((isset($_POST['action']) and ($_POST['action'] == 'Edit')) || (isset($_GET['
 } //edit
 
 
-if (isset($_POST['action']) and $_POST['action'] == 'Delete')
+if (postWhen("action", "Delete"))
 {
 	include $db;
     $id = $_POST['id'];

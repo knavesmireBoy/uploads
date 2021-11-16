@@ -284,7 +284,7 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     $msgs = validateSearch();
     if (!empty($msgs))
     {
-        $location = reLoad($msgs, '', '&find');
+        $location = reLoad($msgs, 'commit', '&find');
         $helper = preserveValidFormValues($location, '&', 'x', '=');
         $location = $helper("&text={$_GET['text']}", "&size={$_GET['size']}");
         doExit($location);        
@@ -603,7 +603,7 @@ function doUpdate($db)
     if (!empty($msgs))
     {
         $id = $_POST['fileid'];
-        $location = reLoad($msgs, "&id=$id&swap=No");
+        $location = reLoad($msgs, 'commit', "&id=$id&swap=No");
         $helper = preserveValidFormValues($location, '&', 'x', '=');
         $location = $helper("&filename={$_POST['filename']}");
         doExit($location);

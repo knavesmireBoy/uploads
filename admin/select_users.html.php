@@ -6,10 +6,13 @@
 	<title>Manage Users</title>
 </head>
     <body>
-        <div>
-            <?php
-            if(isset($_COOKIE['success'])) { echo "<h2>{$_COOKIE['success']}</h2>"; } ?>
+        <div>            
             <h1><?php echo $manage; ?></h1>
+            <?php
+            if(isset($_GET['extent'])){
+                echo "<p class='info'>{$_GET['extent']}</p>";
+            }
+        if(isset($_COOKIE['success'])) { echo "<h2>{$_COOKIE['success']}</h2>"; } ?>
             <p><a href="?add">Add New User</a></p>
             <form action="" id="userform" method="post" name="userform" class="select">
                 <ul>

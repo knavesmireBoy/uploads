@@ -22,9 +22,9 @@ $warning = isset($_GET['warning']) ? $_GET['warning'] : $warning;
                     <label for="the_domain">Domain: <input id="the_domain" type="text" name="domain" value="<?php  htmlout($domain); ?>"/></label></div>
                 <div>
                     <label for="the_tel">Phone: <input id="the_tel" type="text" name="tel" value="<?php htmlout($tel); ?>"/></label></div>
-                </fieldset>
                 <input type="hidden" name="id" value="<?php htmlout($id); ?>"/>
                 <input type="submit" value="<?php htmlout($button); ?>"/>
+                    </fieldset>
             </form>
             <p><a href="./">Return to Client List</a></p></div>
     </body>

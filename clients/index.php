@@ -28,7 +28,7 @@ $doDelete = doWhen(partial("goPost", "confirm") , partial("deleteClient", $db));
 $doCreate(null);
 $doUpdate(null);
 
-if (isset($_GET["add"]) || (isset($_GET["action"]) && $_GET["action"] === "Add"))
+if (goGet('add') || getWhen('action', 'Add'))
 {
     //if submission fails form is reloaded with validated variables
     $id = "";
@@ -42,8 +42,7 @@ if (isset($_GET["add"]) || (isset($_GET["action"]) && $_GET["action"] === "Add")
     exit();
 }
 
-
-if ((isset($_REQUEST["action"]) && $_REQUEST["action"] == "Edit") || (isset($_POST['confirm']) && $_POST['confirm'] == 'No'))
+if (requestWhen('action', 'Edit') || postWhen('confirm', 'No'))
 {
     include $db;
     $name = "!";
@@ -90,7 +89,7 @@ if ((isset($_REQUEST["action"]) && $_REQUEST["action"] == "Edit") || (isset($_PO
     exit();
 }
 
-if (isset($_POST["action"]) and $_POST["action"] == "Delete")
+if (postWhen("action", "Delete"))
 {
     $id = $_POST["id"];
     $title = "Prompt for deletion";
@@ -100,12 +99,12 @@ if (isset($_POST["action"]) and $_POST["action"] == "Delete")
     $neg = "No";
     $action = "";
 }
-$doDelete(null);
+$doDelete(null);//leave delete action to allow No selection to redirect to edit form
 
 include $db;
 $sql = "SELECT id, name, domain from client"; // THE DEFAULT QUERY
 
-if (isset($_POST["act"]) and $_POST["act"] == "choose" && !empty($_POST["client"]))
+if (postWhen('act', 'choose') && goPost('client', true))
 {
     $id = doSanitize($link, $_POST["client"]);
     $sql .= " WHERE id = $id";
@@ -117,4 +116,3 @@ $result = doQuery($link, $sql, "Error retrieving clients from database!");
 //echo mysqli_errno($link) . ": " . mysqli_error($link). "\n";
 $clients = doProcess($result, "id", "name", MYSQLI_ASSOC);
 include "clients.html.php";
-?>
