@@ -6,7 +6,8 @@ if(isset($_GET['error'])){
 }
 else {
     $error = "Amend File Details";
-    $warning = 'commit'; 
+    $positive = isset($answer) && $answer == 'Yes';
+    $warning = $positive ? 'prompt' : 'commit'; 
 }
 ?>
 <form action="" method="post" name="updateFileInfo" class="<?php echo $warning; ?>">
@@ -25,7 +26,7 @@ else {
             if($extent > 1) : 
             if(isset($answer) && $answer == 'Yes') : ?>
             <div class="<?php echo "fieldset $answer"; ?>">
-            <p class="info">Select checkbox to re-assign all client files to selected user.</p><p class="info">Leave unchecked to simply swap all instances of original owner to selected user</p>
+            <p class="info">Select checkbox to re-assign all client files to selected user.</p><p class="info">Leave unchecked to swap all instances of original user to selected user</p>
             <p><label for="blanket">swap/re-assign</label><input type = "checkbox" name="blanket" id="blanket"></p>
             <?php endif; ?>
             <div><label for="colleagues">Colleagues:&nbsp;</label>

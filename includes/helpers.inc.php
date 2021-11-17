@@ -135,6 +135,14 @@ function getBaseOrder($o, $s, $d)
     
 }
 
+function testDomain($db, $key)
+{
+    include $db;
+    $key = doSanitize($link, $key);
+    $res = doQuery($link, "SELECT domain, name FROM client WHERE domain = '$key' ", 'Database error fetching clients.');
+    return goFetch($res);
+}
+
 function getFileTypeQuery($where, $ext)
 {
     if (isset($ext) && !empty($ext) && $ext === 'owt')
@@ -156,6 +164,45 @@ function fileCountByUser($user, $domain)
         return " WHERE user.id = $user ";
     }
     return " INNER JOIN client ON $domain = client.domain WHERE client.domain = '$user'";
+}
+
+function getClientNameFromEmail($db, $domain, $email)
+{
+    //bit confusing as $domain can either be a mysql formula to extract a portion of an email OR that actual portion
+    include $db;
+    if (isset($email))
+    {
+        $key = doSanitize($link, $email);
+        $res = doQuery($link, "SELECT client.name, client.id, client.domain FROM client INNER JOIN user ON $domain = client.domain WHERE user.email='$email' ", 'Db error retrieving client name');
+    }
+    else
+    {
+        $key = doSanitize($link, $domain);
+        $res = doQuery($link, "SELECT client.name, client.id, client.domain FROM client WHERE domain = '$key'", 'Db error retrieving client name');
+    }
+    return goFetch($res, MYSQLI_ASSOC);
+}
+
+function getNameFromEmail($db, $email)
+{
+    include $db;
+    $key = doSanitize($link, $email);
+    $res = doQuery($link, "SELECT user.name from user WHERE user.email='$email'", 'Db error retrieving user name');
+    return goFetch($res) [0];
+}
+
+function userDetailsFromDomain($db, $key, $domain)
+{
+    include $db;
+    $sql = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
+    $res = doQuery($link, $sql, 'Database error fetching users.');
+    return doProcess($res, 'user_id', 'user_name');
+}
+function getUserNameFromID($db, $key)
+{
+    include $db;
+    $res = doQuery($link, "SELECT id, name FROM user where id ='$key' ORDER BY name", "Error retrieving users from the database!");
+    return doProcess($res, 'id', 'name');
 }
 
 function getColleagues($id, $dom)
@@ -325,7 +372,6 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     $decorate = $compose($queryUser, curry2('getFileTypeQuery') ($suffix) , $queryText, $querySize);
     $where = $decorate($where);
     $sql = $select . $from . $where . $order;
-    //dump($sql);
     return calculatePages($db, $display, $sql);
 }
 
@@ -569,7 +615,7 @@ function doUpdate($db)
     $msgs = array();
     
     //dump($_POST);
-    if(isset($_POST['filename'])){
+    if(isset($_POST['filename'])){//preserve initial extension
         $replacement = "$1$ext";
         $filename = preg_replace('/^([\w]+)(\.[\w]+)/', $replacement, $_POST['filename']);
         $msgs = validateFileDetails('desc');
@@ -592,6 +638,7 @@ function doUpdate($db)
     $fname = isset($_POST['filename']) ? doSanitize($link, $filename) : null;
     
     $user = !(isset($user)) ? $orig : $user;
+    
     $single = "UPDATE upload SET userid ='$user', description ='$diz', filename ='$fname' WHERE id ='$fid'";
     $extent = isset($_POST['blanket']) ? assignColleague($fid, $user) : "UPDATE upload SET userid='$user' WHERE userid='$orig'";
     $sql = $_POST['answer'] === "Yes" ? $extent : $single;
@@ -601,53 +648,6 @@ function doUpdate($db)
     $qs = "?$qs";
     header("Location: $qs");
     exit();
-}
-function getClientNameFromEmail($db, $domain, $email)
-{
-    //bit confusing as $domain can either be a mysql formula to extract a portion of an email OR that actual portion
-    include $db;
-    if (isset($email))
-    {
-        $key = doSanitize($link, $email);
-        $res = doQuery($link, "SELECT client.name, client.id, client.domain FROM client INNER JOIN user ON $domain = client.domain WHERE user.email='$email' ", 'Db error retrieving client name');
-    }
-    else
-    {
-        $key = doSanitize($link, $domain);
-        $res = doQuery($link, "SELECT client.name, client.id, client.domain FROM client WHERE domain = '$key'", 'Db error retrieving client name');
-    }
-    return goFetch($res, MYSQLI_ASSOC);
-}
-
-function getNameFromEmail($db, $email)
-{
-    include $db;
-    $key = doSanitize($link, $email);
-    $res = doQuery($link, "SELECT user.name from user WHERE user.email='$email'", 'Db error retrieving user name');
-    return goFetch($res) [0];
-}
-
-function userDetailsFromDomain($db, $key, $domain)
-{
-    include $db;
-    $sql = "SELECT employer.user_name, employer.user_id FROM (SELECT user.name AS user_name, user.id AS user_id, client.domain FROM user INNER JOIN client ON $domain = client.domain) AS employer WHERE employer.domain='$key'";
-    $res = doQuery($link, $sql, 'Database error fetching users.');
-    return doProcess($res, 'user_id', 'user_name');
-}
-
-function testDomain($db, $key)
-{
-    include $db;
-    $key = doSanitize($link, $key);
-    $res = doQuery($link, "SELECT domain, name FROM client WHERE domain = '$key' ", 'Database error fetching clients.');
-    return goFetch($res);
-}
-
-function getUserNameFromID($db, $key)
-{
-    include $db;
-    $res = doQuery($link, "SELECT id, name FROM user where id ='$key' ORDER BY name", "Error retrieving users from the database!");
-    return doProcess($res, 'id', 'name');
 }
 
 function chooseAdmin($db, $key, $user, $domain)
@@ -702,6 +702,7 @@ function asAdmin($p, $clientname)
 {
     return $p === ('Admin') || $clientname;
 }
+
 function getPages($db, $display, $getCountQuery, $pages)
 {
     if (isset($_GET['page']) && is_numeric($_GET['page']))
