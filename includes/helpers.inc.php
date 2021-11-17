@@ -21,6 +21,15 @@ function seek($flag = false)
     return '?find';
 }
 
+function formatFileSize($size)
+{
+    if ($size > 1024)
+    {
+        return number_format($size / 1024, 2, '.', '') . 'mb';
+    }
+    return ceil($size) . 'kb';
+}
+
 function uploadedfile($arg)
 {
     return $_FILES['upload'][$arg];
@@ -47,6 +56,19 @@ function doSanitize($lnk, $arg)
 {
     return mysqli_real_escape_string($lnk, $arg);
 }
+
+function massSanitize($db, $src)
+{
+    include $db;
+    $export = array();
+    $vars = array_map(partial('doSanitize', $link) , array_filter($src, 'iSet'));
+    foreach ($vars as $k => $v)
+    {
+        $export[$k] = $v;
+    }
+    return $export;
+}
+
 function doSafeFetch($lnk, $sql, $mode = MYSQLI_BOTH)
 {
     //assumes query works!!
@@ -78,17 +100,6 @@ function doBuild($r, $v, $mode = MYSQLI_BOTH)
     return $gang;
 }
 
-function doFetch($lnk, $sql, $msg)
-{
-    $result = mysqli_query($lnk, $sql);
-    if (!$result)
-    {
-        $error = $msg;
-        include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
-        exit();
-    }
-    return $result;
-}
 function doQuery($lnk, $sql, $msg)
 {
     $result = mysqli_query($lnk, $sql);
@@ -106,15 +117,6 @@ function domainFromUserID($link, $id)
     $sql = "SELECT domain from client INNER JOIN user ON user.client_id = client.id WHERE user.id = $id";
     $res = doQuery($link, $sql, 'Database getting client domain.');
     return goFetch($res) [0];
-}
-
-function formatFileSize($size)
-{
-    if ($size > 1024)
-    {
-        return number_format($size / 1024, 2, '.', '') . 'mb';
-    }
-    return ceil($size) . 'kb';
 }
 
 function getBaseSelect()
@@ -160,19 +162,7 @@ function getColleagues($id, $dom)
 {
     return "SELECT employer.id, employer.name FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id = $id ORDER BY name";
 }
-/*
-function getColleaguesExtent($id, $dom)
-{
-    return "SELECT employer.id, employer.name, COUNT(employer.id) AS extent FROM upload INNER JOIN user ON upload.userid = user.id INNER JOIN (SELECT user.id, user.name, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer ON $dom = employer.domain WHERE upload.id = $id GROUP BY employer.id ORDER BY name";
-}
-function getColleagues3($id)
-{
-    return "SELECT user.id, user.name FROM user INNER JOIN (SELECT tgt.client_id FROM user 
-INNER JOIN upload ON user.id = upload.userid 
-INNER JOIN (SELECT user.client_id FROM user INNER JOIN upload ON user.id = upload.userid  WHERE upload.id = $id)  AS tgt 
-ON user.client_id  =  tgt.client_id LIMIT 1)  AS client ON client.client_id = user.client_id ORDER BY name";
-}
-*/
+
 function getColleaguesFromName($domain, $name)
 {
     return "SELECT user.id, user.name FROM user INNER JOIN client ON $domain = client.domain WHERE client.name = '$name' ORDER BY name";
@@ -203,8 +193,8 @@ function doInsert($link)
 function doEmail($link, $id)
 {
     $sql = "select user.email, user.name, upload.id, upload.filename from user INNER JOIN upload ON user.id=upload.userid WHERE upload.id=$id";
-    doFetch($link, $sql, 'Error selecting email address.');
-    $row = doSafeFetch($link, $sql);
+    $res = doQuery($link, $sql, 'Error selecting email address.');
+    $row = goFetch($res);
     $email = $row['email'];
     $file = $row['filename'];
     $name = $row['name'];
@@ -216,31 +206,32 @@ function doEmail($link, $id)
     }
 }
 
-function getInitialKey($conn, $privilege, $user, $dom)
-{
-
-    function assignInitialUser($id, $dom)
+function assignInitialUser($id, $dom)
     {
         return "SELECT employer.name, employer.id FROM (SELECT user.name, user.id, client.domain FROM user INNER JOIN client ON $dom = client.domain) AS employer WHERE employer.domain = '$id' LIMIT 1";
     }
 
-    if ( /*$privilege == 'Admin' and*/
-    !empty($user))
-    { //ie Admin selects user
+function getInitialKey($db, $privilege, $user, $dom)
+{
+
+    if (!empty($user)) { //ie Admin selects user
         $key = $user;
-        include $conn;
+        include $db;
         //will either return empty set(no error) or produce count. Test to see if a client has been selected.
-        $row = doSafeFetch($link, "SELECT domain FROM client WHERE domain='$key'");
+        $res = doQuery($link, "SELECT domain FROM client WHERE domain = '$key'", 'error selecting domain');
+        $row = goFetch($res);
         if (isset($row[0]))
         {
             //RETURNS one user, as relationship between file and user is one to one.
-            $row = doSafeFetch($link, assignInitialUser($key, $dom));
+            $res = doQuery($link, assignInitialUser($key, $dom), 'error assigning key');
+            $row = goFetch($res, MYSQLI_ASSOC);
             $key = $row['id'];
             if (!$key)
             {
                 $key = $user; //$key will be empty if above query returned empty set, reset
                 $sql = "SELECT user.id from user INNER JOIN client ON user.client_id = client.id WHERE user.email='$key'";
-                $row = doSafeFetch($link, $sql);
+                $res = doQuery($link, $sql, 'error obtaining user id');
+                $row = goFetch($res, MYSQLI_ASSOC);
                 $key = $row['id'];
             } // @ clients use domain or full email as key if neither tests produce a result key refers to a user only
             
@@ -261,18 +252,6 @@ function calculatePages($db, $display, $sql)
         'pages' => $pages,
         'searched' => preg_split('/(?=\sFROM)/', $sql) [1]
     );
-}
-
-function massSanitize($db, $src)
-{
-    include $db;
-    $export = array();
-    $vars = array_map(partial('doSanitize', $link) , array_filter($src, 'iSet'));
-    foreach ($vars as $k => $v)
-    {
-        $export[$k] = $v;
-    }
-    return $export;
 }
 
 function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $display)
@@ -302,6 +281,7 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
         ${$k} = $v;
     }
    
+    /*default search using purely numbers assumes kilobytes and greater or equals, modify by prepending with lesser than character and/or append m to search by megabytes. NOTE math operation on number as string automatically casts to a number*/
     if(!empty($size)){
     $m = explode('m', $size);
     $size = $m[0];
@@ -310,7 +290,7 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     if(isset($m[1])){
         $size *= 1000;
     }
-    $size = isset($mod[1]) ? "< $size" : "> $size";
+    $size = isset($mod[1]) ? "<= $size" : ">= $size";
     }
 
     $emptyText = partial('isEmpty', $text);
@@ -462,7 +442,7 @@ function doUpload($db, $priv, $key, $domain)
     include $db;
     $doInsert = doInsert($link); //older versions of php may need to capture closure in a variable as opposed to func()();
     $sql = $doInsert($realname, uploadedfile('type') , $uploaddesc, $path, $uploadname, uploadedfile('size') , $mykey);
-    doFetch($link, $sql, 'Database error storing file information!' . $sql);
+    doQuery($link, $sql, "Database error storing file information! $sql");
     doExit();
 }
 
