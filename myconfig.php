@@ -31,4 +31,10 @@ define("VALIDATE_DESCRIPTION", "xdesc;DESCRIPTION is optional but should be betw
 define("SANITIZE_DESCRIPTION", "xdesc;Description contains invalid characters");
 define("VALIDATE_FILESIZE", "xsize;FILESIZE allows for a leading < and a trailing m");
 define("VALIDATE_SEARCH", "xtext;SEARCH TEXT should be between 2 and 20 word characters");
+
+// Or, using an anonymous function as of PHP 5.3.0
+spl_autoload_register(function ($class) {
+    require_once CLASS_PATH . $class . '.php';
+});
+
 ?>

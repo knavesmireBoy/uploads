@@ -65,7 +65,9 @@ function prepareChecks(){
     //predicates...
     $isName = $f('/^[\w.]{2,20}(\s[\w]{2,20})?$/');
     $isEmail = $f('/^[\w][\w.-]+@[\w][\w.-]+\.[A-Za-z]{2,6}$/');
-    $isPwd = compose('reduce')('strlen', curry2('lesserThan')(3));
+    $lsThan = curry2('lesserThan');
+    $isPwd = compose('reduce');
+    $isPwd = $isPwd('strlen', $lsThan(3));
     //messages..CONSTANTS supplied as arguments ORDER is critical    
     $checks = array_map($always, func_get_args());
     $beEmpty = array('isEmpty', $dopush($checks[0]));

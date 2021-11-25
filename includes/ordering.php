@@ -30,14 +30,19 @@ if($checksort) {
         $reset = isset($reset[1]) ? $reset[1] : '';
         return strlen($reset) === 2 ? true : false;
     };
-$deferCheckReset = curry2($checkReset)($sort_string);
+$deferCheckReset = curry2($checkReset);
+$deferCheckReset = $deferCheckReset($sort_string);
 /*doWhen expects one argument, even if it resolves to empty, it receives two partially applied functions and itself is also partially applied*/
-$checkTreble = partial(doWhen($always(true), curry22('resetQuery')('')($query_string)), '');
+$tisTwoo = $always(true);
+    $resetQ = curry22('resetQuery');
+    $resetQ = $resetQ('');
+$checkTreble = partial(doWhen($tisTwoo, $resetQ($query_string)), '');
 $checkDouble = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'uu');
 $checkSingle = partial(doWhen($deferCheckReset, partial('resetQuery', $query_string)), 'u');
 $cbs = [$checkTreble, $checkDouble, $checkSingle];
 $notUser = negate(partial('preg_match', '/u/', $sort_string));
-$checkUserToggleStatus = $compose('notEmpty', curry2('preg_split')($sort_string));
+$split = curry2('preg_split');
+$checkUserToggleStatus = $compose('notEmpty', $split($sort_string));
 /*IF splitting produces a a two member array for 'uuu' scenario reset sort string, for 'u' and 'uu' reset when second member has two characters ie ?sort=uut : ['sort=', 't'], ?sort=uuu : ['sort=', ''], ?sort=uutt : ['sort=', 'tt']*/
 $u = $checkUserToggleStatus('/u/');
 $uu = $checkUserToggleStatus('/uu/');

@@ -127,7 +127,9 @@ $select = getBaseSelect();
 $select .= ", user.name as user";
 //*the searched SELECT statement has only COUNT(upload.id), but all the current constraints follow in the FROM and WHERE and ORDER clauses, so we simply append the default SELECT which returns all the file info with the constraints
 if(!isset($searched)){
-$pages = getPages($db, $display, getBestArgs($notPriv)($fileCount, 'emptyString'), $pages);
+$getBest = getBestArgs($notPriv);
+$getBest = $getBest($fileCount, 'emptyString');
+$pages = getPages($db, $display, $getBest, $pages);
 $from = getBaseFrom();
 if ($priv !== 'Admin'){
     if(isset($client_id)){
@@ -171,9 +173,16 @@ while ($row = mysqli_fetch_array($result))
 }
 
 //$doSelected = $compose('optionOpenTag', curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
-$doSelected = $compose(partial('completeTag', 'option', 'value'), curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
-$doOpt = getBestArgs(negate(partial('isEmpty', $users)))('optGroupOpen', $always(""));
-$doOptEnd = getBestArgs(negate(partial('isEmpty', $users)))('optGroupClose', $always(""));
-$isTrueClient = partial('array_reduce', [$isClient, $compose(partial('count', $client), curry2('greaterThan')(1))], 'every', true);
+$invoke = curry2('invokeArg');
+$selected = $always(" selected = 'selected' ");
+$getBest = getBestArgs($equals);
+$empty = $always("");
+$negate = negate(partial('isEmpty', $users));
+$doSelected = $compose(partial('completeTag', 'option', 'value'), $invoke($getBest($selected, $empty)));
+$doNegate = getBestArgs($negate);
+$doOpt = $doNegate('optGroupOpen', $empty);
+$doOptEnd = $doNegate('optGroupClose', $empty);
+$gtThan = curry2('greaterThan');
+$isTrueClient = partial('array_reduce', [$isClient, $compose(partial('count', $client), $gtThan(1))], 'every', true);
 
 include $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/ordering.php';

@@ -17,7 +17,7 @@ if(!$confirmed): ?>
 <form action="." method="post" name="deletions" class="commit confirm">
     <div class="fieldset">
     <p><label for="ext_nwf">Delete this file only<input type="radio" id="ext_nwf" name="extent" value="f"/></label></p>
-    <?php if($extent): ?>
+    <?php if(true): ?>
     <p><label for="ext_nwu">Delete all files for this user<input type="radio" id="ext_nwu" name="extent" value="u"/></label></p>
     <p><label for="ext_nwc"><?php echo $delete; ?><input type="radio" id="ext_nwc" name="extent" value="c"/></label></p>
         <?php endif; ?>

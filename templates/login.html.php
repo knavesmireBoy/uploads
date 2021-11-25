@@ -3,7 +3,7 @@
 <?php if (isset($loginError)): ?>
 <p><?php htmlout($loginError); ?></p>
 <?php endif;
-$email = isset($_GET['logme'] ? $_GET['logme'] : '';
+$email = isset($_GET['logme']) ? $_GET['logme'] : '';
 ?>
 <form action="." method="post" name="loginform" class="log">
     <div><label for="email">Email: <input id="email" type="email" name="email" value="<?php htmlout($email); ?>"/></label></div>

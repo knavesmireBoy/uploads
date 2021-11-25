@@ -15,7 +15,8 @@ $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
 $manage = "Manage User";
 setcookie('eemail', "", time() -1, "/");
 //$doWarning = doWhen($always(true), $always('warning'));
-$doWarning = getBestArgs($always(true))($always('warning'), $always(''));
+$doWarning = getBestArgs($always(true));
+$doWarning = $doWarning($always('warning'), $always(''));
 $warning = 'commit';
 $error = 'User Details:';
 $submit = "Delete";
@@ -54,7 +55,8 @@ if(!isset($priv)){
 }
 
 $isAdmin = partial('equals', $priv, 'Admin');
-$testPriv = getBestArgs($isAdmin)('chooseAdmin', 'chooseClient');
+$testPriv = getBestArgs($isAdmin);
+$testPriv = $testPriv('chooseAdmin', 'chooseClient');
 $manage = $isAdmin() ? 'Manage User' : 'Edit Details';
 $data = ['manage' => $manage];//required for edit.html.php after delete is invoked
 
@@ -134,7 +136,7 @@ if (goGet('add') || getWhen('action', 'add'))
     $res = doQuery($link, "SELECT id, name FROM client ORDER BY name", "Error retrieving clients from database!");
     $clientlist = doProcess($res, 'id', 'name');//for assigning to client
     
-    $extent = $_COOKIE['extent'];
+    $extent = isset($_COOKIE['extent']) ? $_COOKIE['extent'] : null;
     $data = array();
     if(isset($extent) && $extent > 1){
         $data['ret'] = '.';
@@ -251,9 +253,12 @@ if ($priv == "Admin")
     $users = doProcess($res, 'id', 'name');
     $userid = -1;
     $equals = partial(equality(true), $userid);
-    $doSelected = $compose(partial('completeTag', 'option', 'value'), curry2('invokeArg')(getBestArgs($equals)($always(" selected = 'selected' "), $always(""))));
-    $doOpt = getBestArgs(negate(partial('isEmpty', $users)))('optGroupOpen', $always(""));
-    $doOptEnd = getBestArgs(negate(partial('isEmpty', $users)))('optGroupClose', $always(""));
+    $invoke = curry2('invokeArg');
+    $doEquals = getBestArgs($equals);
+    $doSelected = $compose(partial('completeTag', 'option', 'value'), $invoke($doEquals($always(" selected = 'selected' "), $always(""))));
+    $negate = getBestArgs(negate(partial('isEmpty', $users)));
+    $doOpt = $negate('optGroupOpen', $always(""));
+    $doOptEnd = $negate('optGroupClose', $always(""));
     include 'select_users.html.php';
 }
 else {

@@ -26,7 +26,9 @@ if (!userIsLoggedIn())
 $roleplay = userHasWhatRole();
 //public page
 $doError = partialDefer('errorHandler', 'Only valid clients may access this page.', $tmplt . 'accessdenied.html.php');
-doWhen($always(!$roleplay) , $doError) (null);
+$checkRole = $always(!$roleplay);
+$onCheckRole = doWhen($checkRole, $doError);
+$onCheckRole(null);
 
 $key = $roleplay['id'];
 $priv = $roleplay['roleid'];
@@ -69,7 +71,9 @@ $isSingleUser = partial('equals', 'Client', $priv);
 
 
 $keytype = isset($client_domain) ? $client_domain : $key;
-$fileCount = curry22('fileCountByUser')($domain)($keytype);
+$fileCount = curry22('fileCountByUser');
+$fileCount = $fileCount($domain);
+$fileCount = $fileCount($keytype);
 
 $doZero = doWhen($isPriv, $always(0));
 $doOne = doWhen($always($client_id), $always(1));

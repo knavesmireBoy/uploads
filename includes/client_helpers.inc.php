@@ -48,10 +48,11 @@ function checkExistingDomain($db){
     return $dom ? in_array($_POST['domain'], $gang) : false;
 }
 
-function prepareChecks($dom){
+function prepareChecks($dom)
+{
     return function() use($dom) {
-    $msgs = array();
-    $compose = curry2(compose('reduce'));
+        $msgs = array();
+        $compose = curry2(compose('reduce'));
         $dom_reg = '/^[^.]+\.[^.]*\.?[A-Za-z]{2,6}$/';
     $negate = curryLeft2('preg_match', 'negate');
     $match = curryLeft2('preg_match');
@@ -68,8 +69,10 @@ function prepareChecks($dom){
     //allows for a word of 2 to 15 characters, followed by up to four words of 1(eg: ampersand) to 15 characters, ie Tom Dick & Harry
     $isName = $negate('/^[\w.]{2,15}(\s[\w&.]{1,15}){0,4}$/');
     $isDomain = $dom ? $match($dom_reg) : $negate($dom_reg);
-    $phone_reg = compose('reduce')($replace, $negate("/^[0-9]{10,15}$/"));
-    $isPhone = getBestArgs('isEmpty')(partial('doAlways', false), $phone_reg);
+    $reduce = compose('reduce');
+    $phone_reg = $reduce($replace, $negate("/^[0-9]{10,15}$/"));
+    $isEmpty = getBestArgs('isEmpty');
+    $isPhone = $isEmpty(partial('doAlways', false), $phone_reg);
     //messages..CONSTANTS supplied as arguments ORDER is critical    
     $checks = array_map($always, func_get_args());
     $beEmpty = array('isEmpty', $dopush($checks[0]));
@@ -90,7 +93,8 @@ function validateClient($db, $edit = false){
     $location = '.';
     $domain_exists = $edit ? false : checkExistingDomain($db);
     $constant = $domain_exists ? "xdomain;DOMAIN <b>{$_POST['domain']}</b> already exists" : VALIDATE_DOMAIN;
-    $msgs = prepareChecks($domain_exists)(REQUIRED_NAME, VALIDATE_NAME, REQUIRED_DOMAIN, $constant, VALIDATE_PHONE);   
+    $isDomain = prepareChecks($domain_exists);
+    $msgs = $isDomain(REQUIRED_NAME, VALIDATE_NAME, REQUIRED_DOMAIN, $constant, VALIDATE_PHONE);   
     $action = !empty($edit) ? 'Edit' : 'Add';
     
     if(empty($msgs)){

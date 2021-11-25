@@ -344,8 +344,10 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     $emptySize = partial('isEmpty', $size);
     $active_where = [' ', " WHERE user.id = $user", " WHERE user.email = '$email'"];
     $haveUser = partial(negate('isEmpty') , $user);
-    $andUser = curry2('concatString')(" AND user.id = $user");
-    $queryUser = getBestPred($isAdmin) ($andUser, partial('doAlways'));
+    $andUser = curry2('concatString');
+    $andUser =     $andUser(" AND user.id = $user");
+    $queryUser = getBestPred($isAdmin);
+    $queryUser =  $queryUser($andUser, partial('doAlways'));
     $where = $active_where[$user_int];
     $active_from = [partial('fileCountByUser', $user, $domain) , partial('doAlways', '') , partial('doAlways', '') ];   
 
@@ -362,14 +364,19 @@ function doSearch($db, $user_int, $dom, $domain, $compose, $order_by, $start, $d
     else
     {
         $from .= $active_from[$user_int]();
-        $queryUser = getBestPred($isAdmin) (partial('doAlways') , $andUser);
+        $queryUser = getBestPred($isAdmin);
+        $queryUser = $queryUser(partial('doAlways') , $andUser);
     }
-    $likeText = curry2('concatString')(" AND upload.filename LIKE '%$text%' ");
-    $andSize = curry2('concatString')(" AND size $size");
-    $queryText = getBestPred($emptyText)(partial('doAlways'), $likeText);
-    $querySize = getBestPred($emptySize)(partial('doAlways'), $andSize);
+    $soConcat = curry2('concatString');
+    $likeText = $soConcat(" AND upload.filename LIKE '%$text%' ");
+    $andSize = $soConcat(" AND size $size");
+    $queryText = getBestPred($emptyText);
+    $queryText = $queryText(partial('doAlways'), $likeText);
+    $querySize = getBestPred($emptySize);
+    $querySize = $querySize(partial('doAlways'), $andSize);
+    $doSuffix = curry2('getFileTypeQuery'); 
 
-    $decorate = $compose($queryUser, curry2('getFileTypeQuery') ($suffix) , $queryText, $querySize);
+    $decorate = $compose($queryUser, $doSuffix($suffix) , $queryText, $querySize);
     $where = $decorate($where);
     $sql = $select . $from . $where . $order;
     return calculatePages($db, $display, $sql);
@@ -388,8 +395,10 @@ function validateFileDetails($d = "description")
     $negate = curryLeft2('preg_match', 'negate');
     $compose = curry2(compose('reduce'));
     $dopush = $compose(populateArray($msgs, ';'));
-    $isDesc = getBestArgs('isEmpty') (partial('doAlways', false) , $negate('/^[\w]+[\w\s]{2,29}/'));
-    $isFileName = $negate('/^[\w][\w-]{0,49}\.[\w]{2,4}/');
+    $isEmpty = getBestArgs('isEmpty');
+    $isDesc = $isEmpty(partial('doAlways', false) , $negate('/^[\w]+[\w -]{2,29}/'));
+    $isFileName = $negate('/^[\w][\w- &]{0,49}\.\w{2,4}/');
+    //$isFileName = $negate('/^[\w][\w-]{0,49}\.?\w{0,4}/');
     $checks = array_map('ALWAYS', $messages);
     $beBadDiz = array(
         $isDesc,
@@ -415,8 +424,8 @@ function validateFileDetails($d = "description")
                 $beBadDiz
             ) ,
             'filename' => array(
-                $beBadFileName,
-                $beEmpty
+                $beEmpty,
+                $beBadFileName
             )
         );
     }
@@ -435,8 +444,9 @@ function validateSearch()
     $negate = curryLeft2('preg_match', 'negate');
     $compose = curry2(compose('reduce'));
     $dopush = $compose(populateArray($msgs, ';'));
-    $isFileSize = getBestArgs('isEmpty') (partial('doAlways', false) , $negate('/^[<>]?\d{1,4}m{0,1}/'));
-    $isSearchTerm = getBestArgs('isEmpty') (partial('doAlways', false) , $negate('/^[\w]+[\w\s-]{1,4}/'));
+    $isEmpty = getBestArgs('isEmpty');
+    $isFileSize = $isEmpty(partial('doAlways', false), $negate('/^[<>]?\d{1,4}m{0,1}/'));
+    $isSearchTerm = $isEmpty(partial('doAlways', false), $negate('/^[\w]+[\w\s-]{1,4}/'));
     $checks = array_map('ALWAYS', $messages);
     $beBadSearch = array(
         $isSearchTerm,
@@ -465,14 +475,17 @@ function doUpload($db, $priv, $key, $domain)
     $doError = partialDefer('errorHandler', '<a href=".">There was no file uploaded!</a>', $terror);
     $uploaddesc = isset($_POST['description']) ? $_POST['description'] : '';
     $msgs = validateFileDetails();
-    $noFile = negate(curry11('is_uploaded_file')(uploadedfile('tmp_name')));
+    $negate = negate(curry11('is_uploaded_file'));
+    $noFile = $negate(uploadedfile('tmp_name'));
+    
     $noCopy = negate(partial('copy', uploadedfile('tmp_name')));
 
     if (!empty($msgs))
     {
         doExit(reLoad($msgs, 'upload', '&onupload=true'));
     }
-    doWhen($noFile, $doError)(null);
+    $doWhen = doWhen($noFile, $doError);
+    $doWhen(null);
     $realname = uploadedfile('name');
     $ext = strchr($realname, '.');
     $uploadname = time() . getRemoteAddr() . $ext;
@@ -480,7 +493,8 @@ function doUpload($db, $priv, $key, $domain)
     $filedname = $path . $uploadname;
     // Copy the file (if it is deemed safe)
     $doError = partialDefer('errorHandler', "<a href='.'>Could not  save file as $filedname!</a>", $terror);
-    doWhen($noCopy, $doError)($filedname);
+    $doWhen = doWhen($noCopy, $doError);
+    $doWhen($filedname);
 
     $theKey = getInitialKey($db, $priv, $_POST['user'], $domain);
     $mykey = $theKey ? $theKey : $key;
@@ -502,7 +516,8 @@ function doView($db)
 
     $file = goFetch($result);
     $doError = partialDefer('errorHandler', 'File with specified ID not found in the database!', $terror);
-    doWhen(partial('doAlways', !$file) , $doError) (null);
+    $doWhen = doWhen(partial('doAlways', !$file) , $doError);
+    $doWhen(null);
 
     $filename = $file['filename'];
     $mimetype = $file['mimetype'];
@@ -525,7 +540,8 @@ function doDelete($db, $compose)
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
     $err = 'Error deleting ';
     $outcomes = array("files for this client", "files for this user", "this.file");
-    $findIndex = curry2('array_search') (array(
+    $findIndex = curry2('array_search');
+    $findIndex =  $findIndex(array(
         "c",
         "u",
         "f"
@@ -610,23 +626,29 @@ function doUpdate($db)
     $terror = $_SERVER['DOCUMENT_ROOT'] . '/uploads/includes/error.html.php';
     if (isset($_COOKIE['filename']))
     {
-        $ext = strchr($_COOKIE['filename'], '.');
+        $ext = strrchr($_COOKIE['filename'], '.');
     }
     $msgs = array();
     
     //dump($_POST);
-    if(isset($_POST['filename'])){//preserve initial extension
+    if(isset($_POST['filename'])){
+        //preserve initial extension
         $replacement = "$1$ext";
-        $filename = preg_replace('/^([\w]+)(\.[\w]+)/', $replacement, $_POST['filename']);
+        //ALLOWS FOR OPTIONAL EXTENSION
+        $filename = preg_replace('/^([^.]+)(\.?\w*$)/', $replacement, $_POST['filename']);
+        $_POST['filename'] = $filename;
+        /*IT IS THE REQUEST ARRAY THAT IS LOOPED OVER BY VALIDATING FUNCTIONS SO UPDATE IT WITH PROPER FILENAME*/
+        $_REQUEST['filename'] = $filename;
         $msgs = validateFileDetails('desc');
     }
     //no filename, desc     
     if (!empty($msgs))
     {
+        $filename = isset($filename) ? $filename : $_COOKIE['filename'];
         $id = $_POST['fileid'];
         $location = reLoad($msgs, 'commit', "&id=$id&swap=No");
         $helper = preserveValidFormValues($location, '&', 'x', '=');
-        $location = $helper("&filename={$_POST['filename']}");
+        $location = $helper("&filename=$filename"); 
         doExit($location);
     }
     $fid = doSanitize($link, $_POST['fileid']);
@@ -635,7 +657,7 @@ function doUpdate($db)
     $user = isset($_POST['colleagues']) ? doSanitize($link, $_POST['colleagues']) : $user;
     
     $diz = isset($_POST['desc']) ? doSanitize($link, $_POST['desc']) : null;
-    $fname = isset($_POST['filename']) ? doSanitize($link, $filename) : null;
+    $fname = isset($filename) ? doSanitize($link, $filename) : null;
     
     $user = !(isset($user)) ? $orig : $user;
     
@@ -722,4 +744,5 @@ function getPages($db, $display, $getCountQuery, $pages)
     } //end of IF NOT PAGES SET
     return $pages;
 }
-$doFile = curry3('concatCB') ('f');
+$doFile = curry3('concatCB');
+$doFile('f');

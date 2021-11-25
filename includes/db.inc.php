@@ -1,6 +1,6 @@
 <?php
 
-$link = mysqli_connect('localhost', 'root', 'covid19@krauq');
+$link = mysqli_connect('localhost', 'root', 'krauq');
 if (!$link)
 {
 $error = 'Unable to connect to the database server.'. mysqli_error($link);

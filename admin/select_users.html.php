@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" class="no-js">
     <head>
-	<meta content="text/html; charset=utf-8" http-equiv="content-type">
-	<link href="../css/lofi.css" media="all" rel="stylesheet" type="text/css">
-	<title>Manage Users</title>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Manage Users</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="../css/lofi.css" media="all" rel="stylesheet" type="text/css">
 </head>
     <body>
         <div>            
