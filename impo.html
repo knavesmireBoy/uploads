@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Link to Uploads Site</title>
+        <style>
+             body {
+                font: italic 1em Times, serif;
+            }
+        p a {
+            padding: 0;
+            border: 0;
+            color: blue;
+            font-size: .9em;
+            font-weight: bold;
+            font-style: normal;
+            }
+            p a:hover {
+                background: none;
+                color: purple;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <p>/*For more on InDesign scripting, go to http://www.adobe.com/products/indesign/scripting/index.html
+or visit the InDesign Scripting User to User forum at http://www.adobeforums.com */
+
+/*JS version is pre ES2015; underscore/lodash would be helpful; script is derived from placePDF
+
+USAGE
+Import PDF pages into InDesign for printing in booklet form. (Saddle Stich imposition format)
+
+Typical usage is for printing of documents in portrait booklet form using an A4 home/office printer instead of having a fistful of flat sheets you have to shuffle through.
+The principal drawback is the reading copy will be typically 70% smaller, but then the general idea is that your little booklet will be digested at leisure in a deckchair in the fantastic light of the sun with a long glass of "lemonade".
+The InDesign document should be set to the final FLAT SIZE of the printed size typically A3 or A4 LANDSCAPE
+But if the final document size is a custom size of say 190 x 250 the flat size would be 380 x 250 and remember InDesign should remember the last document setup so if you have a series of items to print then there is no need to have an open document - afer the first - before invoking the script. Afer importing the files use the printers SCALE TO FIT option before printing.
+
+I would say documents would need to be limited to 40 pages, ten flat sheets.
+When printed simply fold the assembled sheets in half.
+A longish rubberband would help secure them but this is not absolutely crucial
+
+So if you have a manual of 200 pages split into several chapters of varying lengths you will need to split the document accordingly.
+Any full version of Acrobat allows you to extract a range of pages
+https://helpx.adobe.com/uk/acrobat/using/manipulating-deleting-renumbering-pdf-pages.html
+
+in Preview:
+First, open up the PDF file in Preview (Acrobat might work too). Then select Print, and under Pages choose the range of pages you need to extract. Then click Preview. Those pages will open up in a new window and you can select Save As from the file menu to save the extracted portion. (http://hints.macworld.com/article.php?story=2002030109023743#:~:text=First%2C%20open%20up%20the%20PDF,to%20save%20the%20extracted%20portion.)
+
+THE PDF MUST HAVE PAGES IN MULTIPLES OF 4
+
+so you could include unwanted pages from the next chapter to round up to 4 (8, 12, 16 20...)
+
+OR (BECAUSE waste of ink and not terribly tidy)
+
+INSERT BLANK pages with Acrobat or Preview (https://support.apple.com/en-us/HT202945) or another available PDF Editor
+
+Here is a link to a 1, 2 and 3 page A5 Portrait pdf which can be inserted into your print-ready pdf.
+The size of this page does not have to match, it is probably a good idea if it is not greater than the target size, but the blanks are just there to generate the correct page count in InDesign.
+
+On running the Script there will be FOUR PROMPTS
+The first is for the OFFSET for the right-hand pages (defaults to 0 for left hand pages) this has a default of 210 but override at will
+The second prompt is for the PAGE COUNT, no default here.
+After the prompt to place pages (accept the default)
+the CROP AREA needs to be set, this defaults to Media, but the setting may need to be one of:
+Art, Bleed, Crop, Media, Trim (the lowercase equivalents will be fine, no, it was nothing really) depending on how the pdf was produced
+(https://www.prepressure.com/pdf/basics/page-boxes)
+*/
+</p>
+            
+        </div>
+    </body>
+</html>
